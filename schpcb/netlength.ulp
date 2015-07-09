@@ -1,0 +1,107 @@
+/* Measure the total length of the net the user entered.*/
+// Alan Stummer, astummer[at]physics.utoronto.ca, March 2011
+
+#require 5.00
+#usage "<b>Run NetLength\n</b>Enter the net name (either command line or via dialog) and the total net length will be shown."
+
+int  KeyHit, mx, my, TotLen = 0, Segments = 0, outputToFile = 0, FirstLine = 0;
+string TargetNet, TxtLen, TxtSeg, Units, TargetFile;
+
+
+if (!board)  {                                                   //CAN ONLY BE RUN ON A BOARD.
+   dlgMessageBox("<b>OOPS!</b>  Can only use this ULP on a board!");
+   exit (0);
+}
+
+
+string GetTargetName() {
+   KeyHit = dlgDialog("Measure")  {
+      dlgLabel ("Enter the net name, e.g. 'N$20'");
+      dlgHBoxLayout {
+         dlgVBoxLayout {
+           
+            dlgHBoxLayout {                                             //"Net Name" text box.
+               dlgLabel("Net Name:");
+               dlgStringEdit(TargetNet);
+            }
+         }
+
+         dlgVBoxLayout {
+            dlgHBoxLayout {                                            //"Measure" pushbutton.
+               dlgPushButton("+Measure")  dlgAccept(1);
+            }
+
+            dlgPushButton("-Quit")  dlgReject(-1);                        //"Quit" pushbutton.
+         }
+      }
+   };
+   return TargetNet;
+}
+
+
+//************************************** MAIN **********************************************//
+if (argc > 1)                                       //net name was given in the command line.
+{
+   TargetNet = strupr(argv[1]);
+   if (argc > 2)
+   {
+      TargetFile = strupr(argv[2]);
+      outputToFile = 1;
+      if ( argc == 4 )
+      {
+         FirstLine = 1;
+      }
+   }
+   
+}
+else  {
+   TargetNet = strupr(GetTargetName());                      //get the net name with a dialog.
+   if (KeyHit == -1  ||  !TargetNet)  exit(0);         //'Quit' button hit or nothing to find.
+}
+
+board(B) {
+   B.signals(S) {                                                                      //Wire.
+      if (strupr(S.name) == TargetNet) {
+         S.wires(W) {
+            TotLen += sqrt(pow(W.x1 - W.x2, 2) + pow(W.y1 - W.y2, 2));   //thanks, Pythagoras.
+            Segments++;
+         }
+      }
+   }
+
+   if (Segments)  {                   
+      switch (B.grid.unit)  {
+         case 0:  Units = "mic";    sprintf( TxtLen, "%g", u2mic(TotLen));   break;
+         case 1:  Units = "mm";     sprintf( TxtLen, "%g", u2mm(TotLen));    break;
+         case 2:  Units = "mil";    sprintf( TxtLen, "%g", u2mil(TotLen));   break;
+         case 3:  Units = "in";     sprintf( TxtLen, "%g", u2inch(TotLen));  break;
+      }
+      sprintf( TxtSeg, "%d", Segments); 
+      if (outputToFile == 0)
+      {
+         dlgMessageBox("Net <b>" + TargetNet + " </b> is <b>" + TxtLen + Units + "</b> in " 
+                              + TxtSeg + " segments.");
+      }
+      else
+      {
+	if ( FirstLine )
+	{
+	  output(TargetFile, "wt")
+	  {
+	    printf("NetName , NetLength , Unit, NumSegments\n");
+	    printf("%s , %s , %s, %s\n",TargetNet, TxtLen, Units, TxtSeg);
+	  }
+	}
+	else
+	{
+	  output(TargetFile, "at")
+	  {
+	    printf("%s , %s , %s, %s\n",TargetNet, TxtLen, Units, TxtSeg);
+	  }
+	}
+      }
+   }
+
+   else
+      dlgMessageBox("<b>OOPS!</b>, can't find net <b>"+ TargetNet + "</b>");
+}
