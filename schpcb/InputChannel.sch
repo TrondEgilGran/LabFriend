@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.2.0">
+<eagle version="7.3.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -147,28 +147,6 @@ Source: http://www.analog.com/static/imported-files/data_sheets/SSM2166.pdf</des
 <rectangle x1="-2.7851" y1="2" x2="-2.2949" y2="3.1001" layer="51"/>
 <rectangle x1="-4.0551" y1="2" x2="-3.5649" y2="3.1001" layer="51"/>
 </package>
-<package name="AMP_227161">
-<description>&lt;b&gt;JACK,  RIGHT ANGLE, 50 OHM, PCB, BNC&lt;/b&gt;&lt;p&gt;
-Source: amp_227161.pdf</description>
-<wire x1="7.275" y1="7.275" x2="-7.275" y2="7.275" width="0.2032" layer="21"/>
-<wire x1="-6.4" y1="7.375" x2="-6.4" y2="16.025" width="0.2032" layer="21"/>
-<wire x1="-6.4" y1="16.025" x2="6.4" y2="16.025" width="0.2032" layer="21"/>
-<wire x1="6.4" y1="16.025" x2="6.4" y2="7.35" width="0.2032" layer="21"/>
-<wire x1="-4.9" y1="16.15" x2="-4.9" y2="28.475" width="0.2032" layer="21"/>
-<wire x1="-4.9" y1="28.475" x2="4.9" y2="28.475" width="0.2032" layer="21"/>
-<wire x1="4.9" y1="28.475" x2="4.9" y2="16.125" width="0.2032" layer="21"/>
-<circle x="0" y="23.94" radius="1.26" width="0" layer="21"/>
-<pad name="1" x="0.2032" y="-5.7912" drill="0.9" diameter="1.778"/>
-<pad name="2" x="-2.3208" y="-5.8024" drill="0.9" diameter="1.778"/>
-<text x="-6.985" y="-8.89" size="1.27" layer="25">&gt;NAME</text>
-<text x="-0.635" y="-8.89" size="1.27" layer="27">&gt;VALUE</text>
-<pad name="P$1" x="-5.3" y="-0.6" drill="2" shape="square" rot="R90"/>
-<pad name="P$2" x="5.3" y="-0.7" drill="2" shape="square" rot="R90"/>
-<wire x1="-7.2136" y1="7.2136" x2="-7.3152" y2="7.112" width="0.3048" layer="21"/>
-<wire x1="-7.3152" y1="7.112" x2="-7.3152" y2="-7.2136" width="0.3048" layer="21"/>
-<wire x1="-7.3152" y1="-7.2136" x2="7.3152" y2="-7.2136" width="0.3048" layer="21"/>
-<wire x1="7.3152" y1="-7.2136" x2="7.3152" y2="7.2136" width="0.3048" layer="21"/>
-</package>
 </packages>
 <symbols>
 <symbol name="OP_PD">
@@ -191,19 +169,6 @@ Source: amp_227161.pdf</description>
 <text x="1.27" y="-5.08" size="1.778" layer="96">&gt;VALUE</text>
 <pin name="V+" x="0" y="7.62" visible="pad" length="middle" direction="pwr" rot="R270"/>
 <pin name="V-" x="0" y="-7.62" visible="pad" length="middle" direction="pwr" rot="R90"/>
-</symbol>
-<symbol name="BU-BNC">
-<wire x1="-2.54" y1="2.54" x2="-2.54" y2="-2.54" width="0.254" layer="94" curve="-180" cap="flat"/>
-<wire x1="0" y1="-2.54" x2="-0.762" y2="-1.778" width="0.254" layer="94"/>
-<wire x1="0" y1="0" x2="-0.508" y2="0" width="0.1524" layer="94"/>
-<wire x1="-2.54" y1="0.254" x2="-0.762" y2="0.254" width="0.254" layer="94"/>
-<wire x1="-0.762" y1="0.254" x2="-0.508" y2="0" width="0.254" layer="94"/>
-<wire x1="-0.508" y1="0" x2="-0.762" y2="-0.254" width="0.254" layer="94"/>
-<wire x1="-0.762" y1="-0.254" x2="-2.54" y2="-0.254" width="0.254" layer="94"/>
-<text x="-2.54" y="-5.08" size="1.778" layer="96">&gt;VALUE</text>
-<text x="-2.54" y="3.302" size="1.778" layer="95">&gt;NAME</text>
-<pin name="1" x="2.54" y="0" visible="off" length="short" direction="pas" rot="R180"/>
-<pin name="2" x="2.54" y="-2.54" visible="off" length="short" direction="pas" rot="R180"/>
 </symbol>
 </symbols>
 <devicesets>
@@ -262,61 +227,6 @@ Source: http://www.analog.com/static/imported-files/data_sheets/ADA4853-1_4853-2
 </connects>
 <technologies>
 <technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-<deviceset name="?227161*" prefix="X">
-<description>&lt;b&gt;JACK,  RIGHT ANGLE, 50 OHM, PCB, BNC&lt;/b&gt;&lt;p&gt;
-Source: amp_227161.pdf</description>
-<gates>
-<gate name="G$1" symbol="BU-BNC" x="0" y="0"/>
-</gates>
-<devices>
-<device name="1-" package="AMP_227161">
-<connects>
-<connect gate="G$1" pin="1" pad="1"/>
-<connect gate="G$1" pin="2" pad="2"/>
-</connects>
-<technologies>
-<technology name="-0">
-<attribute name="MF" value="TYCO ELECTRONICS" constant="no"/>
-<attribute name="MPN" value="1-227161" constant="no"/>
-<attribute name="OC_FARNELL" value="unknown" constant="no"/>
-<attribute name="OC_NEWARK" value="33B3200" constant="no"/>
-</technology>
-<technology name="-2">
-<attribute name="MF" value="" constant="no"/>
-<attribute name="MPN" value="" constant="no"/>
-<attribute name="OC_FARNELL" value="unknown" constant="no"/>
-<attribute name="OC_NEWARK" value="unknown" constant="no"/>
-</technology>
-<technology name="-6">
-<attribute name="MF" value="TYCO ELECTRONICS" constant="no"/>
-<attribute name="MPN" value="1-227161-6" constant="no"/>
-<attribute name="OC_FARNELL" value="unknown" constant="no"/>
-<attribute name="OC_NEWARK" value="09H7854" constant="no"/>
-</technology>
-<technology name="-7">
-<attribute name="MF" value="TYCO ELECTRONICS" constant="no"/>
-<attribute name="MPN" value="1-227161-7" constant="no"/>
-<attribute name="OC_FARNELL" value="unknown" constant="no"/>
-<attribute name="OC_NEWARK" value="09H7855" constant="no"/>
-</technology>
-</technologies>
-</device>
-<device name="" package="AMP_227161">
-<connects>
-<connect gate="G$1" pin="1" pad="1"/>
-<connect gate="G$1" pin="2" pad="2"/>
-</connects>
-<technologies>
-<technology name="-8">
-<attribute name="MF" value="" constant="no"/>
-<attribute name="MPN" value="" constant="no"/>
-<attribute name="OC_FARNELL" value="unknown" constant="no"/>
-<attribute name="OC_NEWARK" value="unknown" constant="no"/>
-</technology>
 </technologies>
 </device>
 </devices>
@@ -5492,6 +5402,71 @@ Source: http://www.analog.com/UploadedFiles/Data_Sheets/AD8682_8684.pdf</descrip
 </deviceset>
 </devicesets>
 </library>
+<library name="connectors">
+<packages>
+<package name="AMP_227161">
+<description>&lt;b&gt;JACK,  RIGHT ANGLE, 50 OHM, PCB, BNC&lt;/b&gt;&lt;p&gt;
+Source: ENG_CD_5227161_B1.pdf</description>
+<wire x1="7.275" y1="7.275" x2="-7.275" y2="7.275" width="0.2032" layer="21"/>
+<wire x1="-6.4" y1="7.375" x2="-6.4" y2="16.025" width="0.2032" layer="21"/>
+<wire x1="-6.4" y1="16.025" x2="6.4" y2="16.025" width="0.2032" layer="21"/>
+<wire x1="6.4" y1="16.025" x2="6.4" y2="7.35" width="0.2032" layer="21"/>
+<wire x1="-4.9" y1="16.15" x2="-4.9" y2="28.475" width="0.2032" layer="21"/>
+<wire x1="-4.9" y1="28.475" x2="4.9" y2="28.475" width="0.2032" layer="21"/>
+<wire x1="4.9" y1="28.475" x2="4.9" y2="16.125" width="0.2032" layer="21"/>
+<circle x="0" y="23.94" radius="1.26" width="0" layer="21"/>
+<pad name="1" x="0" y="-5.08" drill="0.9" diameter="1.778"/>
+<pad name="2" x="-2.54" y="-5.08" drill="0.9" diameter="1.778"/>
+<text x="-6.985" y="-8.89" size="1.27" layer="25">&gt;NAME</text>
+<pad name="P$1" x="-5.08" y="0" drill="2" shape="square" rot="R90"/>
+<pad name="P$2" x="5.08" y="0" drill="2" shape="square" rot="R90"/>
+<wire x1="-7.2136" y1="7.2136" x2="-7.3152" y2="7.112" width="0.3048" layer="21"/>
+<wire x1="-7.3152" y1="7.112" x2="-7.3152" y2="-7.2136" width="0.3048" layer="21"/>
+<wire x1="-7.3152" y1="-7.2136" x2="7.3152" y2="-7.2136" width="0.3048" layer="21"/>
+<wire x1="7.3152" y1="-7.2136" x2="7.3152" y2="7.2136" width="0.3048" layer="21"/>
+</package>
+</packages>
+<symbols>
+<symbol name="BU-BNC">
+<wire x1="-2.54" y1="2.54" x2="-2.54" y2="-2.54" width="0.254" layer="94" curve="-180" cap="flat"/>
+<wire x1="0" y1="-2.54" x2="-0.762" y2="-1.778" width="0.254" layer="94"/>
+<wire x1="0" y1="0" x2="-0.508" y2="0" width="0.1524" layer="94"/>
+<wire x1="-2.54" y1="0.254" x2="-0.762" y2="0.254" width="0.254" layer="94"/>
+<wire x1="-0.762" y1="0.254" x2="-0.508" y2="0" width="0.254" layer="94"/>
+<wire x1="-0.508" y1="0" x2="-0.762" y2="-0.254" width="0.254" layer="94"/>
+<wire x1="-0.762" y1="-0.254" x2="-2.54" y2="-0.254" width="0.254" layer="94"/>
+<text x="-2.54" y="-5.08" size="1.778" layer="96">&gt;VALUE</text>
+<text x="-2.54" y="3.302" size="1.778" layer="95">&gt;NAME</text>
+<pin name="1" x="2.54" y="0" visible="off" length="short" direction="pas" rot="R180"/>
+<pin name="2" x="2.54" y="-2.54" visible="off" length="short" direction="pas" rot="R180"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="?227161*" prefix="X">
+<description>&lt;b&gt;JACK,  RIGHT ANGLE, 50 OHM, PCB, BNC&lt;/b&gt;&lt;p&gt;
+Source: ENG_CD_5227161_B1.pdf</description>
+<gates>
+<gate name="G$1" symbol="BU-BNC" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="AMP_227161">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="-8">
+<attribute name="ALTERNATIVE" value="LowCost(DX, ebay...)" constant="no"/>
+<attribute name="ALTPRICE" value="5.6" constant="no"/>
+<attribute name="DIGIKEY" value="A32260-ND" constant="no"/>
+<attribute name="PRICE" value="16" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -5554,7 +5529,7 @@ Source: http://www.analog.com/UploadedFiles/Data_Sheets/AD8682_8684.pdf</descrip
 <part name="P+2" library="supply1" deviceset="+12V" device="" value="+3VA"/>
 <part name="P-1" library="supply1" deviceset="-12V" device="" value="-2V5A"/>
 <part name="C3" library="passive" deviceset="CAP" device="C0603" value="100nF"/>
-<part name="C4" library="passive" deviceset="CAP" device="C0603" value="100nF"/>
+<part name="C4" library="passive" deviceset="CAP" device="C0402" value="100nF"/>
 <part name="P-5" library="supply1" deviceset="-24V" device="" value="AVREFM"/>
 <part name="P-6" library="supply1" deviceset="-24V" device="" value="AVREFM"/>
 <part name="P-7" library="supply1" deviceset="-24V" device="" value="AVREFM"/>
@@ -5563,7 +5538,7 @@ Source: http://www.analog.com/UploadedFiles/Data_Sheets/AD8682_8684.pdf</descrip
 <part name="GND3" library="supply1" deviceset="GND" device=""/>
 <part name="C21" library="passive" deviceset="CAP" device="C0402" value="100nF"/>
 <part name="GND12" library="supply1" deviceset="GND" device=""/>
-<part name="X1" library="teg4" deviceset="?227161*" device="1-" technology="-0" value="31-5431-10RFX"/>
+<part name="X1" library="connectors" deviceset="?227161*" device="" technology="-8" value="31-5431-10RFX"/>
 <part name="GND13" library="supply1" deviceset="GND" device=""/>
 <part name="T1" library="transistor" deviceset="BC850" device=""/>
 <part name="T2" library="transistor" deviceset="BC850" device=""/>
@@ -5595,7 +5570,7 @@ Source: http://www.analog.com/UploadedFiles/Data_Sheets/AD8682_8684.pdf</descrip
 <part name="C9" library="passive" deviceset="CAP" device="C0603" value="100nF"/>
 <part name="C26" library="passive" deviceset="CAP" device="C0603" value="12pF"/>
 <part name="C27" library="passive" deviceset="CAP" device="C0603" value="12pF"/>
-<part name="L1" library="rcl" deviceset="L-EU" device="L3216C"/>
+<part name="L1" library="rcl" deviceset="L-EU" device="L3216C" value="1uH"/>
 <part name="C10" library="passive" deviceset="CAP" device="C1206" value="100uF"/>
 <part name="C14" library="passive" deviceset="CAP" device="C0402" value="100nF"/>
 <part name="C16" library="passive" deviceset="CAP" device="C0402" value="100nF"/>
@@ -6386,6 +6361,7 @@ AUXIN
 <segment>
 <wire x1="91.44" y1="114.3" x2="91.44" y2="106.68" width="0.1524" layer="91"/>
 <label x="91.44" y="106.68" size="1.778" layer="95"/>
+<pinref part="L1" gate="G$1" pin="2"/>
 </segment>
 </net>
 <net name="N$32" class="0">
@@ -6714,6 +6690,25 @@ AUXIN
 </nets>
 </sheet>
 </sheets>
+<errors>
+<approved hash="102,1,147.32,17.78,+12V,+3VA,,,,"/>
+<approved hash="102,1,147.32,-35.56,-12V,-2V5A,,,,"/>
+<approved hash="102,1,134.62,132.08,-24V,AVREFM,,,,"/>
+<approved hash="102,1,213.36,144.78,-24V,AVREFM,,,,"/>
+<approved hash="102,1,256.54,144.78,-24V,AVREFM,,,,"/>
+<approved hash="102,1,129.54,162.56,-24V,AVREFM,,,,"/>
+<approved hash="102,1,205.74,162.56,-24V,AVREFM,,,,"/>
+<approved hash="102,1,248.92,162.56,-24V,AVREFM,,,,"/>
+<approved hash="104,1,172.72,10.16,IC1P,V+,+5V,,,"/>
+<approved hash="104,1,172.72,-5.08,IC1P,V-,GND,,,"/>
+<approved hash="104,1,226.06,-5.08,IC3P,VEE,-2V5A,,,"/>
+<approved hash="104,1,231.14,10.16,IC3P,VCC,+5V,,,"/>
+<approved hash="104,1,200.66,-5.08,IC2P,VEE,-2V5A,,,"/>
+<approved hash="104,1,205.74,10.16,IC2P,VCC,+5V,,,"/>
+<approved hash="104,1,147.32,12.7,IC4P,V+,+3VA,,,"/>
+<approved hash="104,1,147.32,-2.54,IC4P,V-,-2V5A,,,"/>
+<approved hash="104,1,251.46,10.16,IC7P,VCC,+5V,,,"/>
+</errors>
 </schematic>
 </drawing>
 <compatibility>
