@@ -45,7 +45,7 @@ if (argc > 1)                                       //net name was given in the 
    TargetNet = strupr(argv[1]);
    if (argc > 2)
    {
-      TargetFile = strupr(argv[2]);
+      TargetFile = argv[2];
       outputToFile = 1;
       if ( argc == 4 )
       {
