@@ -33,12 +33,12 @@ architecture rtl of s74595 is
 	--type machine is (idle, 
 type datamachine is (first_byte, second_byte);
 type serialmachine is ( wait_for_trigger, start_transfer, wait_delay, shift_data, finish_transfer );
-signal data_state : datamachine; 
+signal data_state : datamachine := first_byte; 
 signal serial_state : serialmachine;
-signal trigger_serial_transfer, serial_transfer_triggered : std_ulogic;
+signal trigger_serial_transfer, serial_transfer_triggered : std_ulogic := '0';
 
 signal recieved_data, shift_reg : std_ulogic_vector( nr_of_bits-1 downto 0 );
-
+signal boot, boot_2 : std_ulogic := '1'; 
 signal serial_busy : std_ulogic;
 
 begin
@@ -50,8 +50,9 @@ begin
 			data_state <= first_byte;
 			recieved_data <= (others => '0');
 			trigger_serial_transfer <= '0';
+			boot <= '1';
 		elsif rising_edge(clk) then
-			if wr = '1' and addr = address then
+			if wr = '1' and addr = address and boot = '0' then
 				case data_state is
 					when first_byte =>
 						recieved_data( nr_of_bits-1 downto nr_of_bits-8 ) <= datain;
@@ -61,6 +62,20 @@ begin
 						data_state <= first_byte;
 						trigger_serial_transfer <= '1';
 				end case;
+			elsif boot = '1' then -- Make sure relays don't start with voltage 
+				case data_state is
+					when first_byte =>
+						recieved_data( nr_of_bits-1 downto nr_of_bits-8 ) <= "00000000";
+						data_state <= second_byte;
+					when second_byte =>
+						recieved_data( nr_of_bits/2 -1 downto 0) <= "00000000";
+						data_state <= first_byte;
+						trigger_serial_transfer <= '1';
+				end case;
+				if boot_2 = '0' and serial_busy = '0' then
+					boot <= '0';
+				end if;
+				boot_2 <= '0';
 			end if;
 			
 			if serial_transfer_triggered = '1' then
