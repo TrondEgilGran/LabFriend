@@ -362,7 +362,7 @@ end component;
 
 
 
-signal global_clk_4x, global_clk_4x_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_ulogic;
+signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_ulogic;
 signal spimspiclk, spimspidatain, spimspidataout, spimspics, spimRD, spimWR  : std_ulogic;
 signal spimnrbyte : std_ulogic_vector(15 downto 0);
 signal spimdataout, spimcommand, spimdatain0, spimdatain1, spimdatain2 : std_ulogic_vector(7 downto 0);
@@ -415,7 +415,7 @@ begin
 		CLK90 => global_clk_90, -- 1-bit output 90 degree clock output
 		CLKDV => open, -- 1-bit output Divided clock output
 		CLKFX => global_clk_4x, -- 1-bit output Digital Frequency Synthesizer output (DFS)
-		CLKFX180 => open, -- 1-bit output 180 degree CLKFX output
+		CLKFX180 => global_clk_4x_180, -- 1-bit output 180 degree CLKFX output
 		LOCKED => open, -- 1-bit output DCM_SP Lock Output
 		PSDONE => open, -- 1-bit output Phase shift done output
 		STATUS => open, -- 8-bit output DCM_SP status output
@@ -532,9 +532,9 @@ u_ddr3memory : ddr3memory
     C3_CLKOUT3_DIVIDE => C3_CLKOUT3_DIVIDE
 )
 port map (
-   c3_sys_clk_p  =>         c3_sys_clk_p,
-   c3_sys_clk_n    =>       c3_sys_clk_n,
-   c3_sys_rst_i    =>       c3_sys_rst_i,                        
+   c3_sys_clk_p  =>         global_clk_4x,
+   c3_sys_clk_n    =>       global_clk_4x_180,
+   c3_sys_rst_i    =>       global_rst,                        
    mcb3_dram_dq       =>    mcb3_dram_dq,  
    mcb3_dram_a        =>    mcb3_dram_a,  
    mcb3_dram_ba       =>    mcb3_dram_ba,
@@ -549,8 +549,8 @@ port map (
    mcb3_dram_dqs_n    =>    mcb3_dram_dqs_n,
    mcb3_dram_reset_n =>     mcb3_dram_reset_n, 
    mcb3_dram_dm  =>       mcb3_dram_dm,
-   c3_clk0	=>	        c3_clk0,
-   c3_rst0		=>        c3_rst0,	
+   c3_clk0	=>	        open,
+   c3_rst0		=>        open,	
    c3_calib_done      =>    c3_calib_done,
    mcb3_rzq         =>            rzq3,       
    c3_p0_cmd_clk                           =>  c3_p0_cmd_clk,
@@ -577,9 +577,9 @@ port map (
    c3_p0_rd_count                          =>  c3_p0_rd_count,
    c3_p0_rd_overflow                       =>  c3_p0_rd_overflow,
    c3_p0_rd_error                          =>  c3_p0_rd_error,
-   c3_p1_cmd_clk                           =>  c3_p1_cmd_clk,
-   c3_p1_cmd_en                            =>  c3_p1_cmd_en,
-   c3_p1_cmd_instr                         =>  c3_p1_cmd_instr,
+   c3_p1_cmd_clk                           =>  global_clk,
+   c3_p1_cmd_en                            =>  gnd,
+   c3_p1_cmd_instr                         =>  "000",
    c3_p1_cmd_bl                            =>  c3_p1_cmd_bl,
    c3_p1_cmd_byte_addr                     =>  c3_p1_cmd_byte_addr,
    c3_p1_cmd_empty                         =>  c3_p1_cmd_empty,
