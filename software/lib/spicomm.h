@@ -15,3 +15,4 @@ int spiClose( void );
 int spiCommand( uint8_t RW, uint8_t address, uint16_t nrOfBytes );
 int spiRead( uint8_t * data, int nrOfBytes);
 int spiWrite( uint8_t * data, int nrOfBytes);
+

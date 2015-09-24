@@ -7,6 +7,8 @@
 static struct mpsse_context *spiP;
 
 
+
+
 int spiOpen( void )
 {
 	
@@ -22,6 +24,10 @@ int spiOpen( void )
 		
 		printf("Failed to initialize MPSSE: %s\n", ErrorString(spiP));
 	}
+	
+
+	
+	
 	
 	return retval;
 }
