@@ -39,7 +39,7 @@ entity LabFriend is
             C3_P0_DATA_PORT_SIZE      : integer := 32;
             C3_P1_MASK_SIZE           : integer := 4;
             C3_P1_DATA_PORT_SIZE      : integer := 32;
-            C3_MEMCLK_PERIOD          : integer := 3226;
+            C3_MEMCLK_PERIOD          : integer := 3000;
             C3_RST_ACT_LOW            : integer := 0;
             C3_INPUT_CLK_TYPE         : string := "DIFFERENTIAL";
             C3_CALIB_SOFT_IP          : string := "TRUE";
@@ -48,17 +48,10 @@ entity LabFriend is
             C3_MEM_ADDR_ORDER         : string := "ROW_BANK_COLUMN";
             C3_NUM_DQ_PINS            : integer := 8;
             C3_MEM_ADDR_WIDTH         : integer := 14;
-            C3_MEM_BANKADDR_WIDTH     : integer := 3;
-            C3_CLKFBOUT_MULT	      : integer := 31;
-            C3_DIVCLK_DIVIDE	      : integer := 10;
-            C3_CLKOUT0_DIVIDE	      : integer := 1;
-            C3_CLKOUT1_DIVIDE	      : integer := 1;
-            C3_CLKOUT2_DIVIDE         : integer := 6;
-            C3_CLKOUT3_DIVIDE         : integer := 6
+            C3_MEM_BANKADDR_WIDTH     : integer := 3
           );
     Port ( LAD07 : in  STD_ULOGIC_VECTOR (7 downto 0);
            LAD815 : out  STD_ULOGIC_VECTOR (7 downto 0);
-           ASEL1 : out  STD_ULOGIC;
            I2SSCLK : out  STD_ULOGIC;
            I2SDATAIN : out  STD_ULOGIC;
            I2SDATAOUT : in  STD_ULOGIC;
@@ -94,6 +87,11 @@ entity LabFriend is
 	   AUPDN : out STD_ULOGIC;
 	   AU_OVFL : in STD_ULOGIC;
 	   AU_OVFR : in STD_ULOGIC;
+	   PWMOFFS0 : out std_ulogic;
+	   PWMOFFS1 : out std_ulogic;
+	   PWMEXVO : out std_ulogic;
+	   PWMLAVIO : out std_ulogic;
+	   PWMLA : out std_ulogic;
 	   mcb3_dram_dq                            : inout  std_logic_vector(C3_NUM_DQ_PINS-1 downto 0);
 	   mcb3_dram_a                             : out std_logic_vector(C3_MEM_ADDR_WIDTH-1 downto 0);
 	   mcb3_dram_ba                            : out std_logic_vector(C3_MEM_BANKADDR_WIDTH-1 downto 0);
@@ -222,7 +220,7 @@ component ddr3memory
     C3_P0_DATA_PORT_SIZE      : integer := 32;
     C3_P1_MASK_SIZE           : integer := 4;
     C3_P1_DATA_PORT_SIZE      : integer := 32;
-    C3_MEMCLK_PERIOD          : integer := 3226;
+    C3_MEMCLK_PERIOD          : integer := 3000;
     C3_RST_ACT_LOW            : integer := 0;
     C3_INPUT_CLK_TYPE         : string := "DIFFERENTIAL";
     C3_CALIB_SOFT_IP          : string := "TRUE";
@@ -231,13 +229,7 @@ component ddr3memory
     C3_MEM_ADDR_ORDER         : string := "ROW_BANK_COLUMN";
     C3_NUM_DQ_PINS            : integer := 8;
     C3_MEM_ADDR_WIDTH         : integer := 14;
-    C3_MEM_BANKADDR_WIDTH     : integer := 3;
-    C3_CLKFBOUT_MULT	      : integer := 31;
-    C3_DIVCLK_DIVIDE	      : integer := 10;
-    C3_CLKOUT0_DIVIDE	      : integer := 1;
-    C3_CLKOUT1_DIVIDE	      : integer := 1;
-    C3_CLKOUT2_DIVIDE         : integer := 6;
-    C3_CLKOUT3_DIVIDE         : integer := 6
+    C3_MEM_BANKADDR_WIDTH     : integer := 3
 );
    port (
    mcb3_dram_dq                            : inout  std_logic_vector(C3_NUM_DQ_PINS-1 downto 0);
@@ -362,7 +354,8 @@ end component;
 
 
 
-signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_ulogic;
+signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_4x_180_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_ulogic;
+signal memclk_0, memclk_180, memclk_0_b, memclk_180_b : std_ulogic;
 signal spimspiclk, spimspidatain, spimspidataout, spimspics, spimRD, spimWR  : std_ulogic;
 signal spimnrbyte : std_ulogic_vector(15 downto 0);
 signal spimdataout, spimcommand, spimdatain0, spimdatain1, spimdatain2 : std_ulogic_vector(7 downto 0);
@@ -379,11 +372,30 @@ signal hs_clock_out, ram_dcm_fb, ram_dcm_out, hs_clock_out_pol : std_ulogic;
 
 signal SRAMA : std_ulogic_vector( 19-1 downto 0);	
 signal SRAMD : std_ulogic_vector( 18-1 downto 0);	
-signal notsramWE, SRAMCE, notsramOE, busyD, ASEL0 : std_ulogic;
+signal notsramWE, SRAMCE, notsramOE, busyD, ASEL0, ASEL1 : std_ulogic;
 
+signal cmd_instr_g, c3_p0_cmd_instr : std_logic_vector(2 downto 0);
+signal cmd_bl_g, c3_p0_cmd_bl : std_logic_vector(5 downto 0);
+signal cmd_byte_addr_g, c3_p0_cmd_byte_addr : std_logic_vector(29 downto 0);
+signal wr_mask_g : std_logic_vector(C3_P1_MASK_SIZE - 1 downto 0);
+signal wr_data_g, c3_p0_rd_data, c3_p0_wr_data : std_logic_vector(C3_P1_DATA_PORT_SIZE - 1 downto 0);
+signal c3_p0_cmd_en, c3_p0_rd_en, c3_p0_wr_en : std_logic;
+signal resetCounter : unsigned(5 downto 0) := "000000";
+signal ddrclktestcounter, quili : unsigned(7 downto 0) := "00000000";
 
+signal c3_p0_wr_count, c3_p0_rd_count : std_logic_vector(6 downto 0);
+signal c3_p0_cmd_empty, c3_p0_cmd_full, c3_p0_wr_full, c3_p0_wr_empty, c3_p0_wr_underrun, c3_p0_wr_error : std_ulogic;
+signal c3_p0_rd_full, c3_p0_rd_empty, c3_p0_rd_overflow, c3_p0_rd_error, c3_calib_done : std_logic;
+signal user_clock_ddr, ddrclk_fb : std_logic;
+
+signal quack : std_ulogic_vector(7 downto 0);
 begin
-
+	cmd_instr_g <= (others => '0');
+	cmd_bl_g <= (others => '0');
+	cmd_byte_addr_g <= (others  => '0');
+	wr_mask_g <= (others  => '0');
+	wr_data_g <= (others  => '0');
+	
 	-- DCM_SP: Digital Clock Manager
 	-- Spartan-6
 	-- Xilinx HDL Libraries Guide, version 12.4
@@ -428,6 +440,47 @@ begin
 		RST =>  '0' -- 1-bit input Active high reset input
 	);
 	-- End of DCM_SP_inst instantiation
+	
+	DCM_SP_inst_2 : DCM_SP
+	generic map (
+		CLKDV_DIVIDE => 2.0, -- CLKDV divide value
+		-- (1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,14,15,16).
+		CLKFX_DIVIDE => 3, -- Divide value on CLKFX outputs - D - (1-32)
+		CLKFX_MULTIPLY => 5, -- Multiply value on CLKFX outputs - M - (2-32)
+		CLKIN_DIVIDE_BY_2 => FALSE, -- CLKIN divide by two (TRUE/FALSE)
+		CLKIN_PERIOD => 10.0, -- Input clock period specified in nS
+		CLKOUT_PHASE_SHIFT => "NONE", -- Output phase shift (NONE, FIXED, VARIABLE)
+		CLK_FEEDBACK => "1X", -- Feedback source (NONE, 1X, 2X)
+		DESKEW_ADJUST => "SYSTEM_SYNCHRONOUS", -- SYSTEM_SYNCHRNOUS or SOURCE_SYNCHRONOUS
+		DFS_FREQUENCY_MODE => "LOW", -- Unsupported - Do not change value
+		DLL_FREQUENCY_MODE => "LOW", -- Unsupported - Do not change value
+		DSS_MODE => "NONE", -- Unsupported - Do not change value
+		DUTY_CYCLE_CORRECTION => TRUE, -- Unsupported - Do not change value
+		FACTORY_JF => X"c080", -- Unsupported - Do not change value
+		PHASE_SHIFT => 0, -- Amount of fixed phase shift (-255 to 255)
+		STARTUP_WAIT => FALSE -- Delay config DONE until DCM_SP LOCKED (TRUE/FALSE)
+	)
+	port map (
+		CLK0 => ddrclk_fb, -- 1-bit output 0 degree clock output
+		CLK180 => open, -- 1-bit output 180 degree clock output
+		CLK270 => open, -- 1-bit output 270 degree clock output
+		CLK2X => open, -- 1-bit output 2X clock frequency clock output
+		CLK2X180 => open, -- 1-bit output 2X clock frequency, 180 degree clock output
+		CLK90 => open, -- 1-bit output 90 degree clock output
+		CLKDV => open, -- 1-bit output Divided clock output
+		CLKFX => memclk_0, -- 1-bit output Digital Frequency Synthesizer output (DFS)
+		CLKFX180 => memclk_180, -- 1-bit output 180 degree CLKFX output
+		LOCKED => open, -- 1-bit output DCM_SP Lock Output
+		PSDONE => open, -- 1-bit output Phase shift done output
+		STATUS => open, -- 8-bit output DCM_SP status output
+		CLKFB => ddrclk_fb, -- 1-bit input Clock feedback input
+		CLKIN => global_clk_4x, -- 1-bit input Clock input
+		DSSEN => gnd, -- 1-bit input Unsupported, specify to GND.
+		PSCLK => gnd, -- 1-bit input Phase shift clock input
+		PSEN => gnd, -- 1-bit input Phase shift enable
+		PSINCDEC => open, -- 1-bit input Phase shift increment/decrement input
+		RST =>  '0' -- 1-bit input Active high reset input
+	);
 	
 
 	SPIMASTER1: SPIMASTER port map(	spiclk => spimspiclk,
@@ -523,17 +576,11 @@ u_ddr3memory : ddr3memory
     C3_MEM_ADDR_ORDER => C3_MEM_ADDR_ORDER,
     C3_NUM_DQ_PINS => C3_NUM_DQ_PINS,
     C3_MEM_ADDR_WIDTH => C3_MEM_ADDR_WIDTH,
-    C3_MEM_BANKADDR_WIDTH => C3_MEM_BANKADDR_WIDTH,
-    C3_CLKFBOUT_MULT => C3_CLKFBOUT_MULT,
-    C3_DIVCLK_DIVIDE => C3_DIVCLK_DIVIDE,
-    C3_CLKOUT0_DIVIDE => C3_CLKOUT0_DIVIDE,
-    C3_CLKOUT1_DIVIDE => C3_CLKOUT1_DIVIDE,
-    C3_CLKOUT2_DIVIDE => C3_CLKOUT2_DIVIDE,
-    C3_CLKOUT3_DIVIDE => C3_CLKOUT3_DIVIDE
+    C3_MEM_BANKADDR_WIDTH => C3_MEM_BANKADDR_WIDTH
 )
 port map (
-   c3_sys_clk_p  =>         global_clk_4x,
-   c3_sys_clk_n    =>       global_clk_4x_180,
+   c3_sys_clk_p  =>         memclk_0_b,
+   c3_sys_clk_n    =>       memclk_180,
    c3_sys_rst_i    =>       global_rst,                        
    mcb3_dram_dq       =>    mcb3_dram_dq,  
    mcb3_dram_a        =>    mcb3_dram_a,  
@@ -549,114 +596,165 @@ port map (
    mcb3_dram_dqs_n    =>    mcb3_dram_dqs_n,
    mcb3_dram_reset_n =>     mcb3_dram_reset_n, 
    mcb3_dram_dm  =>       mcb3_dram_dm,
-   c3_clk0	=>	        open,
+   c3_clk0	=>	        user_clock_ddr,
    c3_rst0		=>        open,	
    c3_calib_done      =>    c3_calib_done,
-   mcb3_rzq         =>            rzq3,       
-   c3_p0_cmd_clk                           =>  c3_p0_cmd_clk,
+   mcb3_rzq         =>            mcb3_rzq,       
+   c3_p0_cmd_clk                           =>  global_clk,
    c3_p0_cmd_en                            =>  c3_p0_cmd_en,
    c3_p0_cmd_instr                         =>  c3_p0_cmd_instr,
    c3_p0_cmd_bl                            =>  c3_p0_cmd_bl,
    c3_p0_cmd_byte_addr                     =>  c3_p0_cmd_byte_addr,
    c3_p0_cmd_empty                         =>  c3_p0_cmd_empty,
-   c3_p0_cmd_full                          =>  c3_p0_cmd_full,
-   c3_p0_wr_clk                            =>  c3_p0_wr_clk,
+   c3_p0_cmd_full                          =>  open,
+   c3_p0_wr_clk                            =>  global_clk,
    c3_p0_wr_en                             =>  c3_p0_wr_en,
-   c3_p0_wr_mask                           =>  c3_p0_wr_mask,
+   c3_p0_wr_mask                           =>  wr_mask_g,
    c3_p0_wr_data                           =>  c3_p0_wr_data,
    c3_p0_wr_full                           =>  c3_p0_wr_full,
-   c3_p0_wr_empty                          =>  c3_p0_wr_empty,
+   c3_p0_wr_empty                          =>  c3_p0_wr_empty ,
    c3_p0_wr_count                          =>  c3_p0_wr_count,
    c3_p0_wr_underrun                       =>  c3_p0_wr_underrun,
    c3_p0_wr_error                          =>  c3_p0_wr_error,
-   c3_p0_rd_clk                            =>  c3_p0_rd_clk,
+   c3_p0_rd_clk                            =>  global_clk,
    c3_p0_rd_en                             =>  c3_p0_rd_en,
    c3_p0_rd_data                           =>  c3_p0_rd_data,
    c3_p0_rd_full                           =>  c3_p0_rd_full,
    c3_p0_rd_empty                          =>  c3_p0_rd_empty,
-   c3_p0_rd_count                          =>  c3_p0_rd_count,
+   c3_p0_rd_count       		   =>  c3_p0_rd_count ,
    c3_p0_rd_overflow                       =>  c3_p0_rd_overflow,
    c3_p0_rd_error                          =>  c3_p0_rd_error,
    c3_p1_cmd_clk                           =>  global_clk,
    c3_p1_cmd_en                            =>  gnd,
-   c3_p1_cmd_instr                         =>  "000",
-   c3_p1_cmd_bl                            =>  c3_p1_cmd_bl,
-   c3_p1_cmd_byte_addr                     =>  c3_p1_cmd_byte_addr,
-   c3_p1_cmd_empty                         =>  c3_p1_cmd_empty,
-   c3_p1_cmd_full                          =>  c3_p1_cmd_full,
-   c3_p1_wr_clk                            =>  c3_p1_wr_clk,
-   c3_p1_wr_en                             =>  c3_p1_wr_en,
-   c3_p1_wr_mask                           =>  c3_p1_wr_mask,
-   c3_p1_wr_data                           =>  c3_p1_wr_data,
-   c3_p1_wr_full                           =>  c3_p1_wr_full,
-   c3_p1_wr_empty                          =>  c3_p1_wr_empty,
-   c3_p1_wr_count                          =>  c3_p1_wr_count,
-   c3_p1_wr_underrun                       =>  c3_p1_wr_underrun,
-   c3_p1_wr_error                          =>  c3_p1_wr_error,
-   c3_p1_rd_clk                            =>  c3_p1_rd_clk,
-   c3_p1_rd_en                             =>  c3_p1_rd_en,
-   c3_p1_rd_data                           =>  c3_p1_rd_data,
-   c3_p1_rd_full                           =>  c3_p1_rd_full,
-   c3_p1_rd_empty                          =>  c3_p1_rd_empty,
-   c3_p1_rd_count                          =>  c3_p1_rd_count,
-   c3_p1_rd_overflow                       =>  c3_p1_rd_overflow,
-   c3_p1_rd_error                          =>  c3_p1_rd_error,
-   c3_p2_cmd_clk                           =>  c3_p2_cmd_clk,
-   c3_p2_cmd_en                            =>  c3_p2_cmd_en,
-   c3_p2_cmd_instr                         =>  c3_p2_cmd_instr,
-   c3_p2_cmd_bl                            =>  c3_p2_cmd_bl,
-   c3_p2_cmd_byte_addr                     =>  c3_p2_cmd_byte_addr,
-   c3_p2_cmd_empty                         =>  c3_p2_cmd_empty,
-   c3_p2_cmd_full                          =>  c3_p2_cmd_full,
-   c3_p2_wr_clk                            =>  c3_p2_wr_clk,
-   c3_p2_wr_en                             =>  c3_p2_wr_en,
-   c3_p2_wr_mask                           =>  c3_p2_wr_mask,
-   c3_p2_wr_data                           =>  c3_p2_wr_data,
-   c3_p2_wr_full                           =>  c3_p2_wr_full,
-   c3_p2_wr_empty                          =>  c3_p2_wr_empty,
-   c3_p2_wr_count                          =>  c3_p2_wr_count,
-   c3_p2_wr_underrun                       =>  c3_p2_wr_underrun,
-   c3_p2_wr_error                          =>  c3_p2_wr_error,
-   c3_p2_rd_clk                            =>  c3_p2_rd_clk,
-   c3_p2_rd_en                             =>  c3_p2_rd_en,
-   c3_p2_rd_data                           =>  c3_p2_rd_data,
-   c3_p2_rd_full                           =>  c3_p2_rd_full,
-   c3_p2_rd_empty                          =>  c3_p2_rd_empty,
-   c3_p2_rd_count                          =>  c3_p2_rd_count,
-   c3_p2_rd_overflow                       =>  c3_p2_rd_overflow,
-   c3_p2_rd_error                          =>  c3_p2_rd_error,
-   c3_p3_cmd_clk                           =>  c3_p3_cmd_clk,
-   c3_p3_cmd_en                            =>  c3_p3_cmd_en,
-   c3_p3_cmd_instr                         =>  c3_p3_cmd_instr,
-   c3_p3_cmd_bl                            =>  c3_p3_cmd_bl,
-   c3_p3_cmd_byte_addr                     =>  c3_p3_cmd_byte_addr,
-   c3_p3_cmd_empty                         =>  c3_p3_cmd_empty,
-   c3_p3_cmd_full                          =>  c3_p3_cmd_full,
-   c3_p3_wr_clk                            =>  c3_p3_wr_clk,
-   c3_p3_wr_en                             =>  c3_p3_wr_en,
-   c3_p3_wr_mask                           =>  c3_p3_wr_mask,
-   c3_p3_wr_data                           =>  c3_p3_wr_data,
-   c3_p3_wr_full                           =>  c3_p3_wr_full,
-   c3_p3_wr_empty                          =>  c3_p3_wr_empty,
-   c3_p3_wr_count                          =>  c3_p3_wr_count,
-   c3_p3_wr_underrun                       =>  c3_p3_wr_underrun,
-   c3_p3_wr_error                          =>  c3_p3_wr_error,
-   c3_p3_rd_clk                            =>  c3_p3_rd_clk,
-   c3_p3_rd_en                             =>  c3_p3_rd_en,
-   c3_p3_rd_data                           =>  c3_p3_rd_data,
-   c3_p3_rd_full                           =>  c3_p3_rd_full,
-   c3_p3_rd_empty                          =>  c3_p3_rd_empty,
-   c3_p3_rd_count                          =>  c3_p3_rd_count,
-   c3_p3_rd_overflow                       =>  c3_p3_rd_overflow,
-   c3_p3_rd_error                          =>  c3_p3_rd_error
+   c3_p1_cmd_instr                         =>  cmd_instr_g,
+   c3_p1_cmd_bl                            =>  cmd_bl_g,
+   c3_p1_cmd_byte_addr                     =>  cmd_byte_addr_g,
+   c3_p1_cmd_empty                         =>  open,
+   c3_p1_cmd_full                          =>  open,
+   c3_p1_wr_clk                            =>  global_clk,
+   c3_p1_wr_en                             =>  gnd,
+   c3_p1_wr_mask                           =>  wr_mask_g,
+   c3_p1_wr_data                           =>  wr_data_g,
+   c3_p1_wr_full                           =>  open,
+   c3_p1_wr_empty                          =>  open,
+   c3_p1_wr_count                          =>  open,
+   c3_p1_wr_underrun                       =>  open,
+   c3_p1_wr_error                          =>  open,
+   c3_p1_rd_clk                            =>  global_clk,
+   c3_p1_rd_en                             =>  gnd,
+   c3_p1_rd_data                           =>  open,
+   c3_p1_rd_full                           =>  open,
+   c3_p1_rd_empty                          =>  open,
+   c3_p1_rd_count                          =>  open,
+   c3_p1_rd_overflow                       =>  open,
+   c3_p1_rd_error                          =>  open,
+   c3_p2_cmd_clk                           =>  global_clk,
+   c3_p2_cmd_en                            =>  gnd,
+   c3_p2_cmd_instr                         =>  cmd_instr_g,
+   c3_p2_cmd_bl                            =>  cmd_bl_g,
+   c3_p2_cmd_byte_addr                     =>  cmd_byte_addr_g,
+   c3_p2_cmd_empty                         =>  open,
+   c3_p2_cmd_full                          =>  open,
+   c3_p2_wr_clk                            =>  global_clk,
+   c3_p2_wr_en                             =>  gnd,
+   c3_p2_wr_mask                           =>  wr_mask_g,
+   c3_p2_wr_data                           =>  wr_data_g,
+   c3_p2_wr_full                           =>  open,
+   c3_p2_wr_empty                          =>  open,
+   c3_p2_wr_count                          =>  open,
+   c3_p2_wr_underrun                       =>  open,
+   c3_p2_wr_error                          =>  open,
+   c3_p2_rd_clk                            =>  global_clk,
+   c3_p2_rd_en                             =>  gnd,
+   c3_p2_rd_data                           =>  open,
+   c3_p2_rd_full                           =>  open,
+   c3_p2_rd_empty                          =>  open,
+   c3_p2_rd_count                          =>  open,
+   c3_p2_rd_overflow                       =>  open,
+   c3_p2_rd_error                          =>  open,
+   c3_p3_cmd_clk                           =>  global_clk,
+   c3_p3_cmd_en                            =>  gnd,
+   c3_p3_cmd_instr                         =>  cmd_instr_g,
+   c3_p3_cmd_bl                            =>  cmd_bl_g,
+   c3_p3_cmd_byte_addr                     =>  cmd_byte_addr_g,
+   c3_p3_cmd_empty                         =>  open,
+   c3_p3_cmd_full                          =>  open,
+   c3_p3_wr_clk                            =>  global_clk,
+   c3_p3_wr_en                             =>  gnd,
+   c3_p3_wr_mask                           =>  wr_mask_g,
+   c3_p3_wr_data                           =>  wr_data_g,
+   c3_p3_wr_full                           =>  open,
+   c3_p3_wr_empty                          =>  open,
+   c3_p3_wr_count                          =>  open,
+   c3_p3_wr_underrun                       =>  open,
+   c3_p3_wr_error                          =>  open,
+   c3_p3_rd_clk                            =>  global_clk,
+   c3_p3_rd_en                             =>  gnd,
+   c3_p3_rd_data                           =>  open,
+   c3_p3_rd_full                           =>  open,
+   c3_p3_rd_empty                          =>  open,
+   c3_p3_rd_count                          =>  open,
+   c3_p3_rd_overflow                       =>  open,
+   c3_p3_rd_error                          =>  open
 );
-
+	
+	--spimdatain6 <= "01011010";
+	readddr : process(global_clk)
+	begin
+		if rising_edge(global_clk) then
+			if spimWR = '1' and spimcommand(3 downto 0) = "1111" then
+				c3_p0_rd_en <= '1';
+			elsif spimWR = '0' and spimRD = '0' and c3_p0_rd_empty = '0' then
+				c3_p0_rd_en <= '0';
+			end if;
+			
+			if spimRD = '1' and spimcommand(3 downto 0) = "1111" then
+				if c3_p0_rd_empty = '0' then
+					c3_p0_rd_en <= '1';
+				end if;
+				spimdatain7 <= std_ulogic_vector(c3_p0_rd_data(7 downto 0));
+			else
+				if  spimWR = '0'  then
+					c3_p0_rd_en <= '0';
+				end if;
+			end if;
+			
+			if spimWR = '1' and spimcommand(2 downto 0) = "110" then
+				c3_p0_cmd_en <= '1';
+				c3_p0_cmd_instr(2) <= '0';
+				c3_p0_cmd_instr(1 downto 0) <= std_logic_vector(spimdataout(1 downto 0));
+				c3_p0_cmd_bl(5 downto 3) <= "000";
+				c3_p0_cmd_bl(2 downto 0) <= std_logic_vector(spimdataout( 4 downto 2));
+				c3_p0_cmd_byte_addr(29 downto 7) <= (others => '0');
+				c3_p0_cmd_byte_addr(6 downto 4) <= std_logic_vector(spimdataout(7 downto 5));
+				c3_p0_cmd_byte_addr(3 downto 0) <= "0000";
+				quack <= spimdataout;
+				LAD815 <= spimdataout; --std_ulogic_vector(quili);
+				--quili <= quili +1;
+			else
+				c3_p0_cmd_en <= '0';
+			end if;
+			
+			if spimWR = '1' and spimcommand(3 downto 0) = "0111" then
+				c3_p0_wr_en <= '1';
+				c3_p0_wr_data(7 downto 0) <= std_logic_vector(spimdataout);
+				c3_p0_wr_data(31 downto 8) <= "101010101010101010101010";
+			else
+				c3_p0_wr_en <= '0';
+			end if;
+			
+			if global_rst = '1' then
+				LAD815(0) <= '0';
+				quili <= "00000000";
+			end if;
+			
+			
+		end if;
+	end process readddr;
 	
 	gnd <= '0';
 
 	--Global Signal Assignments	
-	global_rst <= USBGPIO1;
-	global_reset_n <= not USBGPIO1;
 	
 	
 	CMP_MEAS_SEL <= '0';
@@ -691,8 +789,19 @@ port map (
 	
 	USBGPIO0 <= gpio;
 	
+	por : process(global_clk)
+	begin
+		if rising_edge(global_clk) then
+			if resetCounter < 63 then
+				global_rst <= '1';
+				resetCounter <= resetCounter + 1;
+			else
+				global_rst <= '0';
+			end if;
+		end if;
+	end process por;
 	
-	
+	global_reset_n <= not global_rst;
 	
 	-- Test connections
 	testL: process (global_clk, global_rst) is
@@ -701,35 +810,62 @@ port map (
 	if global_rst = '1' then
 		testo <= "000";
 	elsif rising_edge(global_clk) then
-		if spimRD = '1' then
+		if spimRD = '1' and spimcommand(2 downto 0) = "010" then
 			if testo = "000" then
 				testo <= "001";
-				spimdatain2 <= "01001111";
+				spimdatain2 <= "00001111";
 			elsif testo = "001" then
 				testo <= "010";
-				spimdatain2 <= "00001111";
+				spimdatain2( 6 downto 0) <= std_ulogic_vector(c3_p0_wr_count);
+				spimdatain2(7) <= c3_p0_wr_full;
 			elsif testo = "010" then
 				testo <= "011";
-				spimdatain2 <= "10001111";
+				spimdatain2(0) <= c3_p0_wr_empty;
+				spimdatain2(1) <= c3_p0_wr_underrun;
+				spimdatain2(2) <= c3_p0_wr_error;
+				spimdatain2(3) <= c3_p0_rd_empty;
+				spimdatain2(4) <= c3_p0_rd_full;
+				spimdatain2(5) <= c3_p0_rd_error;
+				spimdatain2(6) <= c3_p0_rd_overflow;
+				spimdatain2(7) <= c3_p0_rd_en;
 			elsif testo = "011" then
 				testo <= "100";
-				spimdatain2 <= "00001110";
+				spimdatain2( 6 downto 0) <= std_ulogic_vector(c3_p0_rd_count);
+				spimdatain2( 7 ) <= c3_calib_done;
 			elsif testo = "100" then
 				testo <= "101";
-				spimdatain2 <= "00001111";
+				spimdatain2(5 downto 0) <= std_ulogic_vector(c3_p0_cmd_bl);
+				spimdatain2(7 downto 6) <= "00";
 			elsif testo = "101" then
 				testo <= "110";
-				spimdatain2 <= "00001101";
+				spimdatain2(2 downto 0) <= std_ulogic_vector( c3_p0_cmd_instr);
+				spimdatain2(7 downto 3) <= "10000";
 			elsif testo = "110" then
 				testo <= "111";
-				spimdatain2 <= "00011111";
+				spimdatain2 <= std_ulogic_vector(c3_p0_cmd_byte_addr(7 downto 0));
 			elsif testo = "111" then
 				testo <= "000";
-				spimdatain2 <= "01001011";
+				--spimdatain2 <= std_ulogic_vector(c3_p0_cmd_byte_addr(15 downto 8));
+				spimdatain2 <= quack;
 			end if;
 		end if;
 	end if;
 	end process testL;
+	
+	clkck : process( user_clock_ddr )
+	begin
+		if rising_edge(user_clock_ddr) then
+			ddrclktestcounter <= ddrclktestcounter +1;
+		end if;
+	end process clkck;
+	
+	PWMEXVO <= ddrclktestcounter(2);
+	PWMLA <= ddrclktestcounter(2);
+	PWMLAVIO <= ddrclktestcounter(2);
+	PWMOFFS0 <= ddrclktestcounter(3) or ddrclktestcounter(2);
+	PWMOFFS1 <= ddrclktestcounter(3) or ddrclktestcounter(2);
+	
+	--LAD815(7 downto 1) <= std_ulogic_vector(ddrclktestcounter(7 downto 1));
 	
 	
 	--DigiOut: process (global_clk, global_rst) is
@@ -744,9 +880,9 @@ port map (
 	--end if;
 	--end process DigiOut;
 
-	LAD815 <= "10101100";
-	spimdatain5 <= "10100001";
-	spimdatain7 <= "01010010";
+	--LAD815 <= "10101100";
+	--spimdatain5 <= "10100001";
+	--spimdatain7 <= "01010010";
 	
 
 
@@ -757,6 +893,15 @@ port map (
 		O => global_clk_4x_b, -- 1-bit output Clock buffer output
 		I => global_clk_4x -- 1-bit input Clock buffer input
 	);
+	
+	buffer1 : BUFG
+	port map (
+		O => memclk_0_b,
+		I => memclk_0
+	);
+	
+
+
 
 
 	

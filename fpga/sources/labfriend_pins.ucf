@@ -3,7 +3,6 @@
 ##Date:11/08 2013#########################
 
 
-
 ###### PIN CONFIUGURATIONS ################
 
 ###### I2S Pin Config ####################
@@ -65,6 +64,19 @@ NET "USBGPIO0" IOSTANDARD = LVCMOS33;
 NET "USBGPIO1" LOC = A10;
 NET "USBGPIO1" IOSTANDARD = LVCMOS33;
 
+
+######### PWM outputs ########################
+#
+NET "PWMOFFS0" LOC = C10;
+NET "PWMOFFS0" IOSTANDARD = LVCMOS33;
+NET "PWMOFFS1" LOC = C11;
+NET "PWMOFFS1" IOSTANDARD = LVCMOS33;
+NET "PWMEXVO" LOC = D11;
+NET "PWMEXVO" IOSTANDARD = LVCMOS33;
+NET "PWMLAVIO" LOC = D12;
+NET "PWMLAVIO" IOSTANDARD = LVCMOS33;
+NET "PWMLA" LOC = E12;
+NET "PWMLA" IOSTANDARD = LVCMOS33;
 ### FLASH Memory ########################
 # FLASHDIN
 #NET "FLASHDIN" LOC = P65;
@@ -216,8 +228,87 @@ NET "AU_OVFR" IOSTANDARD = LVCMOS33;
 NET "AU_OVFL" LOC = R14;
 NET "AU_OVFL" IOSTANDARD = LVCMOS33;
 
+############################################################################
+# VCC AUX VOLTAGE 
+############################################################################
+CONFIG VCCAUX=3.3; # Valid values are 2.5 and 3.3
 
+############################################################################
+## I/O TERMINATION                                                          
+############################################################################
+NET "mcb3_dram_dq[*]"                                 IN_TERM = UNTUNED_SPLIT_50;
+NET "mcb3_dram_dqs"                                   IN_TERM = UNTUNED_SPLIT_50;
+NET "mcb3_dram_dqs_n"                                 IN_TERM = UNTUNED_SPLIT_50;
 
+############################################################################
+# I/O STANDARDS 
+############################################################################
 
+NET  "mcb3_dram_dq[*]"                               IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_a[*]"                                IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_ba[*]"                               IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_dqs"                                 IOSTANDARD = DIFF_SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_dqs_n"                               IOSTANDARD = DIFF_SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_ck"                                  IOSTANDARD = DIFF_SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_ck_n"                                IOSTANDARD = DIFF_SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_cke"                                 IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_ras_n"                               IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_cas_n"                               IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_we_n"                                IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_odt"                                 IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_dram_reset_n"                             IOSTANDARD = LVCMOS15  ;
+NET  "mcb3_dram_dm"                                  IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+NET  "mcb3_rzq"                                      IOSTANDARD = SSTL15_II  | OUT_TERM = UNTUNED_50;
+
+############################################################################
+# MCB 3
+# Pin Location Constraints for Clock, Masks, Address, and Controls
+############################################################################
+
+NET  "mcb3_dram_a[0]"                            LOC = "K5" ;
+NET  "mcb3_dram_a[10]"                           LOC = "G6" ;
+NET  "mcb3_dram_a[11]"                           LOC = "E3" ;
+NET  "mcb3_dram_a[12]"                           LOC = "F3" ;
+NET  "mcb3_dram_a[13]"                           LOC = "F6" ;
+NET  "mcb3_dram_a[1]"                            LOC = "K6" ;
+NET  "mcb3_dram_a[2]"                            LOC = "D1" ;
+NET  "mcb3_dram_a[3]"                            LOC = "L4" ;
+NET  "mcb3_dram_a[4]"                            LOC = "G5" ;
+NET  "mcb3_dram_a[5]"                            LOC = "H4" ;
+NET  "mcb3_dram_a[6]"                            LOC = "H3" ;
+NET  "mcb3_dram_a[7]"                            LOC = "D3" ;
+NET  "mcb3_dram_a[8]"                            LOC = "B2" ;
+NET  "mcb3_dram_a[9]"                            LOC = "A2" ;
+NET  "mcb3_dram_ba[0]"                           LOC = "C3" ;
+NET  "mcb3_dram_ba[1]"                           LOC = "C2" ;
+NET  "mcb3_dram_ba[2]"                           LOC = "B1" ;
+NET  "mcb3_dram_cas_n"                           LOC = "H5" ;
+NET  "mcb3_dram_ck"                              LOC = "E2" ;
+NET  "mcb3_dram_ck_n"                            LOC = "E1" ;
+NET  "mcb3_dram_cke"                             LOC = "F4" ;
+NET  "mcb3_dram_dm"                              LOC = "J4" ;
+NET  "mcb3_dram_dq[0]"                           LOC = "K2" ;
+NET  "mcb3_dram_dq[1]"                           LOC = "K1" ;
+NET  "mcb3_dram_dq[2]"                           LOC = "J3" ;
+NET  "mcb3_dram_dq[3]"                           LOC = "J1" ;
+NET  "mcb3_dram_dq[4]"                           LOC = "F2" ;
+NET  "mcb3_dram_dq[5]"                           LOC = "F1" ;
+NET  "mcb3_dram_dq[6]"                           LOC = "G3" ;
+NET  "mcb3_dram_dq[7]"                           LOC = "G1" ;
+NET  "mcb3_dram_dqs"                             LOC = "H2" ;
+NET  "mcb3_dram_dqs_n"                           LOC = "H1" ;
+NET  "mcb3_dram_odt"                             LOC = "L5" ;
+NET  "mcb3_dram_ras_n"                           LOC = "J6" ;
+NET  "mcb3_dram_reset_n"                         LOC = "E4" ;
+NET  "mcb3_dram_we_n"                            LOC = "C1" ;
+
+##################################################################################
+#RZQ is required for all MCB designs.   Do not move the location #
+#of this pin for ES devices.For production devices, RZQ can be moved to any #
+#valid package pin within the MCB bank.For designs using Calibrated Input Termination, #
+#a 2R resistor should be connected between RZQand ground, where R is the desired#
+#input termination value.  Otherwise, RZQ should be left as a no-connect (NC) pin.#
+##################################################################################
+NET  "mcb3_rzq"                                  LOC = "M4" ;
 
 
