@@ -92,6 +92,7 @@ entity LabFriend is
 	   PWMEXVO : out std_ulogic;
 	   PWMLAVIO : out std_ulogic;
 	   PWMLA : out std_ulogic;
+	   LADVREF : out std_ulogic; 
 	   mcb3_dram_dq                            : inout  std_logic_vector(C3_NUM_DQ_PINS-1 downto 0);
 	   mcb3_dram_a                             : out std_logic_vector(C3_MEM_ADDR_WIDTH-1 downto 0);
 	   mcb3_dram_ba                            : out std_logic_vector(C3_MEM_BANKADDR_WIDTH-1 downto 0);
@@ -352,6 +353,24 @@ component ddr3memory
 );
 end component;
 
+component pwm is
+	generic( nr_of_bits : natural := 16 ;
+	         address : std_ulogic_vector( 7 downto 0) := "00000000");
+	
+	port (
+		clk : in std_ulogic;
+		datain : in std_ulogic_vector( 7 downto 0);
+		addr : in std_ulogic_vector( 7 downto 0);
+		wr : in std_ulogic;
+		pwmlavio : out std_ulogic;
+		pwmla :  out std_ulogic;
+		pwmexvo : out std_ulogic;
+		pwmoffs0 : out std_ulogic;
+		pwmoffs1 : out std_ulogic;
+		ladvref : out std_ulogic
+		);
+end component;
+
 
 
 signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_4x_180_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_ulogic;
@@ -381,7 +400,7 @@ signal wr_mask_g : std_logic_vector(C3_P1_MASK_SIZE - 1 downto 0);
 signal wr_data_g, c3_p0_rd_data, c3_p0_wr_data : std_logic_vector(C3_P1_DATA_PORT_SIZE - 1 downto 0);
 signal c3_p0_cmd_en, c3_p0_rd_en, c3_p0_wr_en : std_logic;
 signal resetCounter : unsigned(5 downto 0) := "000000";
-signal ddrclktestcounter, quili : unsigned(7 downto 0) := "00000000";
+signal quili : unsigned(7 downto 0) := "00000000";
 
 signal c3_p0_wr_count, c3_p0_rd_count : std_logic_vector(6 downto 0);
 signal c3_p0_cmd_empty, c3_p0_cmd_full, c3_p0_wr_full, c3_p0_wr_empty, c3_p0_wr_underrun, c3_p0_wr_error : std_ulogic;
@@ -550,6 +569,20 @@ begin
 				lrck  	=> I2SLRCK,
 				conf0	=> ASEL0,
 				conf1	=> ASEL1);
+				
+	PWM1: pwm port map(	
+				clk  	 =>  global_clk, 
+				datain   =>  spimdataout,
+				addr     =>  spimcommand,
+				wr       =>  spimWR,
+				pwmlavio =>  PWMLAVIO,
+				pwmla    =>  PWMLA,
+				pwmexvo  =>  PWMEXVO,
+				pwmoffs0 =>  PWMOFFS0,
+				pwmoffs1 =>  PWMOFFS1, 
+				ladvref  =>  LADVREF
+				);
+			
 				
 	BUFG_inst_1 : BUFG
 	port map (
@@ -852,18 +885,18 @@ port map (
 	end if;
 	end process testL;
 	
-	clkck : process( user_clock_ddr )
-	begin
-		if rising_edge(user_clock_ddr) then
-			ddrclktestcounter <= ddrclktestcounter +1;
-		end if;
-	end process clkck;
 	
-	PWMEXVO <= ddrclktestcounter(2);
-	PWMLA <= ddrclktestcounter(2);
-	PWMLAVIO <= ddrclktestcounter(2);
-	PWMOFFS0 <= ddrclktestcounter(3) or ddrclktestcounter(2);
-	PWMOFFS1 <= ddrclktestcounter(3) or ddrclktestcounter(2);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	--LAD815(7 downto 1) <= std_ulogic_vector(ddrclktestcounter(7 downto 1));
 	
