@@ -35,7 +35,8 @@ signal data_state : datamachine := channel_select;
 type type_channel_select is ( channel_lavio, channel_la, channel_exvo, channel_offs0, channel_offs1, channel_ladvref);
 signal channel : type_channel_select := channel_lavio;
 
-signal lavio_level, la_level, exvo_level, offs0_level, offs1_level, ladvref_level : std_ulogic_vector( nr_of_bits-1 downto 0);
+signal lavio_level, la_level, exvo_level, ladvref_level : std_ulogic_vector( nr_of_bits-1 downto 0);
+signal offs0_level, offs1_level : std_ulogic_vector( nr_of_bits-1 downto 0) := "0100010001000100";
 signal counter_pwm : unsigned(nr_of_bits-1 downto 0) := (others => '0');
 
 
