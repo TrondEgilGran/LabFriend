@@ -12,23 +12,23 @@ use ieee.std_logic_1164.all, ieee.numeric_std.all;
 entity i2s is
 	generic( 	DATA    : integer := 48;
 			RADDR    : integer := 12;
-			address : std_ulogic_vector( 7 downto 0) := "00000011");
+			address : std_logic_vector( 7 downto 0) := "00000011");
 	
-	Port (	clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		dataout : out std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		rd : in std_ulogic;
-		busy : out std_ulogic;
-		sclk : out std_ulogic;
-		i2sdout :  out std_ulogic;
-		i2sdin : in std_ulogic;
-		bck :  out std_ulogic;
-		lrck : out std_ulogic;
-		conf0 : out std_ulogic;
-		conf1 : out std_ulogic);
+	Port (	clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		dataout : out std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		rd : in std_logic;
+		busy : out std_logic;
+		sclk : out std_logic;
+		i2sdout :  out std_logic;
+		i2sdin : in std_logic;
+		bck :  out std_logic;
+		lrck : out std_logic;
+		conf0 : out std_logic;
+		conf1 : out std_logic);
 end i2s;
 
 
@@ -59,55 +59,55 @@ port (
 );
 end component bram_tdp;
 
-signal    ram_adc_a_clk   :  std_ulogic;
-signal    ram_adc_a_en    :  std_ulogic;
-signal    ram_adc_a_wr    :  std_ulogic;
-signal    ram_adc_a_addr  :  std_ulogic_vector(RADDR-1 downto 0);
-signal    ram_adc_a_din   :  std_ulogic_vector(DATA-1 downto 0);
-signal    ram_adc_a_dout  :  std_ulogic_vector(DATA-1 downto 0);
+signal    ram_adc_a_clk   :  std_logic;
+signal    ram_adc_a_en    :  std_logic;
+signal    ram_adc_a_wr    :  std_logic;
+signal    ram_adc_a_addr  :  std_logic_vector(RADDR-1 downto 0);
+signal    ram_adc_a_din   :  std_logic_vector(DATA-1 downto 0);
+signal    ram_adc_a_dout  :  std_logic_vector(DATA-1 downto 0);
      
     -- Port B
-signal    ram_adc_b_clk   :  std_ulogic;
-signal    ram_adc_b_en    :  std_ulogic;
-signal    ram_adc_b_wr    :  std_ulogic;
-signal    ram_adc_b_addr  :  std_ulogic_vector(RADDR-1 downto 0);
-signal    ram_adc_b_din   :  std_ulogic_vector(DATA-1 downto 0);
-signal    ram_adc_b_dout  :  std_ulogic_vector(DATA-1 downto 0);
+signal    ram_adc_b_clk   :  std_logic;
+signal    ram_adc_b_en    :  std_logic;
+signal    ram_adc_b_wr    :  std_logic;
+signal    ram_adc_b_addr  :  std_logic_vector(RADDR-1 downto 0);
+signal    ram_adc_b_din   :  std_logic_vector(DATA-1 downto 0);
+signal    ram_adc_b_dout  :  std_logic_vector(DATA-1 downto 0);
 
-signal    ram_dac_a_clk   :  std_ulogic;
-signal    ram_dac_a_en    :  std_ulogic;
-signal    ram_dac_a_wr    :  std_ulogic;
-signal    ram_dac_a_addr  :  std_ulogic_vector(RADDR-1 downto 0);
-signal    ram_dac_a_din   :  std_ulogic_vector(DATA-1 downto 0);
-signal    ram_dac_a_dout  :  std_ulogic_vector(DATA-1 downto 0);
+signal    ram_dac_a_clk   :  std_logic;
+signal    ram_dac_a_en    :  std_logic;
+signal    ram_dac_a_wr    :  std_logic;
+signal    ram_dac_a_addr  :  std_logic_vector(RADDR-1 downto 0);
+signal    ram_dac_a_din   :  std_logic_vector(DATA-1 downto 0);
+signal    ram_dac_a_dout  :  std_logic_vector(DATA-1 downto 0);
      
     -- Port B
-signal    ram_dac_b_clk   :  std_ulogic;
-signal    ram_dac_b_en    :  std_ulogic;
-signal    ram_dac_b_wr    :  std_ulogic;
-signal    ram_dac_b_addr  :  std_ulogic_vector(RADDR-1 downto 0);
-signal    ram_dac_b_din   :  std_ulogic_vector(DATA-1 downto 0);
-signal    ram_dac_b_dout  :  std_ulogic_vector(DATA-1 downto 0);
+signal    ram_dac_b_clk   :  std_logic;
+signal    ram_dac_b_en    :  std_logic;
+signal    ram_dac_b_wr    :  std_logic;
+signal    ram_dac_b_addr  :  std_logic_vector(RADDR-1 downto 0);
+signal    ram_dac_b_din   :  std_logic_vector(DATA-1 downto 0);
+signal    ram_dac_b_dout  :  std_logic_vector(DATA-1 downto 0);
 
-signal	  freq_div_factor : std_ulogic_vector( 3 downto 0);
+signal	  freq_div_factor : std_logic_vector( 3 downto 0);
 
-signal  lrckreg, bckreg, sysclkreg  : std_ulogic;
-signal negedge, posedge, lrposedge, lrnegedge : std_ulogic;
+signal  lrckreg, bckreg, sysclkreg  : std_logic;
+signal negedge, posedge, lrposedge, lrnegedge : std_logic;
 
 signal freq_counter_sysck : unsigned(3 downto 0);
 signal freq_counter_bck : unsigned(1 downto 0);
 signal freq_counter_lrck : unsigned(5 downto 0);
 
-signal adc_I2S_data, dac_I2S_data, dac_ram_reg, adc_ram_reg : std_ulogic_vector( 47 downto 0 );
+signal adc_I2S_data, dac_I2S_data, dac_ram_reg, adc_ram_reg : std_logic_vector( 47 downto 0 );
 signal adc_fifolevel, adc_a_addr_counter, adc_b_addr_counter : unsigned( RADDR-1 downto 0 );
 signal dac_fifolevel, dac_a_addr_counter, dac_b_addr_counter : unsigned( RADDR-1 downto 0 );
 signal dacBufferSize : unsigned( RADDR-1 downto 0 );
 type datamachine is (idle, config, read_fifo, first_byte, second_byte, third_byte, fourth_byte, fifth_byte);
 signal data_state : datamachine;
-signal finish_adc, finish_dac, finish_dac_cnt : std_ulogic;
+signal finish_adc, finish_dac, finish_dac_cnt : std_logic;
 
-signal enable_adc, spi_adc_read, spi_dac_write, enable_dac : std_ulogic;
-signal serial_transfer_triggered, trigger_serial_transfer, indicator : std_ulogic;
+signal enable_adc, spi_adc_read, spi_dac_write, enable_dac : std_logic;
+signal serial_transfer_triggered, trigger_serial_transfer, indicator : std_logic;
 begin
 
 bram1: bram_tdp port map (	a_clk   =>   std_logic(ram_adc_a_clk),  
@@ -115,7 +115,7 @@ bram1: bram_tdp port map (	a_clk   =>   std_logic(ram_adc_a_clk),
 				a_wr    =>   std_logic(ram_adc_a_wr),   
 				a_addr  =>   std_logic_vector(ram_adc_a_addr), 
 				a_din   =>   std_logic_vector(ram_adc_a_din),  
-				std_ulogic_vector(a_dout)  =>   ram_adc_a_dout, 
+				std_logic_vector(a_dout)  =>   ram_adc_a_dout, 
 				
 				-- Port B
 				b_clk   =>   std_logic(ram_adc_b_clk), 
@@ -123,14 +123,14 @@ bram1: bram_tdp port map (	a_clk   =>   std_logic(ram_adc_a_clk),
 				b_wr    =>   std_logic(ram_adc_b_wr),   
 				b_addr  =>   std_logic_vector(ram_adc_b_addr), 
 				b_din   =>   std_logic_vector(ram_adc_b_din),  
-				std_ulogic_vector(b_dout)  =>   ram_adc_b_dout ); 
+				std_logic_vector(b_dout)  =>   ram_adc_b_dout ); 
 				
 bram2: bram_tdp port map (	a_clk   =>   std_logic(ram_dac_a_clk),  
 				a_en    =>   std_logic(ram_dac_a_en),   
 				a_wr    =>   std_logic(ram_dac_a_wr),   
 				a_addr  =>   std_logic_vector(ram_dac_a_addr), 
 				a_din   =>   std_logic_vector(ram_dac_a_din),  
-				std_ulogic_vector(a_dout)  =>   ram_dac_a_dout, 
+				std_logic_vector(a_dout)  =>   ram_dac_a_dout, 
 				
 				-- Port B
 				b_clk   =>   std_logic(ram_dac_b_clk), 
@@ -138,7 +138,7 @@ bram2: bram_tdp port map (	a_clk   =>   std_logic(ram_dac_a_clk),
 				b_wr    =>   std_logic(ram_dac_b_wr),   
 				b_addr  =>   std_logic_vector(ram_dac_b_addr), 
 				b_din   =>   std_logic_vector(ram_dac_b_din),  
-				std_ulogic_vector(b_dout)  =>   ram_dac_b_dout ); 
+				std_logic_vector(b_dout)  =>   ram_dac_b_dout ); 
 				
 				
 
@@ -260,10 +260,10 @@ begin
 
 end process fifo_func;
 
-ram_adc_a_addr <= std_ulogic_vector(adc_a_addr_counter);
-ram_adc_b_addr <= std_ulogic_vector(adc_b_addr_counter);
-ram_dac_a_addr <= std_ulogic_vector(dac_a_addr_counter);
-ram_dac_b_addr <= std_ulogic_vector(dac_b_addr_counter);
+ram_adc_a_addr <= std_logic_vector(adc_a_addr_counter);
+ram_adc_b_addr <= std_logic_vector(adc_b_addr_counter);
+ram_dac_a_addr <= std_logic_vector(dac_a_addr_counter);
+ram_dac_b_addr <= std_logic_vector(dac_b_addr_counter);
 
 ram_adc_b_wr <= '0'; 
 ram_adc_a_en <= enable_adc;
@@ -304,11 +304,11 @@ begin
 						enable_dac <= datain(5);
 						freq_div_factor <= datain( 3 downto 0);
 					elsif addr(6 downto 3) = "1000" then --GET dac Counter
-						dataout( RADDR-9 downto 0) <= std_ulogic_vector(dac_fifolevel( RADDR-1 downto 8 ));
+						dataout( RADDR-9 downto 0) <= std_logic_vector(dac_fifolevel( RADDR-1 downto 8 ));
 						dataout( 7 downto RADDR-8) <= (others => '0');
 						data_state <= read_fifo;
 					elsif addr(6 downto 3) = "1100" then --GET adc Counter
-						dataout( RADDR-9 downto 0) <= std_ulogic_vector(adc_fifolevel( RADDR-1 downto 8 ));
+						dataout( RADDR-9 downto 0) <= std_logic_vector(adc_fifolevel( RADDR-1 downto 8 ));
 						dataout( 7 downto RADDR-8) <= (others => '0');
 						data_state <= read_fifo;
 					elsif addr(6 downto 3) = "0010" then -- dac Data
@@ -358,9 +358,9 @@ begin
 					data_state <= idle;
 				when read_fifo =>
 					if addr(6 downto 3) = "1000" then --GET dac Counter
-						dataout <= std_ulogic_vector(dac_fifolevel( 7 downto 0 ));
+						dataout <= std_logic_vector(dac_fifolevel( 7 downto 0 ));
 					elsif addr(6 downto 3) = "1100" then --GET adc Counter
-						dataout <= std_ulogic_vector(adc_fifolevel( 7 downto 0 ));
+						dataout <= std_logic_vector(adc_fifolevel( 7 downto 0 ));
 					end if;
 					data_state <= idle;
 				when others =>

@@ -9,32 +9,41 @@ library UNIMACRO;
 use UNIMACRO.Vcomponents.all;
 
 entity HSaqusition is
-	generic( sram_addr_width : natural := 19; --Number of bits in SRAM addr bus
-		 sram_data_width : natural := 18;
-		 address : std_ulogic_vector( 7 downto 0 ) := "00000001"
+	generic( ram_addr_width : natural := 29; --Number of bits in SRAM addr bus
+		 ram_data_width : natural := 32;
+		 address : std_logic_vector( 7 downto 0 ) := "00000001"
 		 );
 
 	port (
-		clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		rd : in std_ulogic;
-		dataout : out std_ulogic_vector( 7 downto 0);
-		sram_addr : out std_ulogic_vector( sram_addr_width-1 downto 0);
-		sram_data : inout std_ulogic_vector( sram_data_width-1 downto 0);
-		sram_wr : out std_ulogic;
-		sram_ce : out std_ulogic;
-		sram_oe : out std_ulogic;
-		digital_in : in std_ulogic_vector( 7 downto 0);
-		hs_adc_a : in std_ulogic_vector( 7 downto 0);
-		hs_adc_b : in std_ulogic_vector( 7 downto 0);
-		adc_clk_a : out std_ulogic;
-		adc_clk_b : out std_ulogic;
-		adc_pwd_d : out std_ulogic;
-		hs_clock_2 : in std_ulogic;
-		hs_clock_4 : in std_ulogic
+		clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		rd : in std_logic;
+		dataout : out std_logic_vector( 7 downto 0);
+		adc_a_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		adc_a_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
+		adc_a_ram_wr : out std_logic;
+		adc_a_cmd_en : out std_logic;
+		adc_b_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		adc_b_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
+		adc_b_ram_wr : out std_logic;
+		adc_b_cmd_en : out std_logic;
+		digital_in_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		digital_in_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
+		digital_in_ram_wr : out std_logic;
+		digital_in_cmd_en : out std_logic;
+		ram_command : out std_logic_vector(2 downto 0);
+		ram_bl : out std_logic_vector(5 downto 0);
+		digital_in : in std_logic_vector( 7 downto 0);
+		hs_adc_a : in std_logic_vector( 7 downto 0);
+		hs_adc_b : in std_logic_vector( 7 downto 0);
+		adc_clk_a : out std_logic;
+		adc_clk_b : out std_logic;
+		adc_pwd_d : out std_logic;
+		hs_clock_2 : in std_logic;
+		hs_clock_4 : in std_logic
 		);
 end HSaqusition;
 
@@ -63,37 +72,43 @@ type datamachine is (idle, process_command, read_trigger, read_ram, read_status,
 signal data_state : datamachine := idle; 
 type WRcountermachine is (idle, counting, read_data, wait_ready);
 signal ram_count_state_wr, ram_count_state_rd : WRcountermachine := idle;
-signal ram_group_0_select, ram_group_1_select, trigger_select, trigger_select_HS  : std_ulogic_vector( 1 downto 0 ) := (others => '0');
-signal ram_group_2_select, ram_group_3_select : std_ulogic_vector( 2 downto 0 ) := (others => '0');
-signal ram_group_2_select_master, ram_group_3_select_master : std_ulogic_vector( 2 downto 0 ) := (others => '0') ;
-signal digital_in_by_8_muxed : std_ulogic;
+signal ram_group_0_select, ram_group_1_select, trigger_select, trigger_select_HS  : std_logic_vector( 1 downto 0 ) := (others => '0');
+signal ram_group_2_select, ram_group_3_select : std_logic_vector( 2 downto 0 ) := (others => '0');
+signal ram_group_2_select_master, ram_group_3_select_master : std_logic_vector( 2 downto 0 ) := (others => '0') ;
+signal digital_in_by_8_muxed : std_logic;
+
 signal ram_write_counter, ram_read_counter, ram_address_offset, ram_trigger_address: unsigned( sram_addr_width-1 downto 0 ) :=(others => '0') ;
+
 signal read_ram_stop, ram_read_size : unsigned( sram_addr_width-1 downto 0 ) := (others => '1');
-signal ram_counter_wr_stop : std_ulogic_vector( sram_addr_width-1 downto 0 ) := (others => '0');
-signal ram_data_in, ram_data_out : std_ulogic_vector(sram_data_width-1 downto 0 ) := (others => '0');
-signal adc_clk_a_select, adc_clk_b_select, read_ready, ram_data_available, ram_read_finished, ram_ready : std_ulogic := '0';
-signal trigger_source, trigger_source_tmp, trigger_d1, trigger_d2, trigger_val , trigger_val_hs: std_ulogic_vector(7 downto 0) := (others => '0');
-signal start_ram_capture, ram_full, data_capture_started, trigger_edge, triggered, manual_trigger : std_ulogic := '0';
+signal ram_counter_wr_stop : std_logic_vector( sram_addr_width-1 downto 0 ) := (others => '0');
+signal ram_data_in, ram_data_out : std_logic_vector(sram_data_width-1 downto 0 ) := (others => '0');
+signal adc_clk_a_select, adc_clk_b_select, read_ready, ram_data_available, ram_read_finished, ram_ready : std_logic := '0';
+signal trigger_source, trigger_source_tmp, trigger_d1, trigger_d2, trigger_val , trigger_val_hs: std_logic_vector(7 downto 0) := (others => '0');
+signal start_ram_capture, ram_full, data_capture_started, trigger_edge, triggered, manual_trigger : std_logic := '0';
 signal ram_addr_adder : unsigned( sram_addr_width downto 0 ) := (others => '0');
-signal combus_0, combus_1 : std_ulogic_vector( 7 downto 0 ) := (others => '0');
-signal combus_2 : std_ulogic_vector( 1 downto 0) := (others => '0');
-signal combus : std_ulogic_vector( 2 downto 0) := (others => '0');
-signal command : std_ulogic_vector( 2 downto 0) := (others => '0');
-signal sram_wr_sig, configdone, interruptdataread : std_ulogic := '0';
+signal combus_0, combus_1 : std_logic_vector( 7 downto 0 ) := (others => '0');
+signal combus_2 : std_logic_vector( 1 downto 0) := (others => '0');
+signal combus : std_logic_vector( 2 downto 0) := (others => '0');
+signal command : std_logic_vector( 2 downto 0) := (others => '0');
+signal sram_wr_sig, configdone, interruptdataread : std_logic := '0';
 signal rdcnt : unsigned(7 downto 0) := (others => '0');
-signal first_ram_read : std_ulogic := '0';
-signal clocksel : std_ulogic_vector(1 downto 0) := (others => '0');
-signal clock_mux_con,  clock_mux_con_n : std_ulogic :='0';
-signal hs_clock, hs_clock_n : std_ulogic := '0';
-signal adc_clk_a_select_n, adc_clk_b_select_n : std_ulogic := '0';
-signal gnd, vcc : std_ulogic;
-signal ram_group_0_register, ram_group_1_register, adc_a_register, adc_b_register, digital_in_register : std_ulogic_vector(7 downto 0) := (others => '0');
-signal ram_group_2_register, ram_group_3_register : std_ulogic := '0';
-signal ram_write_counter_reset, ram_write_counter_enable : std_ulogic :='1';
-signal trig_it : std_ulogic := '0';
-signal count_inc_by : std_ulogic_vector( sram_addr_width+9 downto 0 ) := "00000000000000000010000000000";
-signal counter_connection : std_ulogic_vector( sram_addr_width+9 downto 0 );
-signal ram_dcm_fb : std_ulogic;
+signal first_ram_read : std_logic := '0';
+signal clocksel : std_logic_vector(1 downto 0) := (others => '0');
+signal clock_mux_con,  clock_mux_con_n : std_logic :='0';
+signal hs_clock, hs_clock_n : std_logic := '0';
+signal adc_clk_a_select_n, adc_clk_b_select_n : std_logic := '0';
+signal gnd, vcc : std_logic;
+signal adc_a_register, adc_b_register, digital_in_register : std_logic_vector(7 downto 0) := (others => '0');
+
+signal ram_write_counter_reset, ram_write_counter_enable : std_logic :='1';
+signal trig_it : std_logic := '0';
+signal count_inc_by : std_logic_vector( sram_addr_width+9 downto 0 ) := "00000000000000000010000000000";
+signal counter_connection : std_logic_vector( sram_addr_width+9 downto 0 );
+signal ram_dcm_fb : std_logic;
+
+signal adc_a_to_ram_reg, adc_b_to_ram_reg, digital_in_to_ram_reg : std_logic_vector( 31 downto 0 );
+signal adc_a_to_ram_out, adc_b_to_ram_out, digital_in_to_ram_out : std_logic_vector( 31 downto 0 );
+
 begin
 	gnd <= '0';
 	vcc <= '1';
@@ -173,11 +188,6 @@ begin
 	-- End of ODDR2_inst instantiation
 	
 	
-	sram_ce <= '1';
-	sram_data <= ram_data_in when sram_wr_sig = '1' else (others => 'Z');
-	ram_data_out <= sram_data;
-	sram_wr <= sram_wr_sig;
-	sram_addr <= std_ulogic_vector(ram_write_counter) when sram_wr_sig = '1' else std_ulogic_vector(ram_read_counter);
 
 	getData: process (rst, clk, datain, addr) is
 	
@@ -209,13 +219,13 @@ begin
 						if rd = '1' then
 							case combus is
 								when "000" =>
-									dataout <= std_ulogic_vector(ram_trigger_address( 7 downto 0));
+									dataout <= std_logic_vector(ram_trigger_address( 7 downto 0));
 									combus <= "001";
 								when "001" =>
-									dataout <= std_ulogic_vector(ram_trigger_address( 15 downto 8));
+									dataout <= std_logic_vector(ram_trigger_address( 15 downto 8));
 									combus <= "010";
 								when "010" =>
-									dataout(2 downto 0) <= std_ulogic_vector(ram_trigger_address( sram_addr_width-1 downto 16));
+									dataout(2 downto 0) <= std_logic_vector(ram_trigger_address( sram_addr_width-1 downto 16));
 									dataout(7 downto 3) <= (others => '0');
 									combus <= "011";
 								when "011" =>
@@ -264,7 +274,7 @@ begin
 										combus <= "010";
 									when "010" =>
 										dataout <= "101010" & combus_2;
-										--dataout <= std_ulogic_vector(rdcnt);
+										--dataout <= std_logic_vector(rdcnt);
 										combus <= "000";
 										read_ready <= '1';
 										if ram_read_finished = '1' then
@@ -376,53 +386,17 @@ begin
 		if rising_edge(hs_clock) then
 			adc_a_register <= hs_adc_a;
 			adc_b_register <= hs_adc_b;
-			ram_data_in(7 downto 0) <= ram_group_0_register;
-			ram_data_in(15 downto 8) <= ram_group_1_register;
-			ram_data_in(16) <= ram_group_2_register;
-			ram_data_in(17) <= ram_group_3_register;
+			adc_a_to_ram_reg( 7 downto 0 ) <= adc_a_register;
+			adc_a_to_ram_reg( 15 downto 8 ) <= adc_a_to_ram_reg( 7 downto 0 );
+			adc_a_to_ram_reg( 23 downto 16 ) <= adc_a_to_ram_reg( 15 downto 8 );
+			adc_a_to_ram_reg( 31 downto 24 ) <= adc_a_to_ram_reg( 23 downto 16 );
 			trigger_select_HS <= trigger_select;
 			trigger_source <= trigger_source_tmp;
 			trigger_val_hs <= trigger_val; 
 		end if;
 	end process SpeedDevil;
 	
-	-- Select ADC/DIGITAL input on first part of SRAM
-	ram_group_0_register <=	adc_a_register when ram_group_0_select = "00" else
-					adc_b_register when ram_group_0_select = "01" else
-					digital_in when ram_group_0_select = "10" else
-					"XXXXXXXX";
-	-- Select ADC/DIGITAL input on second part of SRAM
-	ram_group_1_register <=	adc_a_register when ram_group_1_select = "00" else
-					adc_b_register when ram_group_1_select = "01" else
-					digital_in when ram_group_1_select = "10" else
-					"XXXXXXXX";			
-	-- Select DIgital channel in for  last part of SRAM
-	ram_group_2_register <=	digital_in(0) when ram_group_2_select = "000" else
-				digital_in(1) when ram_group_2_select = "001" else
-				digital_in(2) when ram_group_2_select = "010" else
-				digital_in(3) when ram_group_2_select = "011" else
-				digital_in(4) when ram_group_2_select = "100" else
-				digital_in(5) when ram_group_2_select = "101" else
-				digital_in(6) when ram_group_2_select = "110" else
-				digital_in(7) when ram_group_2_select = "111" else
-				'X';
-	-- Select DIgital channel in for  last part of SRAM
-	ram_group_3_register <=	digital_in(0) when ram_group_3_select = "000" else
-				digital_in(1) when ram_group_3_select = "001" else
-				digital_in(2) when ram_group_3_select = "010" else
-				digital_in(3) when ram_group_3_select = "011" else
-				digital_in(4) when ram_group_3_select = "100" else
-				digital_in(5) when ram_group_3_select = "101" else
-				digital_in(6) when ram_group_3_select = "110" else
-				digital_in(7) when ram_group_3_select = "111" else
-				'X';
-	
-	ram_group_2_select <=	'0' & std_ulogic_vector(ram_write_counter(1 downto 0)) when digital_in_by_8_muxed = '0' else
-				ram_group_2_select_master when digital_in_by_8_muxed = '1' else
-				"XXX";
-	ram_group_3_select <=	'1' & std_ulogic_vector(ram_write_counter(1 downto 0)) when digital_in_by_8_muxed = '0' else
-				ram_group_3_select_master when digital_in_by_8_muxed = '1' else
-				"XXX";
+
 	
 	
 	--select trigger input
@@ -454,7 +428,7 @@ begin
 		);
 	-- End of ADDSUB_MACRO_inst instantiation
 	--ram_addr_adder <= ('0' & ram_address_offset) + ('0' & ram_trigger_address);
-	ram_counter_wr_stop <= std_ulogic_vector(ram_addr_adder( sram_addr_width-1 downto 0 ));
+	ram_counter_wr_stop <= std_logic_vector(ram_addr_adder( sram_addr_width-1 downto 0 ));
 	
 	procTrigger: process ( rst, hs_clock ) is
 	begin
@@ -501,7 +475,7 @@ begin
 		DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
 		WIDTH_DATA => sram_addr_width + 10) -- Counter output bus width, 1-48
 	port map (
-		std_ulogic_vector(Q) => counter_connection, -- Counter ouput, width determined by WIDTH_DATA generic
+		std_logic_vector(Q) => counter_connection, -- Counter ouput, width determined by WIDTH_DATA generic
 		CLK => hs_clock, -- 1-bit clock input
 		CE => ram_write_counter_enable, -- 1-bit clock enable input
 		DIRECTION => '1', -- 1-bit up/down count direction input, high is count up
@@ -528,7 +502,7 @@ begin
 						ram_write_counter_enable <= '1';
 					end if;	
 				when counting =>
-					if std_ulogic_vector(ram_write_counter) = ram_counter_wr_stop and triggered = '1' then
+					if std_logic_vector(ram_write_counter) = ram_counter_wr_stop and triggered = '1' then
 						ram_count_state_wr <= idle;
 						ram_full <= '1';
 						sram_wr_sig <= '0';

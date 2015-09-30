@@ -41,51 +41,51 @@ ARCHITECTURE behavior OF spimaster_tb IS
  
     COMPONENT SPIMASTER
     PORT(
-         spiclk : IN  std_ulogic;
-         clk : IN  std_ulogic;
-         rst : IN  std_ulogic;
-         spidatain : IN  std_ulogic;
-         spidataout : OUT  std_ulogic;
-         spics : IN  std_ulogic;
-         nrbyte : OUT  std_ulogic_vector(15 downto 0);
-         dataout : OUT  std_ulogic_vector(7 downto 0);
-         datain0 : IN  std_ulogic_vector(7 downto 0);
-         datain1 : IN  std_ulogic_vector(7 downto 0);
-         datain2 : IN  std_ulogic_vector(7 downto 0);
-         datain3 : IN  std_ulogic_vector(7 downto 0);
-         datain4 : IN  std_ulogic_vector(7 downto 0);
-         datain5 : IN  std_ulogic_vector(7 downto 0);
-         datain6 : IN  std_ulogic_vector(7 downto 0);
-         datain7 : IN  std_ulogic_vector(7 downto 0);
-         command : OUT  std_ulogic_vector(7 downto 0);
-         RD : OUT  std_ulogic;
-         WR : OUT  std_ulogic
+         spiclk : IN  std_logic;
+         clk : IN  std_logic;
+         rst : IN  std_logic;
+         spidatain : IN  std_logic;
+         spidataout : OUT  std_logic;
+         spics : IN  std_logic;
+         nrbyte : OUT  std_logic_vector(15 downto 0);
+         dataout : OUT  std_logic_vector(7 downto 0);
+         datain0 : IN  std_logic_vector(7 downto 0);
+         datain1 : IN  std_logic_vector(7 downto 0);
+         datain2 : IN  std_logic_vector(7 downto 0);
+         datain3 : IN  std_logic_vector(7 downto 0);
+         datain4 : IN  std_logic_vector(7 downto 0);
+         datain5 : IN  std_logic_vector(7 downto 0);
+         datain6 : IN  std_logic_vector(7 downto 0);
+         datain7 : IN  std_logic_vector(7 downto 0);
+         command : OUT  std_logic_vector(7 downto 0);
+         RD : OUT  std_logic;
+         WR : OUT  std_logic
         );
     END COMPONENT;
     
 
    --Inputs
-   signal spiclk : std_ulogic := '0';
-   signal clk : std_ulogic := '0';
-   signal rst : std_ulogic := '0';
-   signal spidatain : std_ulogic := '0';
-   signal spics : std_ulogic := '0';
-   signal datain0 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain1 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain2 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain3 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain4 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain5 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain6 : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal datain7 : std_ulogic_vector(7 downto 0) := (others => '0');
+   signal spiclk : std_logic := '0';
+   signal clk : std_logic := '0';
+   signal rst : std_logic := '0';
+   signal spidatain : std_logic := '0';
+   signal spics : std_logic := '0';
+   signal datain0 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain1 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain2 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain3 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain4 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain5 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain6 : std_logic_vector(7 downto 0) := (others => '0');
+   signal datain7 : std_logic_vector(7 downto 0) := (others => '0');
 
  	--Outputs
-   signal spidataout : std_ulogic;
-   signal nrbyte : std_ulogic_vector(15 downto 0);
-   signal dataout : std_ulogic_vector(7 downto 0);
-   signal command : std_ulogic_vector(7 downto 0);
-   signal RD : std_ulogic;
-   signal WR : std_ulogic;
+   signal spidataout : std_logic;
+   signal nrbyte : std_logic_vector(15 downto 0);
+   signal dataout : std_logic_vector(7 downto 0);
+   signal command : std_logic_vector(7 downto 0);
+   signal RD : std_logic;
+   signal WR : std_logic;
 
    -- Clock period definitions
    constant spiclk_period : time := 33.3 ns;

@@ -19,8 +19,8 @@
 -- Additional Comments:
 --
 -- Notes: 
--- This testbench has been automatically generated using types std_ulogic and
--- std_ulogic_vector for the ports of the unit under test.  Xilinx recommends
+-- This testbench has been automatically generated using types std_logic and
+-- std_logic_vector for the ports of the unit under test.  Xilinx recommends
 -- that these types always be used for the top-level I/O of a design in order
 -- to guarantee that the testbench will bind correctly to the post-implementation 
 -- simulation model.
@@ -41,63 +41,63 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
  
     COMPONENT HSaqusition
     PORT(
-         clk : IN  std_ulogic;
-         rst : IN  std_ulogic;
-         datain : IN  std_ulogic_vector(7 downto 0);
-         addr : IN  std_ulogic_vector(7 downto 0);
-         wr : IN  std_ulogic;
-         rd : IN  std_ulogic;
-         dataout : OUT  std_ulogic_vector(7 downto 0);
-         sram_addr : OUT  std_ulogic_vector(18 downto 0);
-         sram_data : INOUT  std_ulogic_vector(17 downto 0);
-         sram_wr : OUT  std_ulogic;
-         sram_ce : OUT  std_ulogic;
-         sram_oe : OUT  std_ulogic;
-         digital_in : IN  std_ulogic_vector(7 downto 0);
-         hs_adc_a : IN  std_ulogic_vector(7 downto 0);
-         hs_adc_b : IN  std_ulogic_vector(7 downto 0);
-         adc_clk_a : OUT  std_ulogic;
-         adc_clk_b : OUT  std_ulogic;
-         adc_pwd_d : OUT  std_ulogic;
-         hs_clock : IN  std_ulogic
+         clk : IN  std_logic;
+         rst : IN  std_logic;
+         datain : IN  std_logic_vector(7 downto 0);
+         addr : IN  std_logic_vector(7 downto 0);
+         wr : IN  std_logic;
+         rd : IN  std_logic;
+         dataout : OUT  std_logic_vector(7 downto 0);
+         sram_addr : OUT  std_logic_vector(18 downto 0);
+         sram_data : INOUT  std_logic_vector(17 downto 0);
+         sram_wr : OUT  std_logic;
+         sram_ce : OUT  std_logic;
+         sram_oe : OUT  std_logic;
+         digital_in : IN  std_logic_vector(7 downto 0);
+         hs_adc_a : IN  std_logic_vector(7 downto 0);
+         hs_adc_b : IN  std_logic_vector(7 downto 0);
+         adc_clk_a : OUT  std_logic;
+         adc_clk_b : OUT  std_logic;
+         adc_pwd_d : OUT  std_logic;
+         hs_clock : IN  std_logic
         );
     END COMPONENT;
     
 
    --Inputs
-   signal clk : std_ulogic := '0';
-   signal rst : std_ulogic := '0';
-   signal datain : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal addr : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal wr : std_ulogic := '0';
-   signal rd : std_ulogic := '0';
-   signal digital_in : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal hs_adc_a : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal hs_adc_b : std_ulogic_vector(7 downto 0) := (others => '0');
-   signal hs_clock : std_ulogic := '0';
+   signal clk : std_logic := '0';
+   signal rst : std_logic := '0';
+   signal datain : std_logic_vector(7 downto 0) := (others => '0');
+   signal addr : std_logic_vector(7 downto 0) := (others => '0');
+   signal wr : std_logic := '0';
+   signal rd : std_logic := '0';
+   signal digital_in : std_logic_vector(7 downto 0) := (others => '0');
+   signal hs_adc_a : std_logic_vector(7 downto 0) := (others => '0');
+   signal hs_adc_b : std_logic_vector(7 downto 0) := (others => '0');
+   signal hs_clock : std_logic := '0';
 
 	--BiDirs
-   signal sram_data : std_ulogic_vector(17 downto 0);
+   signal sram_data : std_logic_vector(17 downto 0);
 
 
  	--Outputs
-   signal dataout : std_ulogic_vector(7 downto 0);
-   signal sram_addr : std_ulogic_vector(18 downto 0);
-   signal sram_wr : std_ulogic;
-   signal sram_ce : std_ulogic;
-   signal sram_oe : std_ulogic;
-   signal adc_clk_a : std_ulogic;
-   signal adc_clk_b : std_ulogic;
-   signal adc_pwd_d : std_ulogic;
+   signal dataout : std_logic_vector(7 downto 0);
+   signal sram_addr : std_logic_vector(18 downto 0);
+   signal sram_wr : std_logic;
+   signal sram_ce : std_logic;
+   signal sram_oe : std_logic;
+   signal adc_clk_a : std_logic;
+   signal adc_clk_b : std_logic;
+   signal adc_pwd_d : std_logic;
 
 
    -- Clock period definitions
    constant clk_period : time := 2 ps;
    constant hs_clock_period : time := 2 ps;
    
-   --type ram_array is array ( 0 to 524287 ) of std_ulogic_vector( 17 downto 0 );
+   --type ram_array is array ( 0 to 524287 ) of std_logic_vector( 17 downto 0 );
    --signal sram : ram_array;
-   --signal ram_data : std_ulogic_vector(17 downto 0);
+   --signal ram_data : std_logic_vector(17 downto 0);
    
    signal adc1signal, adc2signal, digitalsignal : unsigned(7 downto 0) := "00000000";
    
@@ -157,9 +157,9 @@ BEGIN
 	adc2signal <= adc2signal -1;
 	digitalsignal <= digitalsignal +3;
 		
-	hs_adc_a <= std_ulogic_vector( adc1signal );
-	hs_adc_b <= std_ulogic_vector( adc2signal ) ;
-	digital_in <= std_ulogic_vector( digitalsignal ) ;
+	hs_adc_a <= std_logic_vector( adc1signal );
+	hs_adc_b <= std_logic_vector( adc2signal ) ;
+	digital_in <= std_logic_vector( digitalsignal ) ;
    end process hs_data;
    
    

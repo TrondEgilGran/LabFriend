@@ -13,18 +13,18 @@ entity s74595 is
 	generic( nr_of_bits : natural := 16 ;
 	         frequency_div : natural := 5000;
 	         frequency_div_half : natural := 2500;
-	         address : std_ulogic_vector( 7 downto 0) := "00000100");
+	         address : std_logic_vector( 7 downto 0) := "00000100");
 	
 	port (
-		clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		busy : out std_ulogic;
-		ser : out std_ulogic;
-		rck :  out std_ulogic;
-		sck : out std_ulogic);
+		clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		busy : out std_logic;
+		ser : out std_logic;
+		rck :  out std_logic;
+		sck : out std_logic);
 end s74595;
 
 architecture rtl of s74595 is
@@ -35,11 +35,11 @@ type datamachine is (first_byte, second_byte);
 type serialmachine is ( wait_for_trigger, start_transfer, wait_delay, shift_data, finish_transfer );
 signal data_state : datamachine := first_byte; 
 signal serial_state : serialmachine;
-signal trigger_serial_transfer, serial_transfer_triggered : std_ulogic := '0';
+signal trigger_serial_transfer, serial_transfer_triggered : std_logic := '0';
 
-signal recieved_data, shift_reg : std_ulogic_vector( nr_of_bits-1 downto 0 );
-signal boot, boot_2 : std_ulogic := '1'; 
-signal serial_busy : std_ulogic;
+signal recieved_data, shift_reg : std_logic_vector( nr_of_bits-1 downto 0 );
+signal boot, boot_2 : std_logic := '1'; 
+signal serial_busy : std_logic;
 
 begin
 

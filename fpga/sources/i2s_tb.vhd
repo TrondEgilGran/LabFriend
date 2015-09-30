@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all, ieee.numeric_std.all;
 
 entity i2s_tb is
 	generic( 
-	         address : std_ulogic_vector( 7 downto 0) := "00000011");
+	         address : std_logic_vector( 7 downto 0) := "00000011");
 	
 end i2s_tb;
 
@@ -12,40 +12,40 @@ architecture testbench of i2s_tb is
 
 component i2s is
 	generic( 
-	         address : std_ulogic_vector( 7 downto 0) := "00000011");
+	         address : std_logic_vector( 7 downto 0) := "00000011");
 	
 	port (
-		clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		dataout : out std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		rd : in std_ulogic;
-		busy : out std_ulogic;
-		sclk : out std_ulogic;
-		i2sdout :  out std_ulogic;
-		i2sdin : in std_ulogic;
-		bck :  out std_ulogic;
-		lrck : out std_ulogic;
-		conf0 : out std_ulogic;
-		conf1 : out std_ulogic);
+		clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		dataout : out std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		rd : in std_logic;
+		busy : out std_logic;
+		sclk : out std_logic;
+		i2sdout :  out std_logic;
+		i2sdin : in std_logic;
+		bck :  out std_logic;
+		lrck : out std_logic;
+		conf0 : out std_logic;
+		conf1 : out std_logic);
 end component i2s;
 
-signal	clk :  std_ulogic;
-signal	rst :  std_ulogic;
-signal	datain :  std_ulogic_vector( 7 downto 0);
-signal	dataout :  std_ulogic_vector( 7 downto 0);
-signal	addr :  std_ulogic_vector( 7 downto 0);
-signal	wr,rd :  std_ulogic;
-signal	busy :  std_ulogic;
-signal	sclk :  std_ulogic;
-signal	i2sdout :   std_ulogic;
-signal	i2sdin :  std_ulogic;
-signal	bck :   std_ulogic;
-signal	lrck :  std_ulogic;
-signal	conf0 : std_ulogic;
-signal	conf1 : std_ulogic;
+signal	clk :  std_logic;
+signal	rst :  std_logic;
+signal	datain :  std_logic_vector( 7 downto 0);
+signal	dataout :  std_logic_vector( 7 downto 0);
+signal	addr :  std_logic_vector( 7 downto 0);
+signal	wr,rd :  std_logic;
+signal	busy :  std_logic;
+signal	sclk :  std_logic;
+signal	i2sdout :   std_logic;
+signal	i2sdin :  std_logic;
+signal	bck :   std_logic;
+signal	lrck :  std_logic;
+signal	conf0 : std_logic;
+signal	conf1 : std_logic;
 
 begin
 
@@ -147,7 +147,7 @@ begin
 	while (i <= 100) loop
 	
 		addr <= "00010011";
-		datain <= std_ulogic_vector(data_cnt(23 downto 16));
+		datain <= std_logic_vector(data_cnt(23 downto 16));
 		wait until falling_edge(clk);
 		wr <= '1';
 		wait until rising_edge(clk);
@@ -156,7 +156,7 @@ begin
 		wait until rising_edge(clk);
 		wait until rising_edge(clk);
 		
-		datain <= std_ulogic_vector(data_cnt(15 downto 8));
+		datain <= std_logic_vector(data_cnt(15 downto 8));
 		wait until falling_edge(clk);
 		wr <= '1';
 		wait until rising_edge(clk);
@@ -165,7 +165,7 @@ begin
 		wait until rising_edge(clk);
 		wait until rising_edge(clk);
 		
-		datain <= std_ulogic_vector(data_cnt(7 downto 0));
+		datain <= std_logic_vector(data_cnt(7 downto 0));
 		wait until falling_edge(clk);
 		wr <= '1';
 		wait until rising_edge(clk);
@@ -176,7 +176,7 @@ begin
 		
 		data_cnt := data_cnt +1;
 		
-		datain <= std_ulogic_vector(data_cnt(23 downto 16));
+		datain <= std_logic_vector(data_cnt(23 downto 16));
 		wait until falling_edge(clk);
 		wr <= '1';
 		wait until rising_edge(clk);
@@ -185,7 +185,7 @@ begin
 		wait until rising_edge(clk);
 		wait until rising_edge(clk);
 		
-		datain <= std_ulogic_vector(data_cnt(15 downto 8));
+		datain <= std_logic_vector(data_cnt(15 downto 8));
 		wait until falling_edge(clk);
 		wr <= '1';
 		wait until rising_edge(clk);
@@ -194,7 +194,7 @@ begin
 		wait until rising_edge(clk);
 		wait until rising_edge(clk);
 		
-		datain <= std_ulogic_vector(data_cnt(7 downto 0));
+		datain <= std_logic_vector(data_cnt(7 downto 0));
 		wait until falling_edge(clk);
 		wr <= '1';
 		wait until rising_edge(clk);

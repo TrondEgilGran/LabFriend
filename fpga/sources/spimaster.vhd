@@ -64,20 +64,20 @@ end SPIMASTER;
 
 architecture Behavioral of SPIMASTER is
 
-	signal spiClkRisingEdge : std_ulogic;
-	signal spiClkFallingEdge : std_ulogic;
-	signal spiregin : std_ulogic_vector(7 downto 0);
-	signal spiregout : std_ulogic_vector(7 downto 0);
+	signal spiClkRisingEdge : std_logic;
+	signal spiClkFallingEdge : std_logic;
+	signal spiregin : std_logic_vector(7 downto 0);
+	signal spiregout : std_logic_vector(7 downto 0);
 	signal spibitcounter : unsigned(3 downto 0);
-	signal spiregload, spiregloadD1 : std_ulogic;
-	signal datainreg, dataindl : std_ulogic_vector(7 downto 0);
-	signal dataoutreg, dataoutregM1, dataoutregM1D1, dataoutregM1D2, dataoutregM1D3, dataoutregM1D4 : std_ulogic_vector( 7 downto 0);
-	signal newdataflag, newdataflagM1, newdataflagM1D1, newdataflagM1D2, newdataflagM1D3, newdataflagM1D4 : std_ulogic;
-	signal newRDdataflag, newRDdataflagM1, newRDdataflagM1D1, newRDdataflagM1D2, newRDdataflagM1D3, newRDdataflagM1D4 : std_ulogic;
-	signal commandReg: std_ulogic_vector(7 downto 0);
+	signal spiregload, spiregloadD1 : std_logic;
+	signal datainreg, dataindl : std_logic_vector(7 downto 0);
+	signal dataoutreg, dataoutregM1, dataoutregM1D1, dataoutregM1D2, dataoutregM1D3, dataoutregM1D4 : std_logic_vector( 7 downto 0);
+	signal newdataflag, newdataflagM1, newdataflagM1D1, newdataflagM1D2, newdataflagM1D3, newdataflagM1D4 : std_logic;
+	signal newRDdataflag, newRDdataflagM1, newRDdataflagM1D1, newRDdataflagM1D2, newRDdataflagM1D3, newRDdataflagM1D4 : std_logic;
+	signal commandReg: std_logic_vector(7 downto 0);
 	signal spicommandCounter: unsigned(2 downto 0);
 	signal spidataByteCounter, nrbytedelay: unsigned(15 downto 0);
-	signal wrdelay, rddelay, spiregloaded, rdzeero : std_ulogic;
+	signal wrdelay, rddelay, spiregloaded, rdzeero : std_logic;
 begin
 
 
@@ -227,7 +227,7 @@ begin
 
 		command <= commandReg;
 		nrbytedelay <= spidataByteCounter;
-		nrbyte <= std_ulogic_vector(nrbytedelay);
+		nrbyte <= std_logic_vector(nrbytedelay);
 		RD <= rddelay;
 	end if;
 

@@ -7,30 +7,30 @@ use ieee.std_logic_1164.all, ieee.numeric_std.all;
 
 entity pwm_tb is
 	generic( nr_of_bits : natural := 16 ;
-	         address : std_ulogic_vector( 7 downto 0) := "00000000");
+	         address : std_logic_vector( 7 downto 0) := "00000000");
 end pwm_tb;
 
 architecture testbench of pwm_tb is
 
 component pwm is
 	generic( nr_of_bits : natural := 16 ;
-	         address : std_ulogic_vector( 7 downto 0) := "00000000");
+	         address : std_logic_vector( 7 downto 0) := "00000000");
 	
 	port (
-		clk : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		pwmlavio : out std_ulogic;
-		pwmla :  out std_ulogic;
-		pwmexvo : out std_ulogic;
-		pwmoffs0 : out std_ulogic;
-		pwmoffs1 : out std_ulogic;
-		ladvref : out std_ulogic
+		clk : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		pwmlavio : out std_logic;
+		pwmla :  out std_logic;
+		pwmexvo : out std_logic;
+		pwmoffs0 : out std_logic;
+		pwmoffs1 : out std_logic;
+		ladvref : out std_logic
 		);
 end component pwm;
-signal clk, wr, rst, pwmlavio, pwmla, pwmexvo, pwmoffs0, pwmoffs1, ladvref : std_ulogic;
-signal datain, addr : std_ulogic_vector( 7 downto 0);
+signal clk, wr, rst, pwmlavio, pwmla, pwmexvo, pwmoffs0, pwmoffs1, ladvref : std_logic;
+signal datain, addr : std_logic_vector( 7 downto 0);
 begin
 -- 1 3 4 // 0 2 5 6 7
 

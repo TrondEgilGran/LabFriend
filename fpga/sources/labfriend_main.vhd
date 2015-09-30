@@ -87,12 +87,12 @@ entity LabFriend is
 	   AUPDN : out STD_ULOGIC;
 	   AU_OVFL : in STD_ULOGIC;
 	   AU_OVFR : in STD_ULOGIC;
-	   PWMOFFS0 : out std_ulogic;
-	   PWMOFFS1 : out std_ulogic;
-	   PWMEXVO : out std_ulogic;
-	   PWMLAVIO : out std_ulogic;
-	   PWMLA : out std_ulogic;
-	   LADVREF : out std_ulogic; 
+	   PWMOFFS0 : out std_logic;
+	   PWMOFFS1 : out std_logic;
+	   PWMEXVO : out std_logic;
+	   PWMLAVIO : out std_logic;
+	   PWMLA : out std_logic;
+	   LADVREF : out std_logic; 
 	   mcb3_dram_dq                            : inout  std_logic_vector(C3_NUM_DQ_PINS-1 downto 0);
 	   mcb3_dram_a                             : out std_logic_vector(C3_MEM_ADDR_WIDTH-1 downto 0);
 	   mcb3_dram_ba                            : out std_logic_vector(C3_MEM_BANKADDR_WIDTH-1 downto 0);
@@ -148,70 +148,70 @@ end component SPIMASTER;
 component i2s is
 	generic( 	DATA    : integer := 48;
 			RADDR    : integer := 12;
-			address : std_ulogic_vector( 7 downto 0) := "00000011");
+			address : std_logic_vector( 7 downto 0) := "00000011");
 	
-	Port (	clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		dataout : out std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		rd : in std_ulogic;
-		busy : out std_ulogic;
-		sclk : out std_ulogic;
-		i2sdout :  out std_ulogic;
-		i2sdin : in std_ulogic;
-		bck :  out std_ulogic;
-		lrck : out std_ulogic;
-		conf0 : out std_ulogic;
-		conf1 : out std_ulogic);
+	Port (	clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		dataout : out std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		rd : in std_logic;
+		busy : out std_logic;
+		sclk : out std_logic;
+		i2sdout :  out std_logic;
+		i2sdin : in std_logic;
+		bck :  out std_logic;
+		lrck : out std_logic;
+		conf0 : out std_logic;
+		conf1 : out std_logic);
 end component i2s;
 
 component s74595 is
 	generic( nr_of_bits : natural := 16 ;
 	         frequency_div : natural := 5000;
 	         frequency_div_half : natural := 2500;
-	         address : std_ulogic_vector( 7 downto 0) := "00000100");
+	         address : std_logic_vector( 7 downto 0) := "00000100");
 	
 	port (
-		clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		busy : out std_ulogic;
-		ser : out std_ulogic;
-		rck :  out std_ulogic;
-		sck : out std_ulogic);
+		clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		busy : out std_logic;
+		ser : out std_logic;
+		rck :  out std_logic;
+		sck : out std_logic);
 end component s74595;
 
 component HSaqusition is
 	generic( sram_addr_width : natural := 19; --Number of bits in SRAM addr bus
 		 sram_data_width : natural := 18;
-		 address : std_ulogic_vector( 7 downto 0 ) := "00000001"
+		 address : std_logic_vector( 7 downto 0 ) := "00000001"
 		 );
 
 	port (
-		clk : in std_ulogic;
-		rst : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		rd : in std_ulogic;
-		dataout : out std_ulogic_vector( 7 downto 0);
-		sram_addr : out std_ulogic_vector( sram_addr_width-1 downto 0);
-		sram_data : inout std_ulogic_vector( sram_data_width-1 downto 0);
-		sram_wr : out std_ulogic;
-		sram_ce : out std_ulogic;
-		sram_oe : out std_ulogic;
-		digital_in : in std_ulogic_vector( 7 downto 0);
-		hs_adc_a : in std_ulogic_vector( 7 downto 0);
-		hs_adc_b : in std_ulogic_vector( 7 downto 0);
-		adc_clk_a : out std_ulogic;
-		adc_clk_b : out std_ulogic;
-		adc_pwd_d : out std_ulogic;
-		hs_clock_2 : in std_ulogic;
-		hs_clock_4 : in std_ulogic
+		clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		rd : in std_logic;
+		dataout : out std_logic_vector( 7 downto 0);
+		sram_addr : out std_logic_vector( sram_addr_width-1 downto 0);
+		sram_data : inout std_logic_vector( sram_data_width-1 downto 0);
+		sram_wr : out std_logic;
+		sram_ce : out std_logic;
+		sram_oe : out std_logic;
+		digital_in : in std_logic_vector( 7 downto 0);
+		hs_adc_a : in std_logic_vector( 7 downto 0);
+		hs_adc_b : in std_logic_vector( 7 downto 0);
+		adc_clk_a : out std_logic;
+		adc_clk_b : out std_logic;
+		adc_pwd_d : out std_logic;
+		hs_clock_2 : in std_logic;
+		hs_clock_4 : in std_logic
 		);
 end component HSaqusition;
 
@@ -355,43 +355,43 @@ end component;
 
 component pwm is
 	generic( nr_of_bits : natural := 16 ;
-	         address : std_ulogic_vector( 7 downto 0) := "00000000");
+	         address : std_logic_vector( 7 downto 0) := "00000000");
 	
 	port (
-		clk : in std_ulogic;
-		datain : in std_ulogic_vector( 7 downto 0);
-		addr : in std_ulogic_vector( 7 downto 0);
-		wr : in std_ulogic;
-		pwmlavio : out std_ulogic;
-		pwmla :  out std_ulogic;
-		pwmexvo : out std_ulogic;
-		pwmoffs0 : out std_ulogic;
-		pwmoffs1 : out std_ulogic;
-		ladvref : out std_ulogic
+		clk : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		pwmlavio : out std_logic;
+		pwmla :  out std_logic;
+		pwmexvo : out std_logic;
+		pwmoffs0 : out std_logic;
+		pwmoffs1 : out std_logic;
+		ladvref : out std_logic
 		);
 end component;
 
 
 
-signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_4x_180_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_ulogic;
-signal memclk_0, memclk_180, memclk_0_b, memclk_180_b : std_ulogic;
-signal spimspiclk, spimspidatain, spimspidataout, spimspics, spimRD, spimWR  : std_ulogic;
-signal spimnrbyte : std_ulogic_vector(15 downto 0);
-signal spimdataout, spimcommand, spimdatain0, spimdatain1, spimdatain2 : std_ulogic_vector(7 downto 0);
-signal spimdatain3, spimdatain4, spimdatain5, spimdatain6, spimdatain7 : std_ulogic_vector(7 downto 0);
+signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_4x_180_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_logic;
+signal memclk_0, memclk_180, memclk_0_b, memclk_180_b : std_logic;
+signal spimspiclk, spimspidatain, spimspidataout, spimspics, spimRD, spimWR  : std_logic;
+signal spimnrbyte : std_logic_vector(15 downto 0);
+signal spimdataout, spimcommand, spimdatain0, spimdatain1, spimdatain2 : std_logic_vector(7 downto 0);
+signal spimdatain3, spimdatain4, spimdatain5, spimdatain6, spimdatain7 : std_logic_vector(7 downto 0);
 
 
-signal global_clk, global_rst, global_reset_n : std_ulogic; 
+signal global_clk, global_rst, global_reset_n : std_logic; 
 
 
-signal gpio : std_ulogic;
-signal testo : std_ulogic_vector(2 downto 0);
+signal gpio : std_logic;
+signal testo : std_logic_vector(2 downto 0);
 
-signal hs_clock_out, ram_dcm_fb, ram_dcm_out, hs_clock_out_pol : std_ulogic;
+signal hs_clock_out, ram_dcm_fb, ram_dcm_out, hs_clock_out_pol : std_logic;
 
-signal SRAMA : std_ulogic_vector( 19-1 downto 0);	
-signal SRAMD : std_ulogic_vector( 18-1 downto 0);	
-signal notsramWE, SRAMCE, notsramOE, busyD, ASEL0, ASEL1 : std_ulogic;
+signal SRAMA : std_logic_vector( 19-1 downto 0);	
+signal SRAMD : std_logic_vector( 18-1 downto 0);	
+signal notsramWE, SRAMCE, notsramOE, busyD, ASEL0, ASEL1 : std_logic;
 
 signal cmd_instr_g, c3_p0_cmd_instr : std_logic_vector(2 downto 0);
 signal cmd_bl_g, c3_p0_cmd_bl : std_logic_vector(5 downto 0);
@@ -403,11 +403,11 @@ signal resetCounter : unsigned(5 downto 0) := "000000";
 signal quili : unsigned(7 downto 0) := "00000000";
 
 signal c3_p0_wr_count, c3_p0_rd_count : std_logic_vector(6 downto 0);
-signal c3_p0_cmd_empty, c3_p0_cmd_full, c3_p0_wr_full, c3_p0_wr_empty, c3_p0_wr_underrun, c3_p0_wr_error : std_ulogic;
+signal c3_p0_cmd_empty, c3_p0_cmd_full, c3_p0_wr_full, c3_p0_wr_empty, c3_p0_wr_underrun, c3_p0_wr_error : std_logic;
 signal c3_p0_rd_full, c3_p0_rd_empty, c3_p0_rd_overflow, c3_p0_rd_error, c3_calib_done : std_logic;
 signal user_clock_ddr, ddrclk_fb : std_logic;
 
-signal quack : std_ulogic_vector(7 downto 0);
+signal quack : std_logic_vector(7 downto 0);
 begin
 	cmd_instr_g <= (others => '0');
 	cmd_bl_g <= (others => '0');
@@ -745,7 +745,7 @@ port map (
 				if c3_p0_rd_empty = '0' then
 					c3_p0_rd_en <= '1';
 				end if;
-				spimdatain7 <= std_ulogic_vector(c3_p0_rd_data(7 downto 0));
+				spimdatain7 <= std_logic_vector(c3_p0_rd_data(7 downto 0));
 			else
 				if  spimWR = '0'  then
 					c3_p0_rd_en <= '0';
@@ -762,7 +762,7 @@ port map (
 				c3_p0_cmd_byte_addr(6 downto 4) <= std_logic_vector(spimdataout(7 downto 5));
 				c3_p0_cmd_byte_addr(3 downto 0) <= "0000";
 				quack <= spimdataout;
-				LAD815 <= spimdataout; --std_ulogic_vector(quili);
+				LAD815 <= spimdataout; --std_logic_vector(quili);
 				--quili <= quili +1;
 			else
 				c3_p0_cmd_en <= '0';
@@ -849,7 +849,7 @@ port map (
 				spimdatain2 <= "00001111";
 			elsif testo = "001" then
 				testo <= "010";
-				spimdatain2( 6 downto 0) <= std_ulogic_vector(c3_p0_wr_count);
+				spimdatain2( 6 downto 0) <= std_logic_vector(c3_p0_wr_count);
 				spimdatain2(7) <= c3_p0_wr_full;
 			elsif testo = "010" then
 				testo <= "011";
@@ -863,22 +863,22 @@ port map (
 				spimdatain2(7) <= c3_p0_rd_en;
 			elsif testo = "011" then
 				testo <= "100";
-				spimdatain2( 6 downto 0) <= std_ulogic_vector(c3_p0_rd_count);
+				spimdatain2( 6 downto 0) <= std_logic_vector(c3_p0_rd_count);
 				spimdatain2( 7 ) <= c3_calib_done;
 			elsif testo = "100" then
 				testo <= "101";
-				spimdatain2(5 downto 0) <= std_ulogic_vector(c3_p0_cmd_bl);
+				spimdatain2(5 downto 0) <= std_logic_vector(c3_p0_cmd_bl);
 				spimdatain2(7 downto 6) <= "00";
 			elsif testo = "101" then
 				testo <= "110";
-				spimdatain2(2 downto 0) <= std_ulogic_vector( c3_p0_cmd_instr);
+				spimdatain2(2 downto 0) <= std_logic_vector( c3_p0_cmd_instr);
 				spimdatain2(7 downto 3) <= "10000";
 			elsif testo = "110" then
 				testo <= "111";
-				spimdatain2 <= std_ulogic_vector(c3_p0_cmd_byte_addr(7 downto 0));
+				spimdatain2 <= std_logic_vector(c3_p0_cmd_byte_addr(7 downto 0));
 			elsif testo = "111" then
 				testo <= "000";
-				--spimdatain2 <= std_ulogic_vector(c3_p0_cmd_byte_addr(15 downto 8));
+				--spimdatain2 <= std_logic_vector(c3_p0_cmd_byte_addr(15 downto 8));
 				spimdatain2 <= quack;
 			end if;
 		end if;
@@ -898,7 +898,7 @@ port map (
 	
 	
 	
-	--LAD815(7 downto 1) <= std_ulogic_vector(ddrclktestcounter(7 downto 1));
+	--LAD815(7 downto 1) <= std_logic_vector(ddrclktestcounter(7 downto 1));
 	
 	
 	--DigiOut: process (global_clk, global_rst) is
