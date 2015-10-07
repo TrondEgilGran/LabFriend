@@ -40,7 +40,7 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
     -- Component Declaration for the Unit Under Test (UUT)
  
     COMPONENT HSaqusition
-    generic( ram_addr_width : natural := 29; --Number of bits in SRAM addr bus
+    generic( ram_addr_width : natural := 30; --Number of bits in SRAM addr bus
 		 ram_data_width : natural := 32;
 		 ram_depth : natural := 19;
 		 address : std_logic_vector( 7 downto 0 ) := "00000001"

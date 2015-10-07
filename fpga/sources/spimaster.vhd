@@ -33,23 +33,23 @@ use UNISIM.VComponents.all;
 
 
 entity SPIMASTER is
-    Port ( spiclk : in  STD_ULOGIC;
-           clk : in  STD_ULOGIC;
-	   rst : in STD_ULOGIC;
-           spidatain : in  STD_ULOGIC;
-           spidataout : out  STD_ULOGIC;
-           spics : in  STD_ULOGIC;
-           nrbyte : out  STD_ULOGIC_VECTOR (15 downto 0);
-           dataout : out  STD_ULOGIC_VECTOR (7 downto 0);
-           datain0 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain1 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain2 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain3 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain4 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain5 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain6 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           datain7 : in  STD_ULOGIC_VECTOR (7 downto 0);
-           command : out  STD_ULOGIC_VECTOR (7 downto 0);
+    Port ( spiclk : in  STD_LOGIC;
+           clk : in  STD_LOGIC;
+	   rst : in STD_LOGIC;
+           spidatain : in  STD_LOGIC;
+           spidataout : out  STD_LOGIC;
+           spics : in  STD_LOGIC;
+           nrbyte : out  STD_LOGIC_VECTOR (15 downto 0);
+           dataout : out  STD_LOGIC_VECTOR (7 downto 0);
+           datain0 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain1 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain2 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain3 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain4 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain5 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain6 : in  STD_LOGIC_VECTOR (7 downto 0);
+           datain7 : in  STD_LOGIC_VECTOR (7 downto 0);
+           command : out  STD_LOGIC_VECTOR (7 downto 0);
 			  --Device Sel Format:
 			  --Bit7: Read/Write 1= read, 0=write
 			  --Bit6: Command/data mode
@@ -57,8 +57,8 @@ entity SPIMASTER is
 			  --Bit4: Reserved
 			  --Bit3: Reserved
 			  --Bit2-0: Device data selector
-           RD : out  STD_ULOGIC;
-           WR : out  STD_ULOGIC);
+           RD : out  STD_LOGIC;
+           WR : out  STD_LOGIC);
 end SPIMASTER;
 
 
