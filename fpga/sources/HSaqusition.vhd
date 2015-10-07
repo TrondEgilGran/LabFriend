@@ -11,6 +11,7 @@ use UNIMACRO.Vcomponents.all;
 entity HSaqusition is
 	generic( ram_addr_width : natural := 29; --Number of bits in SRAM addr bus
 		 ram_data_width : natural := 32;
+		 ram_depth : natural := 19;
 		 address : std_logic_vector( 7 downto 0 ) := "00000001"
 		 );
 
@@ -23,19 +24,23 @@ entity HSaqusition is
 		rd : in std_logic;
 		dataout : out std_logic_vector( 7 downto 0);
 		adc_a_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		adc_a_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
+		adc_a_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
 		adc_a_ram_wr : out std_logic;
 		adc_a_cmd_en : out std_logic;
 		adc_b_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		adc_b_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
+		adc_b_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
 		adc_b_ram_wr : out std_logic;
 		adc_b_cmd_en : out std_logic;
 		digital_in_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		digital_in_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
+		digital_in_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
 		digital_in_ram_wr : out std_logic;
+		digital_in_ram_rd : out std_logic;
+		digital_in_ram_rd_empty : in std_logic;
 		digital_in_cmd_en : out std_logic;
+		digital_in_ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
 		ram_command : out std_logic_vector(2 downto 0);
 		ram_bl : out std_logic_vector(5 downto 0);
+		ram_clock : out std_logic;
 		digital_in : in std_logic_vector( 7 downto 0);
 		hs_adc_a : in std_logic_vector( 7 downto 0);
 		hs_adc_b : in std_logic_vector( 7 downto 0);
@@ -68,6 +73,9 @@ component COUNTER_LOAD_INC_MACRO is
      );   
 end component COUNTER_LOAD_INC_MACRO;
 
+
+type singlestrobe is (idle, strobe_triggered);
+signal ram_write_strobe, ram_read_strobe  : singlestrobe := idle;
 type datamachine is (idle, process_command, read_trigger, read_ram, read_status, configure);
 signal data_state : datamachine := idle; 
 type WRcountermachine is (idle, counting, read_data, wait_ready);
@@ -77,17 +85,18 @@ signal ram_group_2_select, ram_group_3_select : std_logic_vector( 2 downto 0 ) :
 signal ram_group_2_select_master, ram_group_3_select_master : std_logic_vector( 2 downto 0 ) := (others => '0') ;
 signal digital_in_by_8_muxed : std_logic;
 
-signal ram_write_counter, ram_read_counter, ram_address_offset, ram_trigger_address: unsigned( sram_addr_width-1 downto 0 ) :=(others => '0') ;
+signal ram_write_counter, ram_read_counter, ram_address_offset, ram_trigger_address: unsigned( ram_depth-1 downto 0 ) :=(others => '0') ;
 
-signal read_ram_stop, ram_read_size : unsigned( sram_addr_width-1 downto 0 ) := (others => '1');
-signal ram_counter_wr_stop : std_logic_vector( sram_addr_width-1 downto 0 ) := (others => '0');
-signal ram_data_in, ram_data_out : std_logic_vector(sram_data_width-1 downto 0 ) := (others => '0');
+signal read_ram_stop, ram_read_size : unsigned( ram_depth-1 downto 0 ) := (others => '1');
+signal ram_counter_wr_stop : std_logic_vector( ram_depth-1 downto 0 ) := (others => '0');
+signal ram_data_in, ram_data_out : std_logic_vector(ram_data_width-1 downto 0 ) := (others => '0');
 signal adc_clk_a_select, adc_clk_b_select, read_ready, ram_data_available, ram_read_finished, ram_ready : std_logic := '0';
 signal trigger_source, trigger_source_tmp, trigger_d1, trigger_d2, trigger_val , trigger_val_hs: std_logic_vector(7 downto 0) := (others => '0');
 signal start_ram_capture, ram_full, data_capture_started, trigger_edge, triggered, manual_trigger : std_logic := '0';
-signal ram_addr_adder : unsigned( sram_addr_width downto 0 ) := (others => '0');
+signal ram_addr_adder : unsigned( ram_depth downto 0 ) := (others => '0');
+signal ram_addr_adder_l, ram_address_offset_l, ram_trigger_address_l : std_logic_vector( ram_depth downto 0 ) := (others => '0');
 signal combus_0, combus_1 : std_logic_vector( 7 downto 0 ) := (others => '0');
-signal combus_2 : std_logic_vector( 1 downto 0) := (others => '0');
+signal combus_2, combus_3 : std_logic_vector( 7 downto 0) := (others => '0');
 signal combus : std_logic_vector( 2 downto 0) := (others => '0');
 signal command : std_logic_vector( 2 downto 0) := (others => '0');
 signal sram_wr_sig, configdone, interruptdataread : std_logic := '0';
@@ -102,14 +111,22 @@ signal adc_a_register, adc_b_register, digital_in_register : std_logic_vector(7 
 
 signal ram_write_counter_reset, ram_write_counter_enable : std_logic :='1';
 signal trig_it : std_logic := '0';
-signal count_inc_by : std_logic_vector( sram_addr_width+9 downto 0 ) := "00000000000000000010000000000";
-signal counter_connection : std_logic_vector( sram_addr_width+9 downto 0 );
+signal count_inc_by : std_logic_vector( ram_depth+9 downto 0 ) := "00000000000000000010000000000";
+signal counter_connection : std_logic_vector( ram_depth+9 downto 0 );
 signal ram_dcm_fb : std_logic;
 
-signal adc_a_to_ram_reg, adc_b_to_ram_reg, digital_in_to_ram_reg : std_logic_vector( 31 downto 0 );
+signal adc_a_to_ram_reg, adc_b_to_ram_reg, digital_in_to_ram_reg, data_from_ram_reg : std_logic_vector( 31 downto 0 );
 signal adc_a_to_ram_out, adc_b_to_ram_out, digital_in_to_ram_out : std_logic_vector( 31 downto 0 );
 
+signal adc_a_enable, adc_b_enable, digital_in_enable : std_logic := '1';
+signal ram_read_signal, release_ram, start_ram_read, ram_read_started, digital_in_ram_rd_sig : std_logic := '0';
+signal aq_channel : std_logic_vector(1 downto 0);
+signal control_signals : std_logic_vector(4 downto 0);
+
 begin
+	hs_clock_n <= not hs_clock;
+	adc_clk_a_select_n <= not adc_clk_a_select;
+	adc_clk_b_select_n <= not adc_clk_b_select;
 	gnd <= '0';
 	vcc <= '1';
 	--
@@ -158,36 +175,36 @@ begin
 	ODDR2_inst_1 : ODDR2
 	generic map(
 		DDR_ALIGNMENT => "NONE", -- Sets output alignment to "NONE", "C0", "C1"
-		INIT => '0', -- Sets initial state of the Q output to ’0’ or ’1’
+		INIT => '0', -- Sets initial state of the Q output to
 		SRTYPE => "SYNC") -- Specifies "SYNC" or "ASYNC" set/reset
 	port map (
 		Q => adc_clk_a, -- 1-bit output data
 		C0 => hs_clock, -- 1-bit clock input
-		C1 => not(hs_clock), -- 1-bit clock input
+		C1 => hs_clock_n, -- 1-bit clock input
 		CE => vcc, -- 1-bit clock enable input
 		D0 => adc_clk_a_select, -- 1-bit data input (associated with C0)
-		D1 => not(adc_clk_a_select), -- 1-bit data input (associated with C1)
+		D1 => adc_clk_a_select_n, -- 1-bit data input (associated with C1)
 		R => gnd, -- 1-bit reset input
 		S => gnd -- 1-bit set input
 	);
 	ODDR2_inst_2 : ODDR2
 	generic map(
 		DDR_ALIGNMENT => "NONE", -- Sets output alignment to "NONE", "C0", "C1"
-		INIT => '0', -- Sets initial state of the Q output to ’0’ or ’1’
+		INIT => '0', -- Sets initial state of the Q output to
 		SRTYPE => "SYNC") -- Specifies "SYNC" or "ASYNC" set/reset
 	port map (
 		Q => adc_clk_b, -- 1-bit output data
 		C0 => hs_clock, -- 1-bit clock input
-		C1 => not(hs_clock), -- 1-bit clock input
+		C1 => hs_clock_n, -- 1-bit clock input
 		CE => vcc, -- 1-bit clock enable input
 		D0 => adc_clk_b_select, -- 1-bit data input (associated with C0)
-		D1 => not(adc_clk_b_select), -- 1-bit data input (associated with C1)
+		D1 => adc_clk_b_select_n, -- 1-bit data input (associated with C1)
 		R => gnd, -- 1-bit reset input
 		S => gnd -- 1-bit set input
 	);
 	-- End of ODDR2_inst instantiation
 	
-	
+	ram_clock <= hs_clock;
 
 	getData: process (rst, clk, datain, addr) is
 	
@@ -199,6 +216,7 @@ begin
 						if wr = '1' then
 							command <= datain( 2 downto 0);
 							data_state <= process_command;
+							control_signals <= datain( 7 downto 3);
 						end if;
 						interruptdataread  <= '0';
 					when process_command =>
@@ -208,10 +226,16 @@ begin
 							when "001" =>
 								data_state <= read_ram;
 								read_ready <= '0';
+								aq_channel <= control_signals(1 downto 0);
+								release_ram <= '0';
+								start_ram_read <= '1';
 							when "010" =>
 								data_state <= configure;
 							when "011" =>
 								data_state <= read_status;
+							when "100" =>
+								data_state <= idle;
+								release_ram <= control_signals(0);
 							when others =>
 								data_state <= idle;
 						end case;
@@ -225,7 +249,7 @@ begin
 									dataout <= std_logic_vector(ram_trigger_address( 15 downto 8));
 									combus <= "010";
 								when "010" =>
-									dataout(2 downto 0) <= std_logic_vector(ram_trigger_address( sram_addr_width-1 downto 16));
+									dataout(2 downto 0) <= std_logic_vector(ram_trigger_address( ram_depth-1 downto 16));
 									dataout(7 downto 3) <= (others => '0');
 									combus <= "011";
 								when "011" =>
@@ -235,7 +259,7 @@ begin
 									dataout <= ram_counter_wr_stop( 15 downto 8 );
 									combus <= "101";
 								when "101" =>
-									dataout(2 downto 0) <= ram_counter_wr_stop( sram_addr_width-1 downto 16 );
+									dataout(2 downto 0) <= ram_counter_wr_stop( ram_depth-1 downto 16 );
 									dataout(7 downto 3) <= (others => '0');
 									combus <= "000";
 								when others =>
@@ -273,7 +297,10 @@ begin
 										dataout <= combus_1;
 										combus <= "010";
 									when "010" =>
-										dataout <= "101010" & combus_2;
+										dataout <= combus_2;
+										combus <= "011";
+									when "011" =>
+										dataout <= combus_3;
 										--dataout <= std_logic_vector(rdcnt);
 										combus <= "000";
 										read_ready <= '1';
@@ -377,6 +404,10 @@ begin
 			if data_capture_started = '1' then
 				start_ram_capture <= '0';
 			end if;
+			
+			if ram_read_started = '1' then 
+				start_ram_read <= '0';
+			end if;
 		end if;
 	end process getData;
 	
@@ -384,26 +415,123 @@ begin
 	SpeedDevil : process( hs_clock, rst )
 	begin
 		if rising_edge(hs_clock) then
+			--Store adc and digital input data in registers
+			-----------------------------------------------
 			adc_a_register <= hs_adc_a;
 			adc_b_register <= hs_adc_b;
+			digital_in_register <= digital_in;
+			-----------------------------------------------
+			
+			--Create 32bit words to store in RAM
+			--------------------------------------------------------------------------------
+			--ADC A
 			adc_a_to_ram_reg( 7 downto 0 ) <= adc_a_register;
 			adc_a_to_ram_reg( 15 downto 8 ) <= adc_a_to_ram_reg( 7 downto 0 );
 			adc_a_to_ram_reg( 23 downto 16 ) <= adc_a_to_ram_reg( 15 downto 8 );
 			adc_a_to_ram_reg( 31 downto 24 ) <= adc_a_to_ram_reg( 23 downto 16 );
+			--ADC B
+			adc_b_to_ram_reg( 7 downto 0 ) <= adc_b_register;
+			adc_b_to_ram_reg( 15 downto 8 ) <= adc_b_to_ram_reg( 7 downto 0 );
+			adc_b_to_ram_reg( 23 downto 16 ) <= adc_b_to_ram_reg( 15 downto 8 );
+			adc_b_to_ram_reg( 31 downto 24 ) <= adc_b_to_ram_reg( 23 downto 16 );
+			--Digital input
+			digital_in_to_ram_reg( 7 downto 0 ) <= digital_in_register;
+			digital_in_to_ram_reg( 15 downto 8 ) <=  digital_in_to_ram_reg( 7 downto 0 );
+			digital_in_to_ram_reg( 23 downto 16 ) <= digital_in_to_ram_reg( 15 downto 8 );
+			digital_in_to_ram_reg( 31 downto 24 ) <= digital_in_to_ram_reg( 23 downto 16 );
+			--------------------------------------------------------------------------------
+		
+			--Register data to store in RAM. data_to_ram should be strobed every fourth clock cycle.
+			-----------------------------------------------------------------------------------------
+			if sram_wr_sig = '1' and ram_write_counter(1 downto 0) = "00" then
+				case ram_write_strobe is
+					when idle =>
+						ram_write_strobe <= strobe_triggered;
+						adc_a_ram_wr <= adc_a_enable;
+						adc_b_ram_wr <= adc_b_enable;
+						digital_in_ram_wr <= digital_in_enable;
+						
+						adc_a_ram_data <= adc_a_to_ram_reg;
+						adc_b_ram_data <= adc_b_to_ram_reg;
+						digital_in_ram_data <= digital_in_to_ram_reg;
+
+						if (ram_write_counter(6 downto 2) = "00000") and (ram_write_counter /= 0) then
+							ram_command <= "000";
+							adc_a_cmd_en <= adc_a_enable;
+							adc_b_cmd_en <= adc_b_enable;
+							digital_in_cmd_en <= digital_in_enable;
+							adc_a_ram_addr(5 downto 0) <= (others => '0');
+							adc_a_ram_addr(ram_depth-1 downto 6) <= std_logic_vector(ram_write_counter(ram_depth-1 downto 6));
+							adc_a_ram_addr(ram_addr_width-1 downto ram_depth+2) <= (others => '0');
+							adc_a_ram_addr(ram_depth+1 downto ram_depth) <= "00";
+							adc_b_ram_addr(5 downto 0) <= (others => '0');
+							adc_b_ram_addr(ram_depth-1 downto 6) <= std_logic_vector(ram_write_counter(ram_depth-1 downto 6));
+							adc_b_ram_addr(ram_addr_width-1 downto ram_depth+2) <= (others => '0');
+							adc_b_ram_addr(ram_depth+1 downto ram_depth) <= "01";
+							digital_in_ram_addr(5 downto 0) <= (others => '0');
+							digital_in_ram_addr(ram_depth-1 downto 6) <= std_logic_vector(ram_write_counter(ram_depth-1 downto 6));
+							digital_in_ram_addr(ram_addr_width-1 downto ram_depth+2) <= (others => '0');
+							digital_in_ram_addr(ram_depth+1 downto ram_depth) <= "10";
+							ram_bl <= "011111";
+						end if;
+					when strobe_triggered =>
+						adc_a_ram_wr <= '0';
+						adc_a_ram_wr <= '0';
+						digital_in_ram_wr <= '0';
+						adc_a_cmd_en <= '0';
+						adc_b_cmd_en <= '0';
+						digital_in_cmd_en <= '0';
+				end case;
+			else
+				ram_write_strobe <= idle;
+				adc_a_ram_wr <= '0';
+				adc_a_ram_wr <= '0';
+				digital_in_ram_wr <= '0';
+				adc_a_cmd_en <= '0';
+				adc_b_cmd_en <= '0';
+				
+				--We use digital_in channel to read back data.
+				if ram_read_signal = '1' then
+					case ram_read_strobe is
+						when idle =>
+							ram_read_strobe <= strobe_triggered;
+							ram_command <= "001"; --read ram data
+							ram_bl <= "000000"; --read one word at a time
+							digital_in_ram_addr( ram_depth+1 downto ram_depth  ) <= aq_channel; 
+							digital_in_ram_addr( ram_depth-1 downto 0) <= std_logic_vector(ram_read_counter);
+							digital_in_ram_addr( ram_addr_width-1 downto ram_depth+2 ) <= (others => '0');
+							digital_in_cmd_en <= '1';
+						when strobe_triggered =>
+							digital_in_cmd_en <= '0';
+						
+					end case;
+				else
+					if digital_in_ram_rd_empty = '0' and ram_read_strobe = strobe_triggered then
+						ram_read_strobe <= idle;
+						digital_in_ram_rd_sig <= '1';
+						data_from_ram_reg <= digital_in_ram_data_read;
+					end if;
+					digital_in_cmd_en <= '0';
+				end if;
+				
+			end if;
+			
+			if digital_in_ram_rd_sig = '1' then
+				digital_in_ram_rd_sig <= '0';
+			end if;
 			trigger_select_HS <= trigger_select;
 			trigger_source <= trigger_source_tmp;
 			trigger_val_hs <= trigger_val; 
 		end if;
 	end process SpeedDevil;
-	
+	digital_in_ram_rd <= digital_in_ram_rd_sig;
 
 	
 	
 	--select trigger input
-	trigger_source_tmp <=  ram_data_in( 7 downto 0 ) when trigger_select_HS = "00" else
-			   ram_data_in( 15 downto 8 ) when trigger_select_HS = "01" else
-			   "0000000" & ram_data_in(16) when trigger_select_HS = "10" else
-			   "0000000" & ram_data_in(17) when trigger_select_HS = "11" else
+	trigger_source_tmp <=  adc_a_register when trigger_select_HS = "00" else
+			   adc_b_register when trigger_select_HS = "01" else
+			   digital_in_register when trigger_select_HS = "10" else
 			   "XXXXXXXX";
 
 	--		   
@@ -414,13 +542,13 @@ begin
 	generic map (
 			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
 			LATENCY => 2, -- Desired clock cycle latency, 0-2
-			WIDTH => sram_addr_width+1) -- Input / Output bus width, 1-48
+			WIDTH => ram_depth+1) -- Input / Output bus width, 1-48
 		port map (
 				CARRYOUT => open, -- 1-bit carry-out output signal
-				unsigned(RESULT) => ram_addr_adder, -- Add/sub result output, width defined by WIDTH generic
-				A => std_logic_vector('0' & ram_address_offset), -- Input A bus, width defined by WIDTH generic
+				RESULT => ram_addr_adder_l, -- Add/sub result output, width defined by WIDTH generic
+				A => ram_address_offset_l, -- Input A bus, width defined by WIDTH generic
 				ADD_SUB => vcc, -- 1-bit add/sub input, high selects add, low selects subtract
-				B => std_logic_vector('0' & ram_trigger_address), -- Input B bus, width defined by WIDTH generic
+				B => ram_trigger_address_l, -- Input B bus, width defined by WIDTH generic
 				CARRYIN => gnd, -- 1-bit carry-in input
 				CE => vcc, -- 1-bit clock enable input
 				CLK =>hs_clock, -- 1-bit clock input
@@ -428,8 +556,10 @@ begin
 		);
 	-- End of ADDSUB_MACRO_inst instantiation
 	--ram_addr_adder <= ('0' & ram_address_offset) + ('0' & ram_trigger_address);
-	ram_counter_wr_stop <= std_logic_vector(ram_addr_adder( sram_addr_width-1 downto 0 ));
-	
+	ram_addr_adder <= unsigned(ram_addr_adder_l);
+	ram_counter_wr_stop <= std_logic_vector(ram_addr_adder( ram_depth-1 downto 0 ));
+	ram_address_offset_l <= std_logic_vector('0' & ram_address_offset);
+	ram_trigger_address_l <= std_logic_vector('0' & ram_trigger_address);
 	procTrigger: process ( rst, hs_clock ) is
 	begin
 		if rising_edge(hs_clock) then
@@ -473,25 +603,26 @@ begin
 	COUNTER_LOAD_INC_MACRO_inst : COUNTER_LOAD_INC_MACRO
 	generic map (
 		DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-		WIDTH_DATA => sram_addr_width + 10) -- Counter output bus width, 1-48
+		WIDTH_DATA => ram_depth + 10) -- Counter output bus width, 1-48
 	port map (
-		std_logic_vector(Q) => counter_connection, -- Counter ouput, width determined by WIDTH_DATA generic
+		Q => counter_connection, -- Counter ouput, width determined by WIDTH_DATA generic
 		CLK => hs_clock, -- 1-bit clock input
 		CE => ram_write_counter_enable, -- 1-bit clock enable input
 		DIRECTION => '1', -- 1-bit up/down count direction input, high is count up
-		COUNT_BY => std_logic_vector(count_inc_by),
+		COUNT_BY => count_inc_by,
 		LOAD => '0', -- 1-bit active high load input
 		LOAD_DATA => (others => '0'), -- Counter load data, width determined by WIDTH_DATA generic
 		RST => ram_write_counter_reset -- 1-bit active high synchronous reset
 	);
 	-- End of COUNTER_LOAD_MACRO_inst instantiation
-	ram_write_counter <= unsigned(counter_connection( sram_addr_width+9 downto 10)); 
+	ram_write_counter <= unsigned(counter_connection( ram_depth+9 downto 10)); 
 
 	
 	RamWriteCounter: process ( rst, hs_clock, ram_counter_wr_stop ) is
 	begin
-	
-		if rising_edge(hs_clock) then  --We change address on falling edge
+		if rst = '1' then
+			ram_write_counter_reset <= '1';
+		elsif rising_edge(hs_clock) then  --We change address on falling edge
 			case ram_count_state_wr is
 				when idle =>
 					if start_ram_capture = '1' then
@@ -533,34 +664,42 @@ begin
 		end if;	
 	end process RamWriteCounter;
 	
-	
 	RamReadCounter: process ( rst, clk ) is
 	begin	
 		
 		if rising_edge(clk) then
+			if start_ram_read = '0' then 
+				ram_read_started <= '0';
+			end if;
 			case ram_count_state_rd is
 				when idle =>
 					if ram_full = '1' then
-						ram_count_state_rd <= read_data;
-						read_ram_stop <= ram_trigger_address + ram_address_offset;
-						ram_read_counter <= ram_trigger_address - (ram_read_size - ram_address_offset);
+						if start_ram_read = '1' then  -- will be performed when ram read command is sent
+							ram_count_state_rd <= read_data;
+							read_ram_stop(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) + ram_address_offset(ram_depth-1 downto 2);
+							ram_read_counter(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) - (ram_read_size(ram_depth-1 downto 2) - ram_address_offset(ram_depth-1 downto 2));
+							ram_read_signal <= '1';
+							ram_read_started <= '1';
+						end if;
 					end if;
 					if read_ready = '1' then
 						ram_data_available <= '0';
 					end if;
-					sram_oe <= '0';
 					ram_read_finished <= '0';
 					first_ram_read <= '0';
 				when read_data =>
 					if ram_data_available = '0' then
-						if ram_read_counter =  read_ram_stop  then
+						if ram_read_counter(ram_depth-1 downto 2) =  read_ram_stop(ram_depth-1 downto 2)  then
 							ram_count_state_rd <= idle;
-							ram_read_finished <= '1';
+							if release_ram = '1' then --if release ram then ram_full will become '0' otherwise read ram can be redone.
+								ram_read_finished <= '1';
+							end if;
 						else
-							sram_oe <= '1';
-							combus_0 <= ram_data_out( 7 downto 0 );
-							combus_1 <= ram_data_out( 15 downto 8 );
-							combus_2 <= ram_data_out( sram_data_width-1 downto 16 );
+							ram_read_signal <= '1';
+							combus_0 <= data_from_ram_reg(7 downto 0);
+							combus_1 <= data_from_ram_reg(15 downto 8);
+							combus_2 <= data_from_ram_reg(23 downto 16);
+							combus_3 <= data_from_ram_reg(31 downto 24);
 							ram_data_available <= '1';
 							ram_read_finished <= '0';
 							ram_count_state_rd <= counting;
@@ -569,7 +708,7 @@ begin
 					end if;
 				when counting =>		
 					if read_ready = '0' then
-						ram_read_counter <= ram_read_counter + 1;
+						ram_read_counter <= ram_read_counter + 4;
 						ram_count_state_rd <= wait_ready;
 					end if;
 				when wait_ready =>
@@ -584,7 +723,12 @@ begin
 				ram_count_state_rd <= idle;
 				ram_data_available <= '0';
 			end if;
+			
+			if ram_read_signal = '1' then
+				ram_read_signal <= '0';
+			end if;
 		end if;
 	end process RamReadCounter;
+	
 
 end RTL;

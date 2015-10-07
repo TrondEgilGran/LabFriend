@@ -186,8 +186,9 @@ component s74595 is
 end component s74595;
 
 component HSaqusition is
-	generic( sram_addr_width : natural := 19; --Number of bits in SRAM addr bus
-		 sram_data_width : natural := 18;
+	generic( ram_addr_width : natural := 29; --Number of bits in SRAM addr bus
+		 ram_data_width : natural := 32;
+		 ram_depth : natural := 19;
 		 address : std_logic_vector( 7 downto 0 ) := "00000001"
 		 );
 
@@ -199,11 +200,24 @@ component HSaqusition is
 		wr : in std_logic;
 		rd : in std_logic;
 		dataout : out std_logic_vector( 7 downto 0);
-		sram_addr : out std_logic_vector( sram_addr_width-1 downto 0);
-		sram_data : inout std_logic_vector( sram_data_width-1 downto 0);
-		sram_wr : out std_logic;
-		sram_ce : out std_logic;
-		sram_oe : out std_logic;
+		adc_a_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		adc_a_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
+		adc_a_ram_wr : out std_logic;
+		adc_a_cmd_en : out std_logic;
+		adc_b_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		adc_b_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
+		adc_b_ram_wr : out std_logic;
+		adc_b_cmd_en : out std_logic;
+		digital_in_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		digital_in_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
+		digital_in_ram_wr : out std_logic;
+		digital_in_ram_rd : out std_logic;
+		digital_in_ram_rd_empty : in std_logic;
+		digital_in_cmd_en : out std_logic;
+		digital_in_ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
+		ram_command : out std_logic_vector(2 downto 0);
+		ram_bl : out std_logic_vector(5 downto 0);
+		ram_clock : out std_logic;
 		digital_in : in std_logic_vector( 7 downto 0);
 		hs_adc_a : in std_logic_vector( 7 downto 0);
 		hs_adc_b : in std_logic_vector( 7 downto 0);
@@ -407,6 +421,24 @@ signal c3_p0_cmd_empty, c3_p0_cmd_full, c3_p0_wr_full, c3_p0_wr_empty, c3_p0_wr_
 signal c3_p0_rd_full, c3_p0_rd_empty, c3_p0_rd_overflow, c3_p0_rd_error, c3_calib_done : std_logic;
 signal user_clock_ddr, ddrclk_fb : std_logic;
 
+signal adc_a_ram_addr : std_logic_vector( ram_addr_width-1 downto 0);
+signal adc_a_ram_data : std_logic_vector( ram_data_width-1 downto 0);
+signal adc_a_ram_wr : std_logic;
+signal adc_a_cmd_en : std_logic;
+signal adc_b_ram_addr : std_logic_vector( ram_addr_width-1 downto 0);
+signal adc_b_ram_data : std_logic_vector( ram_data_width-1 downto 0);
+signal adc_b_ram_wr : std_logic;
+signal adc_b_cmd_en : std_logic;
+signal digital_in_ram_addr : std_logic_vector( ram_addr_width-1 downto 0);
+signal digital_in_ram_data : std_logic_vector( ram_data_width-1 downto 0);
+signal digital_in_ram_wr : std_logic;
+signal digital_in_ram_rd : std_logic;
+signal digital_in_ram_rd_empty : std_logic;
+signal digital_in_cmd_en : std_logic;
+signal digital_in_ram_data_read : std_logic_vector( ram_data_width-1 downto 0);
+signal ram_command : std_logic_vector(2 downto 0);
+signal ram_bl : std_logic_vector(5 downto 0);
+
 signal quack : std_logic_vector(7 downto 0);
 begin
 	cmd_instr_g <= (others => '0');
@@ -533,18 +565,31 @@ begin
 				  rck => GPSPICS,
 				  sck => GPSPICLK);
 				  
-	HSaqusition1: HSaqusition port map( clk => global_clk,
+	HSaqusition1: HSaqusition port map( 	clk => global_clk,
 						rst => global_rst,
 						datain => spimdataout,
 						addr => spimcommand,
 						wr => spimWR,
 						rd => spimRD,
 						dataout => spimdatain1,
-						sram_addr => SRAMA,
-						sram_data => SRAMD,
-						sram_wr => notsramWE,
-						sram_ce => SRAMCE,
-						sram_oe => notsramOE,
+						adc_a_ram_addr            =>  adc_a_ram_addr ,           
+						adc_a_ram_data            =>  adc_a_ram_data,            
+						adc_a_ram_wr              =>  adc_a_ram_wr ,             
+						adc_a_cmd_en              =>  adc_a_cmd_en ,             
+						adc_b_ram_addr            =>  adc_b_ram_addr ,           
+						adc_b_ram_data            =>  adc_b_ram_data  ,          
+						adc_b_ram_wr              =>  adc_b_ram_wr    ,          
+						adc_b_cmd_en              =>  adc_b_cmd_en              
+						digital_in_ram_addr       =>  digital_in_ram_addr ,      
+						digital_in_ram_data       =>  digital_in_ram_data ,      
+						digital_in_ram_wr         =>  digital_in_ram_wr   ,      
+						digital_in_ram_rd         =>  digital_in_ram_rd    ,     
+						digital_in_ram_rd_empty   =>  digital_in_ram_rd_empty,   
+						digital_in_cmd_en         =>  digital_in_cmd_en,         
+						digital_in_ram_data_read  =>  digital_in_ram_data_read,  
+						ram_command               =>  ram_command ,              
+						ram_bl                    =>  ram_bl   ,
+						ram_clock =>     ram_clock ,
 						digital_in => LAD07,
 						hs_adc_a => ADA,
 						hs_adc_b => ADB,
@@ -633,47 +678,47 @@ port map (
    c3_rst0		=>        open,	
    c3_calib_done      =>    c3_calib_done,
    mcb3_rzq         =>            mcb3_rzq,       
-   c3_p0_cmd_clk                           =>  global_clk,
-   c3_p0_cmd_en                            =>  c3_p0_cmd_en,
-   c3_p0_cmd_instr                         =>  c3_p0_cmd_instr,
-   c3_p0_cmd_bl                            =>  c3_p0_cmd_bl,
-   c3_p0_cmd_byte_addr                     =>  c3_p0_cmd_byte_addr,
+   c3_p0_cmd_clk                           =>  ram_clock,
+   c3_p0_cmd_en                            =>  adc_a_cmd_en,
+   c3_p0_cmd_instr                         =>  ram_command,
+   c3_p0_cmd_bl                            =>  ram_bl,
+   c3_p0_cmd_byte_addr                     =>  adc_a_ram_addr,
    c3_p0_cmd_empty                         =>  c3_p0_cmd_empty,
    c3_p0_cmd_full                          =>  open,
-   c3_p0_wr_clk                            =>  global_clk,
-   c3_p0_wr_en                             =>  c3_p0_wr_en,
+   c3_p0_wr_clk                            =>  ram_clock,
+   c3_p0_wr_en                             =>  adc_a_ram_wr,
    c3_p0_wr_mask                           =>  wr_mask_g,
-   c3_p0_wr_data                           =>  c3_p0_wr_data,
+   c3_p0_wr_data                           =>  adc_a_ram_data,
    c3_p0_wr_full                           =>  c3_p0_wr_full,
    c3_p0_wr_empty                          =>  c3_p0_wr_empty ,
    c3_p0_wr_count                          =>  c3_p0_wr_count,
    c3_p0_wr_underrun                       =>  c3_p0_wr_underrun,
    c3_p0_wr_error                          =>  c3_p0_wr_error,
-   c3_p0_rd_clk                            =>  global_clk,
-   c3_p0_rd_en                             =>  c3_p0_rd_en,
-   c3_p0_rd_data                           =>  c3_p0_rd_data,
+   c3_p0_rd_clk                            =>  ram_clock,
+   c3_p0_rd_en                             =>  gnd,
+   c3_p0_rd_data                           =>  open,
    c3_p0_rd_full                           =>  c3_p0_rd_full,
    c3_p0_rd_empty                          =>  c3_p0_rd_empty,
    c3_p0_rd_count       		   =>  c3_p0_rd_count ,
    c3_p0_rd_overflow                       =>  c3_p0_rd_overflow,
    c3_p0_rd_error                          =>  c3_p0_rd_error,
-   c3_p1_cmd_clk                           =>  global_clk,
-   c3_p1_cmd_en                            =>  gnd,
-   c3_p1_cmd_instr                         =>  cmd_instr_g,
-   c3_p1_cmd_bl                            =>  cmd_bl_g,
-   c3_p1_cmd_byte_addr                     =>  cmd_byte_addr_g,
+   c3_p1_cmd_clk                           =>  ram_clock,
+   c3_p1_cmd_en                            =>  adc_b_cmd_en,
+   c3_p1_cmd_instr                         =>  ram_command,
+   c3_p1_cmd_bl                            =>  ram_bl,
+   c3_p1_cmd_byte_addr                     =>  adc_b_ram_addr,
    c3_p1_cmd_empty                         =>  open,
    c3_p1_cmd_full                          =>  open,
-   c3_p1_wr_clk                            =>  global_clk,
-   c3_p1_wr_en                             =>  gnd,
+   c3_p1_wr_clk                            =>  ram_clock,
+   c3_p1_wr_en                             =>  adc_b_ram_wr,
    c3_p1_wr_mask                           =>  wr_mask_g,
-   c3_p1_wr_data                           =>  wr_data_g,
+   c3_p1_wr_data                           =>  adc_b_ram_data,
    c3_p1_wr_full                           =>  open,
    c3_p1_wr_empty                          =>  open,
    c3_p1_wr_count                          =>  open,
    c3_p1_wr_underrun                       =>  open,
    c3_p1_wr_error                          =>  open,
-   c3_p1_rd_clk                            =>  global_clk,
+   c3_p1_rd_clk                            =>  ram_clock,
    c3_p1_rd_en                             =>  gnd,
    c3_p1_rd_data                           =>  open,
    c3_p1_rd_full                           =>  open,
@@ -681,28 +726,28 @@ port map (
    c3_p1_rd_count                          =>  open,
    c3_p1_rd_overflow                       =>  open,
    c3_p1_rd_error                          =>  open,
-   c3_p2_cmd_clk                           =>  global_clk,
-   c3_p2_cmd_en                            =>  gnd,
-   c3_p2_cmd_instr                         =>  cmd_instr_g,
-   c3_p2_cmd_bl                            =>  cmd_bl_g,
-   c3_p2_cmd_byte_addr                     =>  cmd_byte_addr_g,
+   c3_p2_cmd_clk                           =>  ram_clock,
+   c3_p2_cmd_en                            =>  digital_in_cmd_en,
+   c3_p2_cmd_instr                         =>  ram_command,
+   c3_p2_cmd_bl                            =>  ram_bl,
+   c3_p2_cmd_byte_addr                     =>  digital_in_ram_addr,
    c3_p2_cmd_empty                         =>  open,
    c3_p2_cmd_full                          =>  open,
-   c3_p2_wr_clk                            =>  global_clk,
-   c3_p2_wr_en                             =>  gnd,
+   c3_p2_wr_clk                            =>  ram_clock,
+   c3_p2_wr_en                             =>  digital_in_ram_wr,
    c3_p2_wr_mask                           =>  wr_mask_g,
-   c3_p2_wr_data                           =>  wr_data_g,
+   c3_p2_wr_data                           =>  digital_in_ram_data,
    c3_p2_wr_full                           =>  open,
    c3_p2_wr_empty                          =>  open,
    c3_p2_wr_count                          =>  open,
    c3_p2_wr_underrun                       =>  open,
    c3_p2_wr_error                          =>  open,
-   c3_p2_rd_clk                            =>  global_clk,
-   c3_p2_rd_en                             =>  gnd,
-   c3_p2_rd_data                           =>  open,
+   c3_p2_rd_clk                            =>  ram_clock,
+   c3_p2_rd_en                             =>  digital_in_ram_rd,
+   c3_p2_rd_data                           =>  digital_in_ram_data_read,
    c3_p2_rd_full                           =>  open,
    c3_p2_rd_empty                          =>  open,
-   c3_p2_rd_count                          =>  open,
+   c3_p2_rd_count                          =>  digital_in_ram_rd_empty,
    c3_p2_rd_overflow                       =>  open,
    c3_p2_rd_error                          =>  open,
    c3_p3_cmd_clk                           =>  global_clk,
