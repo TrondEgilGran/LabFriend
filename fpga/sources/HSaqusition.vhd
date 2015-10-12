@@ -118,7 +118,7 @@ signal ram_dcm_fb : std_logic;
 signal adc_a_to_ram_reg, adc_b_to_ram_reg, digital_in_to_ram_reg, data_from_ram_reg : std_logic_vector( 31 downto 0 );
 signal adc_a_to_ram_out, adc_b_to_ram_out, digital_in_to_ram_out : std_logic_vector( 31 downto 0 );
 
-signal adc_a_enable, adc_b_enable, digital_in_enable : std_logic := '1';
+signal adc_a_enable, adc_b_enable, digital_in_enable : std_logic;
 signal ram_read_signal, release_ram, start_ram_read, ram_read_started, digital_in_ram_rd_sig : std_logic := '0';
 signal aq_channel : std_logic_vector(1 downto 0);
 signal control_signals : std_logic_vector(4 downto 0);
@@ -137,7 +137,9 @@ begin
 	--
 	--
 	--
-	
+	adc_a_enable <= '0';
+	adc_b_enable <= '0';
+	digital_in_enable <= '1';
 	
 	-- BUFGMUX: Global Clock Mux Buffer
 	-- Spartan-6

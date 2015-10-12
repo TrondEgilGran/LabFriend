@@ -443,7 +443,9 @@ signal ram_command : std_logic_vector(2 downto 0);
 signal ram_bl : std_logic_vector(5 downto 0);
 signal ram_clock : std_logic;
 
-signal quack : std_logic_vector(7 downto 0);
+signal tmp4bit : std_logic_vector(3 downto 0) := "0000";
+
+signal quack, wonder : std_logic_vector(7 downto 0);
 begin
 	cmd_instr_g <= (others => '0');
 	cmd_bl_g <= (others => '0');
@@ -594,9 +596,9 @@ begin
 						ram_command               =>  ram_command ,              
 						ram_bl                    =>  ram_bl   ,
 						ram_clock =>     ram_clock ,
-						digital_in => std_logic_vector(testtCounterC), --LAD07,
-						hs_adc_a => std_logic_vector(testtCounterA), --ADA,
-						hs_adc_b => std_logic_vector(testtCounterB), --ADB,
+						digital_in => ADA,
+						hs_adc_a => ADB,
+						hs_adc_b => LAD07,
 						adc_clk_a => ADAC,
 						adc_clk_b => ADBC,
 						adc_pwd_d => ADAP,
@@ -826,21 +828,39 @@ port map (
 			if resetCounter < 63 then
 				global_rst <= '1';
 				resetCounter <= resetCounter + 1;
+				--LAD815(6) <= '0';
 			else
 				global_rst <= '0';
 			end if;
+			
+			--if spimRD = '1' and spimcommand(2 downto 0) = "001" then
+			--	LAD815(6) <= '1';
+			--end if;
 		end if;
 	end process por;
 	
-	testtCounterC <= "10101010";
+
 	testc : process(ram_clock)
 	begin
 		if rising_edge(ram_clock) then
 			testtCounterA <= testtCounterA + 1;
-			testtCounterB <= testtCounterB + 3;
+			testtCounterB <= testtCounterB + 2;
+			--testtCounterC <= testtCounterC + 3;
+			if digital_in_ram_rd = '1' then
+				tmp4bit(1) <= not tmp4bit(1);
+				tmp4bit(0) <= '1';
+			end if;
+			if digital_in_ram_wr = '1' then
+				tmp4bit(3) <= not tmp4bit(3);
+				tmp4bit(2) <= '1';
+			end if;
 			
 		end if;
 	end process testc;
+	LAD815(7) <= tmp4bit(1);
+	LAD815(5) <= tmp4bit(3);
+	LAD815(4) <= tmp4bit(2);
+	LAD815(6) <= tmp4bit(0);
 	
 	global_reset_n <= not global_rst;
 	
@@ -898,8 +918,11 @@ port map (
 	
 	
 	
-	
-	
+	LAD815(0) <= digital_in_ram_rd_empty;
+	LAD815(1) <= c3_p0_wr_full;
+	LAD815(2) <= c3_p0_wr_empty;
+	LAD815(3) <= c3_p0_wr_underrun;
+	--LAD815(7 downto 4) <= "1111";
 	
 	
 	
@@ -913,10 +936,12 @@ port map (
 
 	begin
 	if global_rst = '1' then
-		LAD815 <= "11101010";
+--		LAD815 <= "11101010";
+		wonder <= "00000000";
 	elsif rising_edge(global_clk) then
 		if spimWR = '1'  and spimcommand(2 downto 0) = "101" then
-			LAD815 <= spimdataout;
+--			LAD815 <= spimdataout;
+			wonder <= spimdataout;
 		end if;
 	end if;
 	end process DigiOut;
