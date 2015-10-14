@@ -23,21 +23,13 @@ entity HSaqusition is
 		wr : in std_logic;
 		rd : in std_logic;
 		dataout : out std_logic_vector( 7 downto 0);
-		adc_a_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		adc_a_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
-		adc_a_ram_wr : out std_logic;
-		adc_a_cmd_en : out std_logic;
-		adc_b_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		adc_b_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
-		adc_b_ram_wr : out std_logic;
-		adc_b_cmd_en : out std_logic;
-		digital_in_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		digital_in_ram_data : out std_logic_vector( ram_data_width-1 downto 0);
-		digital_in_ram_wr : out std_logic;
-		digital_in_ram_rd : out std_logic;
-		digital_in_ram_rd_empty : in std_logic;
-		digital_in_cmd_en : out std_logic;
-		digital_in_ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
+		ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		ram_data_write : out std_logic_vector( ram_data_width-1 downto 0);
+		ram_wr_en : out std_logic;
+		ram_rd_en : out std_logic;
+		ram_rd_empty : in std_logic;
+		ram_cmd_en : out std_logic;
+		ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
 		ram_command : out std_logic_vector(2 downto 0);
 		ram_bl : out std_logic_vector(5 downto 0);
 		ram_clock : out std_logic;
@@ -73,21 +65,22 @@ component COUNTER_LOAD_INC_MACRO is
      );   
 end component COUNTER_LOAD_INC_MACRO;
 
-
+type ram_machine is (write_adc_a, write_adc_b, write_digital_in, write_buffer);
+signal ram_machine_1 : ram_machine:= write_adc_a;
 type singlestrobe is (idle, strobe_triggered);
 signal ram_write_strobe, ram_read_strobe  : singlestrobe := idle;
 type datamachine is (idle, process_command, read_trigger, read_ram, read_status, configure);
 signal data_state : datamachine := idle; 
-type WRcountermachine is (idle, counting, read_data, wait_ready);
+type WRcountermachine is (idle, counting, read_data, wait_ready, multiply_data);
 signal ram_count_state_wr, ram_count_state_rd : WRcountermachine := idle;
 signal ram_group_0_select, ram_group_1_select, trigger_select, trigger_select_HS  : std_logic_vector( 1 downto 0 ) := (others => '0');
 signal ram_group_2_select, ram_group_3_select : std_logic_vector( 2 downto 0 ) := (others => '0');
 signal ram_group_2_select_master, ram_group_3_select_master : std_logic_vector( 2 downto 0 ) := (others => '0') ;
 signal digital_in_by_8_muxed : std_logic;
 
-signal ram_write_counter, ram_read_counter, ram_address_offset, ram_trigger_address: unsigned( ram_depth-1 downto 0 ) :=(others => '0') ;
-
-signal read_ram_stop, ram_read_size : unsigned( ram_depth-1 downto 0 ) := (others => '1');
+signal ram_write_counter, ram_address_offset, ram_trigger_address : unsigned( ram_depth-1 downto 0 ) :=(others => '0') ;
+signal ram_read_counter : unsigned( ram_depth+1 downto 0 ) := (others => '0') ;
+signal read_ram_stop, ram_read_size : unsigned( ram_depth+1 downto 0 ) := (others => '1');
 signal ram_counter_wr_stop : std_logic_vector( ram_depth-1 downto 0 ) := (others => '0');
 signal ram_data_in, ram_data_out : std_logic_vector(ram_data_width-1 downto 0 ) := (others => '0');
 signal adc_clk_a_select, adc_clk_b_select, read_ready, ram_data_available, ram_read_finished, ram_ready : std_logic := '0';
@@ -99,9 +92,11 @@ signal combus_0, combus_1 : std_logic_vector( 7 downto 0 ) := (others => '0');
 signal combus_2, combus_3 : std_logic_vector( 7 downto 0) := (others => '0');
 signal combus : std_logic_vector( 2 downto 0) := (others => '0');
 signal command : std_logic_vector( 2 downto 0) := (others => '0');
-signal sram_wr_sig, configdone, interruptdataread : std_logic := '0';
+signal ram_wr_sig, ram_wr_sig_delayed, configdone, interruptdataread, ram_wr_en_sig, ram_cmd_en_sig : std_logic := '0';
+signal ram_rd_en_sig : std_logic := '0';
 signal rdcnt : unsigned(7 downto 0) := (others => '0');
 signal first_ram_read : std_logic := '0';
+signal first_ram_write : std_logic := '1';
 signal clocksel : std_logic_vector(1 downto 0) := (others => '0');
 signal clock_mux_con,  clock_mux_con_n : std_logic :='0';
 signal hs_clock, hs_clock_n : std_logic := '0';
@@ -113,6 +108,8 @@ signal ram_write_counter_reset, ram_write_counter_enable : std_logic :='1';
 signal trig_it : std_logic := '0';
 signal count_inc_by : std_logic_vector( ram_depth+9 downto 0 ) := "00000000000000000010000000000";
 signal counter_connection : std_logic_vector( ram_depth+9 downto 0 );
+signal counter_connection_m : std_logic_vector( 17 downto 0 );
+signal write_counter_connection : std_logic_vector( 20 downto 0 );
 signal ram_dcm_fb : std_logic;
 
 signal adc_a_to_ram_reg, adc_b_to_ram_reg, digital_in_to_ram_reg, data_from_ram_reg : std_logic_vector( 31 downto 0 );
@@ -122,6 +119,14 @@ signal adc_a_enable, adc_b_enable, digital_in_enable : std_logic;
 signal ram_read_signal, release_ram, start_ram_read, ram_read_started, digital_in_ram_rd_sig : std_logic := '0';
 signal aq_channel : std_logic_vector(1 downto 0);
 signal control_signals : std_logic_vector(4 downto 0);
+
+signal ram_write_address : std_logic_vector( 20 downto 0);
+signal ram_address_counter_inc_m : std_logic_vector( 2 downto 0);
+signal ram_buffer_counter : unsigned(6 downto 0) := (others => '0');
+
+signal store_start_address : std_logic := '0';
+
+signal ram_read_multiplyer : unsigned(1 downto 0);
 
 begin
 	hs_clock_n <= not hs_clock;
@@ -137,9 +142,7 @@ begin
 	--
 	--
 	--
-	adc_a_enable <= '0';
-	adc_b_enable <= '0';
-	digital_in_enable <= '1';
+	
 	
 	-- BUFGMUX: Global Clock Mux Buffer
 	-- Spartan-6
@@ -334,14 +337,12 @@ begin
 						if wr = '1' then
 							case combus is
 								when "000" =>
-									ram_group_0_select <= datain(1 downto 0); 
-									ram_group_1_select <= datain(3 downto 2);
-									ram_group_2_select_master <= datain(6 downto 4);
-									digital_in_by_8_muxed <= datain(7);
+									adc_a_enable <= datain(0);
+									adc_b_enable <= datain(1);
+									digital_in_enable <= datain(2);
 									combus <= "001";
 									configdone <= '0';
 								when "001" =>
-									ram_group_3_select_master <= datain(2 downto 0);
 									adc_clk_a_select <= datain(3);
 									adc_clk_b_select <= datain(4);
 									adc_pwd_d <= datain(5);
@@ -417,6 +418,8 @@ begin
 	SpeedDevil : process( hs_clock, rst )
 	begin
 		if rising_edge(hs_clock) then
+			ram_wr_sig_delayed <= ram_wr_sig; --delay wr_sig to synch with counter
+			
 			--Store adc and digital input data in registers
 			-----------------------------------------------
 			adc_a_register <= hs_adc_a;
@@ -442,56 +445,70 @@ begin
 			digital_in_to_ram_reg( 23 downto 16 ) <= digital_in_to_ram_reg( 15 downto 8 );
 			digital_in_to_ram_reg( 31 downto 24 ) <= digital_in_to_ram_reg( 23 downto 16 );
 			--------------------------------------------------------------------------------
+			
+			if ram_write_counter_reset = '1' then
+				ram_addr <= (others => '0');
+			end if;
 		
 			--Register data to store in RAM. data_to_ram should be strobed every fourth clock cycle.
 			-----------------------------------------------------------------------------------------
-			if sram_wr_sig = '1' and ram_write_counter(1 downto 0) = "00" then
-				case ram_write_strobe is
-					when idle =>
-						ram_write_strobe <= strobe_triggered;
-						adc_a_ram_wr <= adc_a_enable;
-						adc_b_ram_wr <= adc_b_enable;
-						digital_in_ram_wr <= digital_in_enable;
-						
-						adc_a_ram_data <= adc_a_to_ram_reg;
-						adc_b_ram_data <= adc_b_to_ram_reg;
-						digital_in_ram_data <= digital_in_to_ram_reg;
-
-						if (ram_write_counter(6 downto 2) = "00000") and (ram_write_counter /= 0) then
-							ram_command <= "000";
-							adc_a_cmd_en <= adc_a_enable;
-							adc_b_cmd_en <= adc_b_enable;
-							digital_in_cmd_en <= digital_in_enable;
-							adc_a_ram_addr(5 downto 0) <= (others => '0');
-							adc_a_ram_addr(ram_depth-1 downto 6) <= std_logic_vector(ram_write_counter(ram_depth-1 downto 6));
-							adc_a_ram_addr(ram_addr_width-1 downto ram_depth+2) <= (others => '0');
-							adc_a_ram_addr(ram_depth+1 downto ram_depth) <= "00";
-							adc_b_ram_addr(5 downto 0) <= (others => '0');
-							adc_b_ram_addr(ram_depth-1 downto 6) <= std_logic_vector(ram_write_counter(ram_depth-1 downto 6));
-							adc_b_ram_addr(ram_addr_width-1 downto ram_depth+2) <= (others => '0');
-							adc_b_ram_addr(ram_depth+1 downto ram_depth) <= "01";
-							digital_in_ram_addr(5 downto 0) <= (others => '0');
-							digital_in_ram_addr(ram_depth-1 downto 6) <= std_logic_vector(ram_write_counter(ram_depth-1 downto 6));
-							digital_in_ram_addr(ram_addr_width-1 downto ram_depth+2) <= (others => '0');
-							digital_in_ram_addr(ram_depth+1 downto ram_depth) <= "10";
-							ram_bl <= "011111";
+			if ram_wr_sig_delayed = '1' then
+			
+				case ram_machine_1 is
+					when write_adc_a =>
+						if adc_a_enable = '1' then
+							ram_data_write <= adc_a_to_ram_reg;
+							ram_wr_en_sig <= '1';
+						else
+							ram_wr_en_sig <= '0';
 						end if;
-					when strobe_triggered =>
-						adc_a_ram_wr <= '0';
-						adc_a_ram_wr <= '0';
-						digital_in_ram_wr <= '0';
-						adc_a_cmd_en <= '0';
-						adc_b_cmd_en <= '0';
-						digital_in_cmd_en <= '0';
+						ram_machine_1 <= write_adc_b;
+					when write_adc_b =>
+						if adc_b_enable = '1' then
+							ram_data_write <= adc_b_to_ram_reg;
+							ram_wr_en_sig <= '1';
+						else
+							ram_wr_en_sig <= '0';
+						end if;
+						ram_machine_1 <= write_digital_in;
+					when write_digital_in =>
+						if digital_in_enable = '1' then
+							ram_data_write <= digital_in_to_ram_reg;
+							ram_wr_en_sig <= '1';
+						else
+							ram_wr_en_sig <= '0';
+						end if;
+						ram_machine_1 <= write_buffer;
+					when write_buffer =>
+						if ram_buffer_counter >= 15 then	
+							ram_command <= "000";
+							ram_cmd_en_sig <= '1';
+							store_start_address <= '1';
+							ram_buffer_counter <= (others => '0');
+						else
+							ram_buffer_counter <= ram_buffer_counter + unsigned(ram_address_counter_inc_m);
+						end if;
+						ram_machine_1 <= write_adc_a;
+						ram_wr_en_sig <= '0';
+						if store_start_address = '1' then
+							store_start_address <= '0';
+							ram_addr( 20 downto 0) <= ram_write_address; 
+							ram_addr( ram_addr_width-1 downto 21) <= (others => '0');
+						end if;
 				end case;
+				--3 byte = 18
+				--2 byte = 
+				if ram_address_counter_inc_m = "01" then
+					ram_bl <= "011111"; --fill half of the ram buffer
+				else
+					ram_bl <= "100001"; --fill half of the ram buffer
+				end if;
+				
 			else
 				ram_write_strobe <= idle;
-				adc_a_ram_wr <= '0';
-				adc_a_ram_wr <= '0';
-				digital_in_ram_wr <= '0';
-				adc_a_cmd_en <= '0';
-				adc_b_cmd_en <= '0';
-				
+				first_ram_write <= '1';
+				store_start_address <= '0';
+				ram_buffer_counter <= (others => '0');
 				--We use digital_in channel to read back data.
 				if ram_read_signal = '1' then
 					case ram_read_strobe is
@@ -499,35 +516,39 @@ begin
 							ram_read_strobe <= strobe_triggered;
 							ram_command <= "001"; --read ram data
 							ram_bl <= "000000"; --read one word at a time
-							digital_in_ram_addr( ram_depth+1 downto ram_depth  ) <= aq_channel; 
-							digital_in_ram_addr( ram_depth-1 downto 0) <= std_logic_vector(ram_read_counter);
-							digital_in_ram_addr( ram_addr_width-1 downto ram_depth+2 ) <= (others => '0');
-							digital_in_cmd_en <= '1';
+							ram_addr( ram_depth+1 downto 0) <= std_logic_vector(ram_read_counter);
+							ram_addr( ram_addr_width-1 downto ram_depth+2 ) <= (others => '0');
+							ram_cmd_en_sig <= '1';
 						when strobe_triggered =>
-							digital_in_cmd_en <= '0';
+							
 						
 					end case;
 				else
-					if digital_in_ram_rd_empty = '0' and ram_read_strobe = strobe_triggered then
+					if ram_rd_empty = '0' and ram_read_strobe = strobe_triggered then
 						ram_read_strobe <= idle;
-						digital_in_ram_rd_sig <= '1';
-						data_from_ram_reg <= digital_in_ram_data_read;
+						ram_rd_en_sig <= '1';
+						data_from_ram_reg <= ram_data_read;
 					end if;
-					digital_in_cmd_en <= '0';
 				end if;
 				
 			end if;
 			
-			if digital_in_ram_rd_sig = '1' then
-				digital_in_ram_rd_sig <= '0';
+			
+			if ram_rd_en_sig = '1' then
+				ram_rd_en_sig <= '0';
+			end if;
+			
+			if ram_cmd_en_sig = '1' then
+				ram_cmd_en_sig <= '0';
 			end if;
 			trigger_select_HS <= trigger_select;
 			trigger_source <= trigger_source_tmp;
 			trigger_val_hs <= trigger_val; 
 		end if;
 	end process SpeedDevil;
-	digital_in_ram_rd <= digital_in_ram_rd_sig;
-
+	ram_cmd_en <= ram_cmd_en_sig;
+	ram_rd_en <= ram_rd_en_sig;
+	ram_wr_en <= ram_wr_en_sig;
 	
 	
 	--select trigger input
@@ -618,6 +639,34 @@ begin
 	);
 	-- End of COUNTER_LOAD_MACRO_inst instantiation
 	ram_write_counter <= unsigned(counter_connection( ram_depth+9 downto 10)); 
+	
+	-- MULT_MACRO: Multiply Function implemented in a DSP48E
+	-- Spartan-6
+	-- Xilinx HDL Libraries Guide, version 13.1
+	MULT_MACRO_inst : MULT_MACRO
+	generic map (
+			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
+			LATENCY => 1, -- Desired clock cycle latency, 0-4
+			WIDTH_A => 18, -- Multiplier A-input bus width, 1-25
+			WIDTH_B => 3) -- Multiplier B-input bus width, 1-18
+	port map (
+			P => write_counter_connection, -- Multiplier ouput bus, width determined by WIDTH_P generic
+			A => counter_connection_m, -- Multiplier input A bus, width determined by WIDTH_A generic
+			B => ram_address_counter_inc_m, -- Multiplier input B bus, width determined by WIDTH_B generic
+			CE => ram_write_counter_enable, -- 1-bit active high input clock enable
+			CLK => hs_clock, -- 1-bit positive edge clock input
+			RST => rst -- 1-bit input active high reset
+		);
+	-- End of MULT_MACRO_inst instantiation
+	ram_write_address(20 downto 2) <= write_counter_connection(18 downto 0);
+
+	counter_connection_m(17) <= '0';
+	counter_connection_m(16 downto 0) <= counter_connection(ram_depth+9 downto 12);
+	ram_write_address(1 downto 0) <= "00";
+	ram_address_counter_inc_m(0) <= ((digital_in_enable and adc_a_enable) and adc_b_enable) or (( not digital_in_enable and adc_a_enable) and not adc_b_enable) or 
+					((adc_b_enable xor digital_in_enable) and not adc_a_enable);
+	ram_address_counter_inc_m(1) <= (adc_a_enable and adc_b_enable) or ((adc_a_enable xor adc_b_enable) and digital_in_enable);
+	ram_address_counter_inc_m(2) <= '0';
 
 	
 	RamWriteCounter: process ( rst, hs_clock, ram_counter_wr_stop ) is
@@ -631,20 +680,20 @@ begin
 						ram_count_state_wr <= counting;
 						data_capture_started <= '1';
 						ram_full <= '0';
-						sram_wr_sig <= '1';
+						ram_wr_sig <= '1';
 						ram_write_counter_enable <= '1';
 					end if;	
 				when counting =>
 					if std_logic_vector(ram_write_counter) = ram_counter_wr_stop and triggered = '1' then
 						ram_count_state_wr <= idle;
 						ram_full <= '1';
-						sram_wr_sig <= '0';
+						ram_wr_sig <= '0';
 						ram_write_counter_reset <= '1';
 						ram_write_counter_enable <= '1';
 					end if;
 				when others =>
 					ram_count_state_wr <= idle;
-					sram_wr_sig <= '0';
+					ram_wr_sig <= '0';
 			end case;
 			
 			if data_capture_started = '1' and start_ram_capture = '0' then
@@ -661,7 +710,7 @@ begin
 				ram_write_counter_enable <= '1';
 				ram_full <= '0';
 				data_capture_started <= '0';
-				sram_wr_sig <= '0';
+				ram_wr_sig <= '0';
 			end if;
 		end if;	
 	end process RamWriteCounter;
@@ -677,11 +726,14 @@ begin
 				when idle =>
 					if ram_full = '1' then
 						if start_ram_read = '1' then  -- will be performed when ram read command is sent
-							ram_count_state_rd <= read_data;
+							ram_count_state_rd <= multiply_data;
 							read_ram_stop(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) + ram_address_offset(ram_depth-1 downto 2);
 							ram_read_counter(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) - (ram_read_size(ram_depth-1 downto 2) - ram_address_offset(ram_depth-1 downto 2));
-							ram_read_signal <= '1';
-							ram_read_started <= '1';
+							read_ram_stop(1 downto 0) <= "00";
+							read_ram_stop(ram_depth+1 downto ram_depth) <= "00";
+							ram_read_counter(ram_depth+1 downto ram_depth) <= "00";
+							ram_read_counter(1 downto 0) <= "00";
+							ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
 						end if;
 					end if;
 					if read_ready = '1' then
@@ -689,6 +741,25 @@ begin
 					end if;
 					ram_read_finished <= '0';
 					first_ram_read <= '0';
+				when multiply_data =>
+					case ram_read_multiplyer is
+						when "11" =>
+							ram_read_multiplyer <= "10";
+							ram_read_counter <= ram_read_counter + ram_read_counter;
+							read_ram_stop <= read_ram_stop + read_ram_stop;
+						when "10" =>
+							ram_read_multiplyer <= "00";
+							ram_read_counter <= ram_read_counter + ram_read_counter;
+							read_ram_stop <= read_ram_stop + read_ram_stop;
+							ram_count_state_rd <= read_data;
+							ram_read_signal <= '1';
+							ram_read_started <= '1';
+						when others =>
+							ram_count_state_rd <= read_data;
+							ram_read_signal <= '1';
+							ram_read_started <= '1';
+					end case;
+					
 				when read_data =>
 					if ram_data_available = '0' then
 						if ram_read_counter(ram_depth-1 downto 2) =  read_ram_stop(ram_depth-1 downto 2)  then

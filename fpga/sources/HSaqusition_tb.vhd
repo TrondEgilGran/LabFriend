@@ -53,21 +53,13 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
 		wr : in std_logic;
 		rd : in std_logic;
 		dataout : out std_logic_vector( 7 downto 0);
-		adc_a_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		adc_a_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
-		adc_a_ram_wr : out std_logic;
-		adc_a_cmd_en : out std_logic;
-		adc_b_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		adc_b_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
-		adc_b_ram_wr : out std_logic;
-		adc_b_cmd_en : out std_logic;
-		digital_in_ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		digital_in_ram_data : inout std_logic_vector( ram_data_width-1 downto 0);
-		digital_in_ram_wr : out std_logic;
-		digital_in_ram_rd : out std_logic;
-		digital_in_ram_rd_empty : in std_logic;
-		digital_in_cmd_en : out std_logic;
-		digital_in_ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
+		ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+		ram_data_write : out std_logic_vector( ram_data_width-1 downto 0);
+		ram_wr_en : out std_logic;
+		ram_rd_en : out std_logic;
+		ram_rd_empty : in std_logic;
+		ram_cmd_en : out std_logic;
+		ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
 		ram_command : out std_logic_vector(2 downto 0);
 		ram_bl : out std_logic_vector(5 downto 0);
 		ram_clock : out std_logic;
@@ -109,18 +101,11 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
    signal adc_clk_b : std_logic;
    signal adc_pwd_d : std_logic;
    
-   signal adc_a_ram_addr   : std_logic_vector( 29-1 downto 0);	
-   signal adc_a_ram_data   : std_logic_vector( 32-1 downto 0); 
-   signal adc_a_ram_wr     : std_logic;   
-   signal adc_a_cmd_en     : std_logic;     
-   signal adc_b_ram_addr   : std_logic_vector( 29-1 downto 0);	     
-   signal adc_b_ram_data   : std_logic_vector( 32-1 downto 0);      
-   signal adc_b_ram_wr     : std_logic;     
-   signal adc_b_cmd_en      : std_logic;    
-   signal digital_in_ram_addr  : std_logic_vector( 29-1 downto 0);	 
-   signal digital_in_ram_data, digital_in_ram_data_read  : std_logic_vector( 32-1 downto 0);  
-   signal digital_in_ram_wr,  digital_in_ram_rd, digital_in_ram_rd_empty : std_logic;
-   signal digital_in_cmd_en     : std_logic;
+  
+   signal ram_addr  : std_logic_vector( 30-1 downto 0);	 
+   signal ram_data_write, ram_data_read  : std_logic_vector( 32-1 downto 0);  
+   signal ram_wr_en,  ram_rd_en, ram_rd_empty : std_logic;
+   signal ram_cmd_en     : std_logic;
    signal ram_command           : std_logic_vector(2 downto 0);
    signal ram_bl                :  std_logic_vector(5 downto 0);
    signal ram_clock : std_logic;
@@ -149,22 +134,14 @@ BEGIN
           addr => addr,
           wr => wr,
           rd => rd,
-          dataout => dataout,
-	  adc_a_ram_addr   	=>   adc_a_ram_addr,   	
-	  adc_a_ram_data        =>   adc_a_ram_data,        
-	  adc_a_ram_wr          =>   adc_a_ram_wr,          
-	  adc_a_cmd_en          =>   adc_a_cmd_en,          
-	  adc_b_ram_addr        =>   adc_b_ram_addr,        
-	  adc_b_ram_data        =>   adc_b_ram_data,        
-	  adc_b_ram_wr          =>   adc_b_ram_wr,          
-	  adc_b_cmd_en          =>   adc_b_cmd_en ,         
-	  digital_in_ram_addr   =>   digital_in_ram_addr ,  
-	  digital_in_ram_data   =>   digital_in_ram_data ,  
-	  digital_in_ram_wr     =>   digital_in_ram_wr ,   
-	  digital_in_ram_rd     =>   digital_in_ram_rd,
-	  digital_in_ram_rd_empty => digital_in_ram_rd_empty,
-	  digital_in_cmd_en     =>   digital_in_cmd_en , 
-	  digital_in_ram_data_read => digital_in_ram_data_read ,
+          dataout => dataout,       
+	  ram_addr   =>   ram_addr ,  
+	  ram_data_write   =>   ram_data_write ,  
+	  ram_wr_en     =>   ram_wr_en ,   
+	  ram_rd_en     =>   ram_rd_en,
+	  ram_rd_empty => ram_rd_empty,
+	  ram_cmd_en     =>   ram_cmd_en , 
+	  ram_data_read => ram_data_read ,
 	  ram_command           =>   ram_command ,          
 	  ram_bl                =>   ram_bl,  
 	  ram_clock => ram_clock,
@@ -223,7 +200,7 @@ BEGIN
 	--addr <= "00000000";
 	i := 0;
 	rd <= '0';
-	digital_in_ram_rd_empty <= '1';
+	ram_rd_empty <= '1';
 	finished_write <= '0';
 	
 	wait until rising_edge(clk);
@@ -253,7 +230,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00000100";  --combus 0
+	datain <= "00000111";  --combus 0
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -315,7 +292,7 @@ BEGIN
 	
 	---------------------------------------
 	while (i <= 65555) loop
-		wait until adc_a_ram_wr = '1';
+		wait until ram_wr_en = '1';
 		--wait until adc_a_ram_wr  = '0';
 		loopcounter <= loopcounter + 1;
 		i := i + 1;
@@ -368,7 +345,7 @@ BEGIN
 	wr <= '0';
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	digital_in_ram_rd_empty <= '0';
+	ram_rd_empty <= '0';
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
@@ -383,10 +360,10 @@ BEGIN
 			xaa <= xaa +2;
 			xbb <= xbb -1;
 			xcc <= xcc -2;
-			digital_in_ram_data_read(7 downto 0) <= std_logic_vector(xabc);
-			digital_in_ram_data_read(15 downto 8) <= std_logic_vector(xaa);
-			digital_in_ram_data_read(23 downto 16) <= std_logic_vector(xbb);
-			digital_in_ram_data_read(31 downto 24) <= std_logic_vector(xcc);
+			ram_data_read(7 downto 0) <= std_logic_vector(xabc);
+			ram_data_read(15 downto 8) <= std_logic_vector(xaa);
+			ram_data_read(23 downto 16) <= std_logic_vector(xbb);
+			ram_data_read(31 downto 24) <= std_logic_vector(xcc);
 		--end if;
 		wait until rising_edge(clk);
 		wait until falling_edge(clk);
