@@ -290,9 +290,9 @@ begin
 						if rd = '1' then
 							if ram_data_available = '1'  then
 								if addr(4) = '1' then
-									ram_read_size <= "0001111111111111111";
+									ram_read_size <= "000001111111111111111";
 								else
-									ram_read_size <= "1111111111111111111";
+									ram_read_size <= "001111111111111111111";
 								end if;
 								case combus is
 									when "000" =>
