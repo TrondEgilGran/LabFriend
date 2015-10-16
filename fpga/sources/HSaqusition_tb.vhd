@@ -70,7 +70,8 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
 		adc_clk_b : out std_logic;
 		adc_pwd_d : out std_logic;
 		hs_clock_2 : in std_logic;
-		hs_clock_4 : in std_logic
+		hs_clock_4 : in std_logic;
+		debug_out1 : out std_logic
         );
     END COMPONENT;
     
@@ -109,7 +110,7 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
    signal ram_command           : std_logic_vector(2 downto 0);
    signal ram_bl                :  std_logic_vector(5 downto 0);
    signal ram_clock : std_logic;
-   signal finished_write : std_logic;
+   signal finished_write, full_ram : std_logic;
 
    -- Clock period definitions
    constant clk_period : time := 20 ns;
@@ -152,7 +153,8 @@ BEGIN
           adc_clk_b => adc_clk_b,
           adc_pwd_d => adc_pwd_d,
           hs_clock_2 => hs_clock,
-          hs_clock_4 => hs_clock
+          hs_clock_4 => hs_clock,
+          debug_out1 => full_ram
         );
         
         
@@ -248,7 +250,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00000100"; --copmbus 2
+	datain <= "00001100"; --copmbus 2
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -266,7 +268,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00000000"; --copmbus 4
+	datain <= "11010000"; --copmbus 4
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -275,7 +277,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00000000"; --copmbus 5
+	datain <= "11011101"; --copmbus 5
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -284,19 +286,14 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00001100"; --copmbus 6
+	datain <= "00001110"; --copmbus 6
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
 	wr <= '0';
 	
 	---------------------------------------
-	while (i <= 65555) loop
-		wait until ram_wr_en = '1';
-		--wait until adc_a_ram_wr  = '0';
-		loopcounter <= loopcounter + 1;
-		i := i + 1;
-	end loop;
+	wait until rising_edge(full_ram);
 	
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
@@ -416,7 +413,7 @@ end process test;
 	wait for clk_period*10;
       -- insert stimulus here 
 
-   wait for 5500000 ns;
+   wait for 9500000 ns;
     rst  <= '1';
    end process;
 

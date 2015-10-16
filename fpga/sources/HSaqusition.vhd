@@ -40,7 +40,8 @@ entity HSaqusition is
 		adc_clk_b : out std_logic;
 		adc_pwd_d : out std_logic;
 		hs_clock_2 : in std_logic;
-		hs_clock_4 : in std_logic
+		hs_clock_4 : in std_logic;
+		debug_out1 : out std_logic
 		);
 end HSaqusition;
 
@@ -142,7 +143,7 @@ begin
 	--
 	--
 	--
-	
+	debug_out1 <= ram_full;
 	
 	-- BUFGMUX: Global Clock Mux Buffer
 	-- Spartan-6
@@ -452,12 +453,14 @@ begin
 		
 			--Register data to store in RAM. data_to_ram should be strobed every fourth clock cycle.
 			-----------------------------------------------------------------------------------------
-			if ram_wr_sig_delayed = '1' then
+			if ram_wr_sig_delayed = '1' and ram_wr_sig = '1' then
 			
 				case ram_machine_1 is
 					when write_adc_a =>
 						if adc_a_enable = '1' then
 							ram_data_write <= adc_a_to_ram_reg;
+							adc_b_to_ram_out <= adc_b_to_ram_reg;
+							digital_in_to_ram_out <= digital_in_to_ram_reg;
 							ram_wr_en_sig <= '1';
 						else
 							ram_wr_en_sig <= '0';
@@ -465,7 +468,7 @@ begin
 						ram_machine_1 <= write_adc_b;
 					when write_adc_b =>
 						if adc_b_enable = '1' then
-							ram_data_write <= adc_b_to_ram_reg;
+							ram_data_write <= adc_b_to_ram_out;
 							ram_wr_en_sig <= '1';
 						else
 							ram_wr_en_sig <= '0';
@@ -473,7 +476,7 @@ begin
 						ram_machine_1 <= write_digital_in;
 					when write_digital_in =>
 						if digital_in_enable = '1' then
-							ram_data_write <= digital_in_to_ram_reg;
+							ram_data_write <= digital_in_to_ram_out;
 							ram_wr_en_sig <= '1';
 						else
 							ram_wr_en_sig <= '0';
@@ -505,6 +508,7 @@ begin
 				end if;
 				
 			else
+				ram_wr_en_sig <= '0';
 				ram_write_strobe <= idle;
 				first_ram_write <= '1';
 				store_start_address <= '0';
@@ -744,21 +748,21 @@ begin
 				when multiply_data =>
 					case ram_read_multiplyer is
 						when "11" =>
-							ram_read_multiplyer <= "10";
-							ram_read_counter <= ram_read_counter + ram_read_counter;
-							read_ram_stop <= read_ram_stop + read_ram_stop;
+							--ram_read_multiplyer <= "10";
+							
+							ram_read_counter <= (ram_read_counter(19 downto 0) & '0') + ram_read_counter;
+							read_ram_stop <= (read_ram_stop(19 downto 0) & '0') + read_ram_stop;
 						when "10" =>
-							ram_read_multiplyer <= "00";
-							ram_read_counter <= ram_read_counter + ram_read_counter;
-							read_ram_stop <= read_ram_stop + read_ram_stop;
+							ram_read_counter <= (ram_read_counter(19 downto 0) & '0');
+							read_ram_stop <= (read_ram_stop(19 downto 0) & '0') ;
 							ram_count_state_rd <= read_data;
-							ram_read_signal <= '1';
-							ram_read_started <= '1';
 						when others =>
 							ram_count_state_rd <= read_data;
+							
+					end case;
+					ram_count_state_rd <= read_data;
 							ram_read_signal <= '1';
 							ram_read_started <= '1';
-					end case;
 					
 				when read_data =>
 					if ram_data_available = '0' then

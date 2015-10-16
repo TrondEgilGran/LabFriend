@@ -9,4 +9,4 @@ ghdl -i  HSaqusition.vhd HSaqusition_tb.vhd DSPMAcroCounter.vhd
 echo "itsi"
 ghdl -m -g -Punisim --warn-unused --ieee=synopsys -fexplicit HSaqusition_tb
 echo "oo"
-ghdl -r  HSaqusition_tb --stop-time=5400000ns --wave=hsaqusition.ghw > debug
+ghdl -r  HSaqusition_tb --stop-time=9400000ns --wave=hsaqusition.ghw > debug
