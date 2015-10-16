@@ -290,9 +290,21 @@ begin
 						if rd = '1' then
 							if ram_data_available = '1'  then
 								if addr(4) = '1' then
-									ram_read_size <= "000001111111111111111";
+									if ram_address_counter_inc_m = "01" then
+										ram_read_size <= "000001111111111111111";
+									elsif ram_address_counter_inc_m = "10" then
+										ram_read_size <= "000011111111111111111";
+									elsif ram_address_counter_inc_m = "11" then
+										ram_read_size <= "000101111111111111111";
+									end if;
 								else
-									ram_read_size <= "001111111111111111111";
+									if ram_address_counter_inc_m = "01" then
+										ram_read_size <= "001111111111111111111";
+									elsif ram_address_counter_inc_m = "10" then
+										ram_read_size <= "011111111111111111111";
+									elsif ram_address_counter_inc_m = "11" then
+										ram_read_size <= "101111111111111111111";
+									end if;
 								end if;
 								case combus is
 									when "000" =>
