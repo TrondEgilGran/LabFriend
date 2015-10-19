@@ -478,6 +478,7 @@ begin
 							ram_wr_en_sig <= '0';
 						end if;
 						ram_machine_1 <= write_adc_b;
+						
 					when write_adc_b =>
 						if adc_b_enable = '1' then
 							ram_data_write <= adc_b_to_ram_out;
@@ -510,13 +511,14 @@ begin
 							ram_addr( 20 downto 0) <= ram_write_address; 
 							ram_addr( ram_addr_width-1 downto 21) <= (others => '0');
 						end if;
+						
 				end case;
 				--3 byte = 18
 				--2 byte = 
 				if ram_address_counter_inc_m = "01" then
-					ram_bl <= "011111"; --fill half of the ram buffer
+					ram_bl <= "001111"; --fill half of the ram buffer
 				else
-					ram_bl <= "100001"; --fill half of the ram buffer
+					ram_bl <= "010001"; --fill half of the ram buffer
 				end if;
 				
 			else
@@ -662,7 +664,7 @@ begin
 	MULT_MACRO_inst : MULT_MACRO
 	generic map (
 			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-			LATENCY => 1, -- Desired clock cycle latency, 0-4
+			LATENCY => 0, -- Desired clock cycle latency, 0-4
 			WIDTH_A => 18, -- Multiplier A-input bus width, 1-25
 			WIDTH_B => 3) -- Multiplier B-input bus width, 1-18
 	port map (
@@ -742,14 +744,18 @@ begin
 				when idle =>
 					if ram_full = '1' then
 						if start_ram_read = '1' then  -- will be performed when ram read command is sent
-							ram_count_state_rd <= multiply_data;
-							read_ram_stop(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) + ram_address_offset(ram_depth-1 downto 2);
-							ram_read_counter(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) - (ram_read_size(ram_depth-1 downto 2) - ram_address_offset(ram_depth-1 downto 2));
-							read_ram_stop(1 downto 0) <= "00";
-							read_ram_stop(ram_depth+1 downto ram_depth) <= "00";
-							ram_read_counter(ram_depth+1 downto ram_depth) <= "00";
-							ram_read_counter(1 downto 0) <= "00";
-							ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
+							--ram_count_state_rd <= multiply_data;
+							--read_ram_stop(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) + ram_address_offset(ram_depth-1 downto 2);
+							--ram_read_counter(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) - (ram_read_size(ram_depth-1 downto 2) - ram_address_offset(ram_depth-1 downto 2));
+							--read_ram_stop(1 downto 0) <= "00";
+							--read_ram_stop(ram_depth+1 downto ram_depth) <= "00";
+							--ram_read_counter(ram_depth+1 downto ram_depth) <= "00";
+							--ram_read_counter(1 downto 0) <= "00";
+							--ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
+							   ram_read_counter      <= (others => '0');
+							   read_ram_stop <= ram_read_size;
+							       ram_count_state_rd <= multiply_data;
+							                          ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
 						end if;
 					end if;
 					if read_ready = '1' then
