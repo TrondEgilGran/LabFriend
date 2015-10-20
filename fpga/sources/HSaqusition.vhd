@@ -755,18 +755,18 @@ begin
 				when idle =>
 					if ram_full = '1' then
 						if start_ram_read = '1' then  -- will be performed when ram read command is sent
-							--ram_count_state_rd <= multiply_data;
-							--read_ram_stop(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) + ram_address_offset(ram_depth-1 downto 2);
-							--ram_read_counter(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) - (ram_read_size(ram_depth-1 downto 2) - ram_address_offset(ram_depth-1 downto 2));
-							--read_ram_stop(1 downto 0) <= "00";
-							--read_ram_stop(ram_depth+1 downto ram_depth) <= "00";
-							--ram_read_counter(ram_depth+1 downto ram_depth) <= "00";
-							--ram_read_counter(1 downto 0) <= "00";
-							--ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
-							   ram_read_counter      <= (others => '0');
-							   read_ram_stop <= ram_read_size;
-							       ram_count_state_rd <= multiply_data;
-							                          ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
+							ram_count_state_rd <= multiply_data;
+							read_ram_stop(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) + ram_address_offset(ram_depth-1 downto 2);
+							ram_read_counter(ram_depth-1 downto 2) <= ram_trigger_address(ram_depth-1 downto 2) - (ram_read_size(ram_depth-1 downto 2) - ram_address_offset(ram_depth-1 downto 2));
+							read_ram_stop(1 downto 0) <= "00";
+							read_ram_stop(ram_depth+1 downto ram_depth) <= "00";
+							ram_read_counter(ram_depth+1 downto ram_depth) <= "00";
+							ram_read_counter(1 downto 0) <= "00";
+							ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
+							 --  ram_read_counter      <= (others => '0');
+							 --  read_ram_stop <= ram_read_size;
+							 --      ram_count_state_rd <= multiply_data;
+							 --      ram_read_multiplyer <= unsigned( ram_address_counter_inc_m(1 downto 0) );
 						end if;
 					end if;
 					if read_ready = '1' then
