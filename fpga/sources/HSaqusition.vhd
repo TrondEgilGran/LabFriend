@@ -114,9 +114,9 @@ signal write_counter_connection : std_logic_vector( 20 downto 0 );
 signal ram_dcm_fb : std_logic;
 
 signal adc_a_to_ram_reg, adc_b_to_ram_reg, digital_in_to_ram_reg, data_from_ram_reg : std_logic_vector( 31 downto 0 );
-signal adc_a_to_ram_out, adc_b_to_ram_out, digital_in_to_ram_out : std_logic_vector( 31 downto 0 );
+signal adc_a_to_ram_out, adc_b_to_ram_out, digital_in_to_ram_out, ram_data_write_sig : std_logic_vector( 31 downto 0 );
 
-signal adc_a_enable, adc_b_enable, digital_in_enable : std_logic;
+signal adc_a_enable, adc_b_enable, digital_in_enable : std_logic := '0';
 signal ram_read_signal, release_ram, start_ram_read, ram_read_started, digital_in_ram_rd_sig : std_logic := '0';
 signal aq_channel : std_logic_vector(1 downto 0);
 signal control_signals : std_logic_vector(4 downto 0);
@@ -128,6 +128,8 @@ signal ram_buffer_counter : unsigned(6 downto 0) := (others => '0');
 signal store_start_address : std_logic := '0';
 
 signal ram_read_multiplyer : unsigned(1 downto 0);
+
+signal ram_data_collected : std_logic := '0';
 
 begin
 	hs_clock_n <= not hs_clock;
@@ -469,28 +471,31 @@ begin
 			
 				case ram_machine_1 is
 					when write_adc_a =>
+						
+						adc_b_to_ram_out <= adc_b_to_ram_reg;
+						digital_in_to_ram_out <= digital_in_to_ram_reg;
 						if adc_a_enable = '1' then
-							ram_data_write <= adc_a_to_ram_reg;
-							adc_b_to_ram_out <= adc_b_to_ram_reg;
-							digital_in_to_ram_out <= digital_in_to_ram_reg;
 							ram_wr_en_sig <= '1';
+							ram_data_write_sig <= adc_a_to_ram_reg;
 						else
 							ram_wr_en_sig <= '0';
 						end if;
 						ram_machine_1 <= write_adc_b;
 						
 					when write_adc_b =>
+						
 						if adc_b_enable = '1' then
-							ram_data_write <= adc_b_to_ram_out;
 							ram_wr_en_sig <= '1';
+							ram_data_write_sig <= adc_b_to_ram_out;
 						else
 							ram_wr_en_sig <= '0';
 						end if;
 						ram_machine_1 <= write_digital_in;
 					when write_digital_in =>
+						
 						if digital_in_enable = '1' then
-							ram_data_write <= digital_in_to_ram_out;
 							ram_wr_en_sig <= '1';
+							ram_data_write_sig <= digital_in_to_ram_out;
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -538,19 +543,25 @@ begin
 							ram_addr( ram_addr_width-1 downto ram_depth+2 ) <= (others => '0');
 							ram_cmd_en_sig <= '1';
 						when strobe_triggered =>
-							
-						
+							if ram_rd_empty = '0'  and ram_data_collected = '0' then
+								ram_rd_en_sig <= '1';
+								data_from_ram_reg <= ram_data_read;
+								ram_data_collected <= '1';
+							end if;	
 					end case;
 				else
-					if ram_rd_empty = '0' and ram_read_strobe = strobe_triggered then
-						ram_read_strobe <= idle;
-						ram_rd_en_sig <= '1';
-						data_from_ram_reg <= ram_data_read;
-					end if;
+					ram_read_strobe <= idle;
+				
 				end if;
 				
 			end if;
 			
+			ram_data_write <= ram_data_write_sig;
+			ram_wr_en <= ram_wr_en_sig;
+			
+			if ram_data_available = '1' or ram_read_finished = '1' then
+				ram_data_collected <= '0';
+			end if;
 			
 			if ram_rd_en_sig = '1' then
 				ram_rd_en_sig <= '0';
@@ -566,7 +577,7 @@ begin
 	end process SpeedDevil;
 	ram_cmd_en <= ram_cmd_en_sig;
 	ram_rd_en <= ram_rd_en_sig;
-	ram_wr_en <= ram_wr_en_sig;
+	
 	
 	
 	--select trigger input
@@ -783,8 +794,8 @@ begin
 							ram_read_started <= '1';
 					
 				when read_data =>
-					if ram_data_available = '0' then
-						if ram_read_counter(ram_depth-1 downto 2) =  read_ram_stop(ram_depth-1 downto 2)  then
+					if (ram_data_available = '0')  and (ram_data_collected = '1') then
+						if ram_read_counter(ram_depth+1 downto 2) =  read_ram_stop(ram_depth+1 downto 2)  then
 							ram_count_state_rd <= idle;
 							if release_ram = '1' then --if release ram then ram_full will become '0' otherwise read ram can be redone.
 								ram_read_finished <= '1';
@@ -819,7 +830,7 @@ begin
 				ram_data_available <= '0';
 			end if;
 			
-			if ram_read_signal = '1' then
+			if ram_read_signal = '1' and ram_data_collected = '1'  then
 				ram_read_signal <= '0';
 			end if;
 		end if;
