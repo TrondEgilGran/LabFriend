@@ -794,7 +794,7 @@ begin
 							ram_read_started <= '1';
 					
 				when read_data =>
-					if (ram_data_available = '0')  and (ram_data_collected = '1') then
+					if ram_data_available = '0' then
 						if ram_read_counter(ram_depth+1 downto 2) =  read_ram_stop(ram_depth+1 downto 2)  then
 							ram_count_state_rd <= idle;
 							if release_ram = '1' then --if release ram then ram_full will become '0' otherwise read ram can be redone.
@@ -802,14 +802,16 @@ begin
 							end if;
 						else
 							ram_read_signal <= '1';
-							combus_0 <= data_from_ram_reg(7 downto 0);
-							combus_1 <= data_from_ram_reg(15 downto 8);
-							combus_2 <= data_from_ram_reg(23 downto 16);
-							combus_3 <= data_from_ram_reg(31 downto 24);
-							ram_data_available <= '1';
-							ram_read_finished <= '0';
-							ram_count_state_rd <= counting;
-							first_ram_read <= '1';
+							if ram_data_collected = '1' then
+								combus_0 <= data_from_ram_reg(7 downto 0);
+								combus_1 <= data_from_ram_reg(15 downto 8);
+								combus_2 <= data_from_ram_reg(23 downto 16);
+								combus_3 <= data_from_ram_reg(31 downto 24);
+								ram_data_available <= '1';
+								ram_read_finished <= '0';
+								ram_count_state_rd <= counting;
+								first_ram_read <= '1';
+							end if;
 						end if;
 					end if;
 				when counting =>		
