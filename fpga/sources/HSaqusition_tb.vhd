@@ -268,7 +268,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "11010000"; --copmbus 4
+	datain <= "00000000"; --copmbus 4
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -277,7 +277,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "11011101"; --copmbus 5
+	datain <= "00000000"; --copmbus 5
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -286,7 +286,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00001110"; --copmbus 6
+	datain <= "00001100"; --copmbus 6
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);

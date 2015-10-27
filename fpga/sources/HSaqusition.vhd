@@ -237,6 +237,11 @@ begin
 								aq_channel <= control_signals(1 downto 0);
 								release_ram <= '0';
 								start_ram_read <= '1';
+								if control_signals(2) = '1' then
+									ram_read_size <= "000001111111111111111";
+								else
+									ram_read_size <= "001111111111111111111";
+								end if;
 							when "010" =>
 								data_state <= configure;
 							when "011" =>
@@ -291,23 +296,7 @@ begin
 					when read_ram =>
 						if rd = '1' then
 							if ram_data_available = '1'  then
-								if addr(4) = '1' then
-									if ram_address_counter_inc_m = "01" then
-										ram_read_size <= "000001111111111111111";
-									elsif ram_address_counter_inc_m = "10" then
-										ram_read_size <= "000011111111111111111";
-									elsif ram_address_counter_inc_m = "11" then
-										ram_read_size <= "000101111111111111111";
-									end if;
-								else
-									if ram_address_counter_inc_m = "01" then
-										ram_read_size <= "001111111111111111111";
-									elsif ram_address_counter_inc_m = "10" then
-										ram_read_size <= "011111111111111111111";
-									elsif ram_address_counter_inc_m = "11" then
-										ram_read_size <= "101111111111111111111";
-									end if;
-								end if;
+								
 								case combus is
 									when "000" =>
 										dataout <= combus_0;
@@ -593,7 +582,7 @@ begin
 	ADDSUB_MACRO_inst : ADDSUB_MACRO
 	generic map (
 			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-			LATENCY => 2, -- Desired clock cycle latency, 0-2
+			LATENCY => 0, -- Desired clock cycle latency, 0-2
 			WIDTH => ram_depth+1) -- Input / Output bus width, 1-48
 		port map (
 				CARRYOUT => open, -- 1-bit carry-out output signal
