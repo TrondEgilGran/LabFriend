@@ -805,7 +805,15 @@ begin
 					end if;
 				when counting =>		
 					if read_ready = '0' then
-						ram_read_counter <= ram_read_counter + 4;
+						if ram_read_counter(ram_depth+1 downto 2) = "1011111111111111111" and ram_address_counter_inc_m = "11" then
+							ram_read_counter <= (others => '0');
+						elsif ram_read_counter(ram_depth+1 downto 2) = "0111111111111111111" and ram_address_counter_inc_m = "10" then
+							ram_read_counter <= (others => '0');
+						elsif ram_read_counter(ram_depth+1 downto 2) = "0011111111111111111" and ram_address_counter_inc_m = "01" then
+							ram_read_counter <= (others => '0');
+						else
+							ram_read_counter <= ram_read_counter + 4;
+						end if;
 						ram_count_state_rd <= wait_ready;
 					end if;
 				when wait_ready =>
