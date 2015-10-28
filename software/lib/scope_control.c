@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
@@ -13,6 +14,33 @@ static uint8_t global_attenuationEnabled[nrOfChannels];
 static uint8_t global_AC_Enabled[nrOfChannels];
 static float global_probe_attenuation[nrOfChannels];
 
+
+char *decimal_to_binary(int n, int numbits)
+{
+   int c, d, count;
+   char *pointer;
+ 
+   count = 0;
+   pointer = (char*)malloc(32+1);
+ 
+   if ( pointer == NULL )
+      exit(EXIT_FAILURE);
+ 
+   for ( c = numbits ; c >= 0 ; c-- )
+   {
+      d = n >> c;
+ 
+      if ( d & 1 )
+         *(pointer+count) = 1 + '0';
+      else
+         *(pointer+count) = 0 + '0';
+ 
+      count++;
+   }
+   *(pointer+count) = '\0';
+ 
+   return  pointer;
+}
 
 int set_probe_attenuation(uint8_t channel, float attenuation)
 {
@@ -32,7 +60,7 @@ void init_scope_control(void)
 	printf("Start program\n");
 	for(i=0; i< nrOfChannels; i++)
 	{
-		//set_ACDC(i, DC);
+		set_ACDC(i, DC);
 		set_Attenuation(i,OFF);
 		set_gain(i, GAINx1);
 		set_probe_attenuation(i, 1.0);
@@ -237,9 +265,6 @@ int set_scope_config( 	uint8_t trigger_value,
 			uint8_t trigger_source,
 		        uint8_t trigger_edge,
 			uint8_t ram0_sel, 
-			uint8_t ram1_sel,
-		        uint8_t ram2_sel,
-		        uint8_t ram3_sel,
 		        uint8_t ram_digi_muxed,
 			uint8_t adc_powerdown, 
 		        uint8_t adc_clock,
@@ -249,12 +274,8 @@ int set_scope_config( 	uint8_t trigger_value,
 	uint8_t databuffer[8];
 	
 	databuffer[command] 		= cmd_configure;
-	databuffer[conf_ram_mux]	= 	(ram0_sel << ram_group_0sel_shift) | 
-						(ram1_sel << ram_group_1sel_shift) |
-						(ram2_sel << ram_group_2sel_shift) |
-						(ram_digi_muxed << ram_digital_muxed_shift);
-	databuffer[conf_clock_power]	=	(ram3_sel << ram_group_3sel_shift) |
-						(adc_powerdown << adc_powerdown_shift) |
+	databuffer[conf_ram_mux]	= 	ram0_sel ;
+	databuffer[conf_clock_power]	=	(adc_powerdown << adc_powerdown_shift) |
 						(adc_clock << adc_clock_pol_shift);
     databuffer[conf_trigger]	=	((trigger_source << trigger_source_shift)& trigger_source_mask) |
                         ((trigger_edge << trigger_edge_shift)& trigger_edge_mask) |
@@ -326,6 +347,72 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
 	return 1;
 }
 
+
+int new_read_ram(void)
+{
+    uint8_t *databuffer;
+	int ramadress=0;
+	int i, ia;
+	int trigger, tstop;
+	char bitstring[10];
+	FILE *f = fopen("file.txt", "w");
+	if (f == NULL)
+	{
+		printf("Error opening file!\n");
+		exit(1);
+	}
+
+    databuffer = (uint8_t *) malloc(temp_buffersize+5);
+    if (databuffer==NULL) exit (1);
+    
+    databuffer[command] = cmd_read_status;
+	spiCommand( WRITE, addrHSaqusition, 1 );
+	spiWrite( databuffer, 1 );
+	spiCommand( READ, addrHSaqusition, 1 );
+	spiRead( databuffer, 1 );
+	printf("start status %x\n", databuffer[0]);
+	
+	//Read trigger
+	/*databuffer[command] = cmd_read_trigger;
+	spiCommand( WRITE, addrHSaqusition, 1 );
+	spiWrite( databuffer, 1 );
+	spiCommand( READ, addrHSaqusition, 6 );
+	spiRead( databuffer, 6 );
+	trigger = (int)databuffer[0] | (int)databuffer[1] << 8 | (int)databuffer[2] << 16;
+	tstop = (int)databuffer[3] | (int)databuffer[4] << 8 | (int)databuffer[5] << 16;
+	printf("trigger %x  stop %x\n", trigger, tstop);*/
+	databuffer[command] = cmd_read_ram ;
+	spiCommand( WRITE, addrHSaqusition, 1 );
+	spiWrite( databuffer, 1 );
+	
+	usleep(1000);
+	
+	ramadress=0;
+    for(i = 0; i < (nrOfRamAddresses*3)/temp_buffersize; i ++ )
+	{	
+        spiCommand( READ, addrHSaqusition, temp_buffersize );
+        spiRead( databuffer, temp_buffersize );
+		//printf("Read address %d to %d, ramaddr %d\n", i*bytesPerRamAddress, i*bytesPerRamAddress +192, ramadress);
+        for( ia = 0; ia < temp_buffersize; ia++)
+		{
+			 ramadress++;
+			//printf("%d %x \n", ramadress, databuffer[ia]);
+			fprintf(f, " %d %d %s \n", ramadress, databuffer[ia], decimal_to_binary(databuffer[ia], 8) );
+		}
+	}
+	
+	databuffer[command] = cmd_read_status;
+	spiCommand( WRITE, addrHSaqusition, 1 );
+	spiWrite( databuffer, 1 );
+	spiCommand( READ, addrHSaqusition, 1 );
+	spiRead( databuffer, 1 );
+	printf("end status %x\n", databuffer[0]);
+	
+	
+	fclose(f);
+    free(databuffer);
+	return 1;
+}
 
 int read_ram_fast( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint8_t *ram_group_3)
 {
