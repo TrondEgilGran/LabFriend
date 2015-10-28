@@ -220,7 +220,8 @@ component HSaqusition is
 		adc_clk_b : out std_logic;
 		adc_pwd_d : out std_logic;
 		hs_clock_2 : in std_logic;
-		hs_clock_4 : in std_logic
+		hs_clock_4 : in std_logic;
+		debug_out1 : out std_logic
 		);
 end component HSaqusition;
 
@@ -572,14 +573,15 @@ begin
 						ram_command             =>  ram_command ,              
 						ram_bl                  =>  ram_bl   ,
 						ram_clock =>     ram_clock ,
-						digital_in => ADA,
-						hs_adc_a => ADB,
-						hs_adc_b => LAD07,
+						digital_in => LAD07,
+						hs_adc_a => ADA,
+						hs_adc_b => ADB,
 						adc_clk_a => ADAC,
 						adc_clk_b => ADBC,
 						adc_pwd_d => ADAP,
 						hs_clock_2 => global_clk_2x,
-						hs_clock_4 => global_clk_4x_b
+						hs_clock_4 => global_clk_4x_b,
+						debug_out1 => open
 						);
 	I2S1: i2s port map( 	clk	=> global_clk, 
 				rst     => global_rst,
