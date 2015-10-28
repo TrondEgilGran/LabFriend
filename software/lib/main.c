@@ -34,51 +34,23 @@ int main(void)
 	spiOpen();
 	init_scope_control();
 	set_Attenuation( 0, ON );
-	//set_gain( 0, GAINx2);
-	
-	ddrStatus();
-	
-	//write data
-	databuffer[0] = 0x11;
-	databuffer[1] = 0x3b;
-	databuffer[2] = 0xbb;
-	databuffer[3] = 0x53;
-	databuffer[4] = 0x0f;
-	databuffer[5] = 0xf0;
-	databuffer[6] = 0xcd;
-	spiCommand( WRITE, 7, 7);
-	spiWrite(databuffer, 7);
-	
-	
-	ddrStatus();
-	
-	databuffer[0] = 0x98;
-	
-	spiCommand( WRITE, 6, 1);
-	spiWrite(databuffer, 1);
-	
-	ddrStatus();
+	set_gain( 0, GAINx2);
 
+	set_digital_out(0x55);
+	sleep(1);
+	set_scope_config( 2,
+			  0,
+			  2,
+			  7,  //channel
+			  0,
+			  0, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
+		          0,
+		          260000,
+		          1);
+	sleep(1);
+	new_read_ram( );
+			
 	
-	//READ data
-	databuffer[0] = 0x99;
-	spiCommand( WRITE, 6, 1);
-	spiWrite(databuffer, 1);
-	
-	ddrStatus();
-
-	//databuffer[0] = 0x00;
-	//spiCommand( WRITE, 15, 1);
-	//spiWrite(databuffer, 1);
-	
-	spiCommand( READ, 15, 7);
-	spiRead(databuffer, 7);
-	printf("Number 1 is %x and %x \n", databuffer[0], databuffer[1]);
-	printf("Number 3 is %x and %x \n", databuffer[2], databuffer[3]);
-	printf("Number 5 is %x and %x \n", databuffer[4], databuffer[5]);
-	printf("Number 7 is %x and %x \n", databuffer[6], databuffer[7]);
-	
-	ddrStatus();
 	
 	spiClose();
 }

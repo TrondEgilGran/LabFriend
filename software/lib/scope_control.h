@@ -143,9 +143,6 @@ int set_scope_config( 	uint8_t trigger_value,
 			uint8_t trigger_source,
 		        uint8_t trigger_edge,
 			uint8_t ram0_sel, 
-			uint8_t ram1_sel,
-		        uint8_t ram2_sel,
-		        uint8_t ram3_sel,
 		        uint8_t ram_digi_muxed,
 			uint8_t adc_powerdown, 
 		        uint8_t adc_clock,
@@ -155,6 +152,7 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
 int read_ram_fast( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint8_t *ram_group_3);
 int scope_data_available(void);
 int set_digital_out( uint8_t outputByte);
+int new_read_ram(void);
 
 
 
