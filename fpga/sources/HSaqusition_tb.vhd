@@ -277,7 +277,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00000000"; --copmbus 5
+	datain <= "11110000"; --copmbus 5
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -286,7 +286,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00001100"; --copmbus 6
+	datain <= "00001111"; --copmbus 6
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -413,7 +413,7 @@ end process test;
 	wait for clk_period*10;
       -- insert stimulus here 
 
-   wait for 9500000 ns;
+   wait for 13900000 ns;
     rst  <= '1';
    end process;
 

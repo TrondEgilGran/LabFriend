@@ -805,11 +805,11 @@ begin
 					end if;
 				when counting =>		
 					if read_ready = '0' then
-						if ram_read_counter(ram_depth+1 downto 2) = "1011111111111111111" and ram_address_counter_inc_m = "11" then
+						if ram_read_counter(ram_depth+1 downto 2) = "1011111111111111111" and ram_address_counter_inc_m = "011" then
 							ram_read_counter <= (others => '0');
-						elsif ram_read_counter(ram_depth+1 downto 2) = "0111111111111111111" and ram_address_counter_inc_m = "10" then
+						elsif ram_read_counter(ram_depth+1 downto 2) = "0111111111111111111" and ram_address_counter_inc_m = "010" then
 							ram_read_counter <= (others => '0');
-						elsif ram_read_counter(ram_depth+1 downto 2) = "0011111111111111111" and ram_address_counter_inc_m = "01" then
+						elsif ram_read_counter(ram_depth+1 downto 2) = "0011111111111111111" and ram_address_counter_inc_m = "001" then
 							ram_read_counter <= (others => '0');
 						else
 							ram_read_counter <= ram_read_counter + 4;
