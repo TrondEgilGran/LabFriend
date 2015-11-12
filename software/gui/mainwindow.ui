@@ -1,0 +1,1511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1129</width>
+    <height>949</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>SuperPlotter Pro</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="0">
+     <widget class="QCustomPlot" name="qcpAudioDisplay">
+      <property name="minimumSize">
+       <size>
+        <width>251</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>231</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QCustomPlot" name="qcpScopeDisplay"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1129</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="action_Open_Digital_Out"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="docControls">
+   <property name="minimumSize">
+    <size>
+     <width>338</width>
+     <height>482</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Scope Controls</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <widget class="QWidget" name="tabScopeControl">
+        <attribute name="title">
+         <string>Scope Control</string>
+        </attribute>
+        <widget class="QLabel" name="lbTrigType">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>180</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Trigger Type</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbTimeOffset">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>280</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Time Offset</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbTrace4">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>90</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Trace 4</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsPosTrace4">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>90</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTimeDiv">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>300</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbSource">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>10</y>
+           <width>54</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Source</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTraceSource3">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>70</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTraceSource1">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>30</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="editable">
+          <bool>false</bool>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsOffset2">
+         <property name="geometry">
+          <rect>
+           <x>101</x>
+           <y>150</y>
+           <width>81</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsPosTrace1">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>30</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbAllDigital">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>110</y>
+           <width>201</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>All Digital Channels on Trace 3</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbTrigSingle">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>240</y>
+           <width>71</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Single</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbTimeDiv">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>280</y>
+           <width>54</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Time/Div</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbTrace3">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>70</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Trace 3</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbTrace2">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>50</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Trace 2</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbTrace1">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>30</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Trace 1</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbTrigSource">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>180</y>
+           <width>91</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Trigger Source</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsTimeOffset">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>300</y>
+           <width>81</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsPosTrace2">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>50</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsOffset1">
+         <property name="geometry">
+          <rect>
+           <x>101</x>
+           <y>130</y>
+           <width>81</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbOffset2">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>150</y>
+           <width>71</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>ADC2 Offset</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTriggerSource">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>200</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbTrigLevel">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>180</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Trigger Level</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbOffset1">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>130</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>ADC1 Offset</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTraceSource2">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>50</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbPos">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>10</y>
+           <width>54</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Position</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTrigType">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>200</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbTraceSource4">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>90</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsPosTrace3">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>70</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsTriggerLevel">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>200</y>
+           <width>81</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbStartStop">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>240</y>
+           <width>71</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbADC1">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>130</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbADC2">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>150</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbACADC1">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>130</y>
+           <width>51</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>AC</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbACADC2">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>150</y>
+           <width>51</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>AC</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbFastRamRead">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>240</y>
+           <width>91</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Fast Read</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbCursor1">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>370</y>
+           <width>85</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor 1</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbCursor2">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>400</y>
+           <width>85</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor 2</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_6">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>350</y>
+           <width>21</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>X</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_7">
+         <property name="geometry">
+          <rect>
+           <x>230</x>
+           <y>350</y>
+           <width>31</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Y</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbXcursor1">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>370</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor V</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbYcursor1">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>370</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor V</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbXcursor2">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>400</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor V</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbYcursor2">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>400</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor V</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_8">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>440</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Time Diff</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbTimeDiff">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>440</y>
+           <width>91</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Time Difference</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_9">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>460</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Frequency</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbFrequency_2">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>460</y>
+           <width>101</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Time DIfference</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_10">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>480</y>
+           <width>91</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Voltage Diff CH1</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbVoltageDiffCh1">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>480</y>
+           <width>121</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Voltage Differnece</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_12">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>500</y>
+           <width>91</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Voltage Diff CH2</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbVoltageDiffCh2">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>500</y>
+           <width>121</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Voltage Difference</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tabAudioCodec">
+        <attribute name="title">
+         <string>Audio Codec</string>
+        </attribute>
+        <widget class="QPushButton" name="pbRecord">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>60</y>
+           <width>94</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Record</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dsbTimeAudioRec">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>60</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="smbSignalType">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>120</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbSampleRate">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>20</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbSampleFreq">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>20</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Sample Rate</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsFrequency1">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>120</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbFrequency">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>100</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Frequency</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbSignalType">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>100</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Signal Type</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbGenerateAudio">
+         <property name="geometry">
+          <rect>
+           <x>70</x>
+           <y>200</y>
+           <width>94</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Generate</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbAudioInputConfig">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>20</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsAmplitude1">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>120</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_5">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>100</y>
+           <width>61</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Amplitude</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="smbSignalType_2">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>160</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsFrequency2">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>160</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsAmplitude2">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>160</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbRepeatAudioRec">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>60</y>
+           <width>85</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Repeat</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbAnalysis">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>260</y>
+           <width>72</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_11">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>240</y>
+           <width>54</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Analysis</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursor1">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>300</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor 1</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursor1_2">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>330</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cursor 2</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_13">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>280</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>X</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_14">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>280</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Y</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_15">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>360</y>
+           <width>51</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Diff</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorX1">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>300</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorY1">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>300</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorX2">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>330</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorY2">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>330</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorDiffTime">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>360</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorYDiffVoltage">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>360</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_22">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>390</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Freq</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbAudioCursorDiffFreq">
+         <property name="geometry">
+          <rect>
+           <x>120</x>
+           <y>390</y>
+           <width>57</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tabDlog">
+        <attribute name="title">
+         <string>DataLogger</string>
+        </attribute>
+        <widget class="QCheckBox" name="cbContinous">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>20</y>
+           <width>141</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Continous Sampling</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsSampleRate">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>20</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbMeasure">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>70</y>
+           <width>94</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Measure</string>
+         </property>
+        </widget>
+        <widget class="QLCDNumber" name="lcdCh1">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>120</y>
+           <width>241</width>
+           <height>81</height>
+          </rect>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>81</height>
+          </size>
+         </property>
+        </widget>
+        <widget class="QLCDNumber" name="lcdCh2">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>230</y>
+           <width>241</width>
+           <height>81</height>
+          </rect>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>81</height>
+          </size>
+         </property>
+        </widget>
+        <widget class="QCustomPlot" name="qcpDataLog">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>340</y>
+           <width>311</width>
+           <height>200</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbCh1">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>100</y>
+           <width>54</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Channel 1</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_2">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>210</y>
+           <width>54</width>
+           <height>15</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Channel 2</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbGAINCH1">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>70</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbGAINCH2">
+         <property name="geometry">
+          <rect>
+           <x>240</x>
+           <y>70</y>
+           <width>78</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>50</y>
+           <width>91</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Channel 1 Gain</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_3">
+         <property name="geometry">
+          <rect>
+           <x>230</x>
+           <y>50</y>
+           <width>91</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Channel 2 Gain</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbLoggerToFile">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>570</y>
+           <width>101</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Store To File</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tabGen">
+        <attribute name="title">
+         <string>Gen</string>
+        </attribute>
+        <widget class="QDoubleSpinBox" name="dbsExDC">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>50</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbExDcV">
+         <property name="geometry">
+          <rect>
+           <x>160</x>
+           <y>50</y>
+           <width>131</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Set EX DC Voltage</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbDIOvoltage">
+         <property name="geometry">
+          <rect>
+           <x>160</x>
+           <y>90</y>
+           <width>131</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Set Digital IO Voltage</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsDIOVoltage">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>90</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit7">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>130</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit 7</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit6">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>150</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit 6</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit5">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>170</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit 5</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit4">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>190</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit4</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit3">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>210</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit3</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit2">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>230</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit 2</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit1">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>250</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit  1</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbBit0">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>270</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Bit 0</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbDOfile">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>320</y>
+           <width>141</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Digital IO From File</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="cbDOloopfile">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>350</y>
+           <width>81</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Loop File</string>
+         </property>
+        </widget>
+        <widget class="QDoubleSpinBox" name="dbsDORATE">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>400</y>
+           <width>62</width>
+           <height>23</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_4">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>380</y>
+           <width>121</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Digital Output Rate</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="action_Open_Digital_Out">
+   <property name="text">
+    <string>&amp;OpenDigitalOutput</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QFrame</extends>
+   <header>qcustomplot/qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
