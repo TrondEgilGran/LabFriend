@@ -24,7 +24,7 @@ extern "C"
 {
     #include <audio_codec.h>
     #include <scope_control.h>
-    #include <i2cdac.h>
+    #include <dcio.h>
     #include <board.h>
     #include <spicomm.h>
     #include <sys/time.h>
@@ -362,35 +362,19 @@ void labfriend::ScopeRun(void)
                         trace_2_data.resize(scopeBufferSize);
                         trace_3_data.resize(scopeBufferSize);
                         trace_4_data.resize(scopeBufferSize);
-                        if((trace1source == digital_channel_all) || (trace2source == digital_channel_all) )
-                        {
-                            printf("Im I Here ??? \n");
-                            if(trace1source == digital_channel_all)
-                            {
-                                byte2FloatingBits(trace_1_raw);
-                                trace_2_data.resize(scopeBufferSize);
-                                for(i=0; i < scopeBufferSize; i++ )
-                                {
-                                    xaxis[i] = i/scopeSampleRate;
-                                    trace_2_data[i] = (double)trace_2_raw[i]/32.0;
-                                }
-                                superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setData(xaxis, trace_2_data);
-                                superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setVisible(false);
-                                superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setVisible(true);
 
-                            }
-                            else
-                            {
-                                byte2FloatingBits(trace_2_raw);
-                                for(i=0; i < scopeBufferSize; i++ )
-                                {
-                                    xaxis[i] = i/scopeSampleRate;
-                                    trace_1_data[i] = (double)trace_1_raw[i]/32.0;
-                                }
-                                superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setData(xaxis, trace_1_data);
-                                superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setVisible(false);
-                                superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setVisible(true);
-                            }
+
+                        byte2FloatingBits(trace_3_raw);
+                        for(i=0; i < scopeBufferSize; i++ )
+                        {
+                              xaxis[i] = i/scopeSampleRate;
+                              trace_1_data[i] = (double)trace_1_raw[i]/32.0;
+                              trace_2_data[i] = (double)trace_2_raw[i]/32.0;
+                        }
+                            superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setData(xaxis, trace_1_data);
+                            superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setData(xaxis, trace_2_data);
+                            superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setVisible(true);
+                            superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setVisible(true);
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD0)->setData(xaxis, digitalBit0data);
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD1)->setData(xaxis, digitalBit1data);
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD2)->setData(xaxis, digitalBit2data);
@@ -409,42 +393,7 @@ void labfriend::ScopeRun(void)
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD6)->setVisible(true);
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD7)->setVisible(true);
 
-                        }
-                        else
-                        {
-                            for(i=0; i < scopeBufferSize; i++ )
-                            {
-                                xaxis[i] = i/scopeSampleRate;
-                                trace_1_data[i] = (double)trace_1_raw[i]/32.0;
-                                trace_2_data[i] = (double)trace_2_raw[i]/32.0;
-                                if( i < 8)
-                                {
-                                    trace_3_data[i] = 0.0;
-                                    trace_4_data[i] = 0.0;
-                                }
-                                else
-                                {
-                                    trace_3_data[i] = trace_3_raw[i-8]*5.0/32.0;
-                                    trace_4_data[i] = trace_4_raw[i-8]*5.0/32.0 + 7.0/32.0;
-                                }
-                            }
-                            superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setData(xaxis, trace_1_data);
-                            superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setData(xaxis, trace_2_data);
-                            superplot.ui.qcpScopeDisplay->graph( superplot.curveD0 )->setData(xaxis, trace_3_data);
-                            superplot.ui.qcpScopeDisplay->graph( superplot.curveD1 )->setData(xaxis, trace_4_data);
 
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curve1)->setVisible(true);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curve2)->setVisible(true);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD0)->setVisible(true);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD1)->setVisible(true);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD2)->setVisible(false);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD3)->setVisible(false);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD4)->setVisible(false);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD5)->setVisible(false);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD6)->setVisible(false);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD7)->setVisible(false);
-
-                        }
                         xmax = scopeBufferSize/scopeSampleRate;
                        // emit replotdatanow(0.0 ,xmax, 0.0, 255.0, scopeActualDiv, 32.0 );
 
@@ -599,18 +548,25 @@ void labfriend::scopeStart(void)
 
     scopeOffsetValue = round( (scopeBufferSize >> 1) + (scopeSampleRate)*(scopeOffsetTime/scopeTimeOffsetFormat));
     printf("ov, %d, srate %f, buffs %d, offsT %f, fmt %f \n", scopeOffsetValue, scopeSampleRate, scopeBufferSize, scopeOffsetTime, scopeTimeOffsetFormat );
-    set_scope_config(	triggerValue,  //trigger_value
+  /*  set_scope_config(	triggerValue,  //trigger_value
                 triggerSource | srateDiv,  //trigger_source
                 triggerType,  //trigger_edge
-                trace1source,  //ram0_sel
-                trace2source,  //ram1_sel
-                trace3source,  //ram2_sel
-                trace4source,  //ram3_sel
+                7,  //ram0_sel
                 ram_digital_muxed,  //ram_digi_muxed
                 powerup_adc,  //adc_powerdown
                 adc_clock_normal | srateMult,  //adc_clock
                 scopeOffsetValue, //trigger_ram_offset
-                true); //start_capture
+                true); //start_capture*/
+
+    set_scope_config( triggerValue,
+                  triggerSource ,
+                  triggerType,
+                  7,  //channel
+                  0,
+                  0, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
+                  3 ,
+                  scopeOffsetValue,
+                  1);
 
     firstScopeCapture = true;
     printf("ramsel0 -ramsel3, %x %x %x %x\n", trace1source, trace2source, trace3source, trace4source);
@@ -807,11 +763,11 @@ void labfriend::setVoltDiv(uint8_t channel, QString qsSource)
     printf("Offset VOltage, %f %f \n", ADC1OffsetOffsetError, ADC2OffsetOffsetError);
     if(channel == 0)
     {
-        setVoltage(HSADCOFFSET0, initialOffset + scopeOffsetCh1/1000.0 + ADC1OffsetOffsetError/1000.0, 0, 0);
+        setVoltage(HSADCOFFSET0, scopeOffsetCh1/1000.0 + ADC1OffsetOffsetError/1000.0, 0, 0);
     }
     else if(channel == 1)
     {
-        setVoltage(HSADCOFFSET1, initialOffset + scopeOffsetCh2/1000.0 + ADC2OffsetOffsetError/1000.0, 0, 0);
+        setVoltage(HSADCOFFSET1, scopeOffsetCh2/1000.0 + ADC2OffsetOffsetError/1000.0, 0, 0);
     }
 }
 
@@ -1303,13 +1259,13 @@ void labfriend::setTrigSource(QString qsSource)
 void labfriend::setOffsetADC1(double offsetVoltage)
 {
     scopeOffsetCh1 = offsetVoltage;
-    setVoltage(HSADCOFFSET0, initialOffset + scopeOffsetCh1/1000.0 + ADC1OffsetOffsetError/1000.0, 0, 0);
+    setVoltage(HSADCOFFSET0, scopeOffsetCh1/1000.0 + ADC1OffsetOffsetError/1000.0, 0, 0);
 }
 
 void labfriend::setOffsetADC2(double offsetVoltage)
 {
     scopeOffsetCh2 = offsetVoltage;
-    setVoltage(HSADCOFFSET1, initialOffset + scopeOffsetCh2/1000.0 + ADC2OffsetOffsetError/1000.0, 0, 0);
+    setVoltage(HSADCOFFSET1, scopeOffsetCh2/1000.0 + ADC2OffsetOffsetError/1000.0, 0, 0);
 }
 
 void labfriend::setOffsetTime(double offsetTime)
@@ -1735,7 +1691,7 @@ void labfriend::initScopeRun(void)
 
     startAudioGenerate = false;
     audio_gen_delay = 0;
-    audioSampleRateConfig = SampleRate16k;
+    audioSampleRateConfig = SampleRate48k;
     audioInputConfig = audioATT1;
     enableAudioADC = EnableADC;
     enableAudioDAC = 0;

@@ -27,9 +27,9 @@ http://sam.zoy.org/wtfpl/COPYING for more details.
 
 /*\\\ INCLUDE FILES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
 
-#include	"ffft/def.h"
-#include	"ffft/DynArray.h"
-#include	"ffft/OscSinCos.h"
+#include	"fft/def.h"
+#include	"fft/DynArray.h"
+#include	"fft/OscSinCos.h"
 
 
 
@@ -132,7 +132,7 @@ private:
 
 
 
-#include	"ffft/FFTReal.hpp"
+#include	"fft/FFTReal.hpp"
 
 
 

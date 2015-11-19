@@ -90,7 +90,7 @@ private:
 
 
 
-#include	"ffft/DynArray.hpp"
+#include	"fft/DynArray.hpp"
 
 
 
