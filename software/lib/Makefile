@@ -7,10 +7,10 @@ LDIR =.
 
 LIBS=-lm -lmpsse
 
-_DEPS = scope_control.h spicomm.h audio_codec.h
+_DEPS = scope_control.h spicomm.h audio_codec.h dcio.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = scope_control.o spicomm.o main.o audio_codec.o
+_OBJ = scope_control.o spicomm.o main.o audio_codec.o dcio.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 

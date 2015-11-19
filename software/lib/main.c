@@ -9,6 +9,7 @@
 #include "spicomm.h"
 #include "scope_control.h"
 #include "audio_codec.h"
+#include "dcio.h"
 
 void ddrStatus(void)
 {
@@ -33,10 +34,33 @@ int main(void)
 	uint8_t databuffer[24];
 	spiOpen();
 	init_scope_control();
-	set_Attenuation( 0, ON );
-	set_gain( 0, GAINx2);
-
-	set_digital_out(0x55);
+	//set_Attenuation( 0, ON );
+	//set_gain( 0, GAINx2);
+	setVoltage(EXVO, 3.5, 0, 0);
+	sleep(1);
+	//00001101
+	databuffer[0] = 0x05;
+	//11110001
+	databuffer[1] = 0xF1;
+	//10000011
+	databuffer[2] = 0x83;
+	
+	spiCommand( WRITE, 2, 3);
+	spiWrite(databuffer, 3);
+	sleep(1);
+	spiCommand( WRITE, 2, 3);
+	spiWrite(databuffer, 3);
+	sleep(1);
+	spiCommand( READ, 2, 3);
+	spiRead(databuffer, 3);
+	
+	printf("databuffer %x %x %x \n", databuffer[0], databuffer[1], databuffer[2]);
+	
+	while(1)
+	{
+		audioSPI(2, 3);
+	}
+/*
 	sleep(1);
 	set_scope_config( 2,
 			  0,
@@ -50,7 +74,18 @@ int main(void)
 	sleep(1);
 	new_read_ram( );
 			
+	setVoltage(HSADCOFFSET0, -2.1, 0, 0);
 	
+	setVoltage(HSADCOFFSET1, -1.9, 0, 0);
+	
+	setVoltage(LAOFFSET, 0.0, 0, 0);
+	
+	setVoltage(EXVO, 4.1, 0, 0);
+	
+	setVoltage(LADVREF, 0.5, 0, 0);
+	
+	setVoltage(LAVIO, 3.3, 0, 0);
+	*/
 	
 	spiClose();
 }

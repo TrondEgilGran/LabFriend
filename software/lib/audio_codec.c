@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdint.h>
+#include <unistd.h>
 #include "spicomm.h"
 #include "audio_codec.h"
 #include "board.h"
@@ -43,13 +44,48 @@ float getSampleRate(uint8_t config)
  
  */
 
+int audioSPI(uint8_t address, uint8_t data)
+{
+    uint8_t databuffer[3];
+    //Transfer Config Shift data out on falling edge valid on rising edge
+    databuffer[0] = 0x0B;
+    //Data MSB (address)
+    databuffer[1] = address | 0xA0;
+    databuffer[2] = data;
+    spiCommand(WRITE, addrSPI, 3 );
+    spiWrite(databuffer, 3);
+    //50us (8 real)
+    usleep(50);
+    return 1; //can add readback of status bit to see that write is actually finished
+}
+
+
 int setI2Sconfig( uint8_t config)
 {
-	uint8_t databuffer[2];
+    uint8_t databuffer[1];
+
     printf("I2SConfig %x \n", config);
-    databuffer[0] = config;
-	spiCommand( WRITE, addrAudioCodec | I2SCONFIG, 1 );
-	spiWrite( databuffer, 1 );
+    databuffer[0] = config | 0x40;
+    spiCommand( WRITE, addrAudioCodec | I2SCONFIG, 1 );
+    spiWrite( databuffer, 1 );
+    usleep(50000);
+    /*AK4621 Config */
+    //addr 0, 00000111  Power up device
+
+    /*Cloclk and format
+     * DIF[2..0] 011  I2S
+     * DFS[1..0] 00 32-54kHz
+     * DFS[1..0] 01 54-108kHz
+     * DFS[1..0] 10 108-206kHz
+     * CMODE 0 128/256..fs  CMODE 1 192/384..fs
+     * CKS[1..0]  0 256, 1 512, 2 1024, 3 auto (512 norm, 256 double, 128 quad)
+     *
+     * 011 0 00 00
+     */
+    audioSPI(2, 0x60);
+    //Exit reset
+    audioSPI(1, 3);
+
     return 1;
 }
 

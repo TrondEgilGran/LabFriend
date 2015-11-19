@@ -310,21 +310,30 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
 	spiCommand( WRITE, addrHSaqusition, 1 );
 	spiWrite( databuffer, 1 );
 	
-	
+    usleep(1000);
+
 	ramadress=0;
     for(i = 0; i < (nrOfRamAddresses*bytesPerRamAddress)/temp_buffersize; i ++ )
 	{	
         spiCommand( READ, addrHSaqusition, temp_buffersize );
         spiRead( databuffer, temp_buffersize );
 		//printf("Read address %d to %d, ramaddr %d\n", i*bytesPerRamAddress, i*bytesPerRamAddress +192, ramadress);
-        for( ia = 0; ia < temp_buffersize; ia=ia+3)
+        for( ia = 0; ia < temp_buffersize; ia=ia+12)
 		{
-			*(ram_group_0 + ramadress) = databuffer[0+ia];
-			*(ram_group_1 + ramadress) = databuffer[1+ia];
-			*(ram_group_2 + ramadress) = databuffer[2+ia] & 0x1;
-			*(ram_group_3 + ramadress) = (databuffer[2+ia] >> 1) &0x01;
-			ramadress = ramadress + 1; 
-			//printf(" %d %x %x %x \n", ia, databuffer[0+ia],databuffer[1+ia], databuffer[2+ia]);
+            *(ram_group_0 + ramadress)   = databuffer[0+ia];
+            *(ram_group_0 + ramadress+1) = databuffer[1+ia];
+            *(ram_group_0 + ramadress+2) = databuffer[2+ia];
+            *(ram_group_0 + ramadress+3) = databuffer[3+ia];
+            *(ram_group_1 + ramadress)   = databuffer[4+ia];
+            *(ram_group_1 + ramadress+1) = databuffer[5+ia];
+            *(ram_group_1 + ramadress+2) = databuffer[6+ia];
+            *(ram_group_1 + ramadress+3) = databuffer[7+ia];
+            *(ram_group_2 + ramadress)   = databuffer[8+ia];
+            *(ram_group_2 + ramadress+1) = databuffer[9+ia];
+            *(ram_group_2 + ramadress+2) = databuffer[10+ia];
+            *(ram_group_2 + ramadress+3) = databuffer[11+ia];
+            ramadress = ramadress + 4;
+            //printf(" %d %x %x %x \n", ia, databuffer[0+ia],databuffer[1+ia], databuffer[2+ia]);
 		}
 	}
 	databuffer[command] = 0x07;
@@ -438,8 +447,7 @@ int read_ram_fast( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_gr
         {
             *(ram_group_0 + ramadress) = databuffer[0+ia];
             *(ram_group_1 + ramadress) = databuffer[1+ia];
-            *(ram_group_2 + ramadress) = databuffer[2+ia] & 0x1;
-            *(ram_group_3 + ramadress) = (databuffer[2+ia] >> 1) &0x01;
+            *(ram_group_2 + ramadress) = databuffer[2+ia];
             ramadress = ramadress + 1;
             //printf(" %d %x %x %x \n", ia, databuffer[0+ia],databuffer[1+ia], databuffer[2+ia]);
         }

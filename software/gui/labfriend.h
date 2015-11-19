@@ -6,7 +6,7 @@
 #include <QDir>
 #include "mainform.h"
 #include <cstdint>
-#include "ffft/FFTReal.h"
+#include "fft/FFTReal.h"
 
 #define LOGGERMAXSIZE 1024
 #define MAXDOFILESIZE 100000

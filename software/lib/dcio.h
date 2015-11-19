@@ -1,11 +1,12 @@
 //I2CDAC
 
-#define HSADCOFFSET0	0x10
-#define HSADCOFFSET1	0x12
-#define LAVIO		0x14
-#define EXVO		0x16
-#define i2cadcConfig	0x08
-#define i2cdataread	0x10
+#define HSADCOFFSET0	0x03
+#define HSADCOFFSET1	0x04
+#define LAVIO		0x00
+#define LADVREF     0x05
+#define LAOFFSET    0x01
+#define EXVO		0x02
+
 
 #define SINGLECONVERSION 0x90
 #define LOGGERADC0      0x00
@@ -15,6 +16,8 @@
 #define LOGGERGAIN2     0x01
 #define LOGGERGAIN4     0x02
 #define LOGGERGAIN8     0x03
+
+
 
 int setVoltage(uint8_t channel, float voltage, float gainerror, float offset);
 

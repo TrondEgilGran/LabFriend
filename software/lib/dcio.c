@@ -7,45 +7,60 @@
 #include <time.h>
 #include <unistd.h>
 #include "spicomm.h"
-#include "i2cdac.h"
+#include "dcio.h"
+#include "board.h"
 
 
 
 /*
- * 2.85 Ref Voltage 16 bit
- *  VOUT=INTIN*2.85/0xffff
- * multiplier:
+ * PWM ouput Voltage
+ * PWMOV=PWMVOLTAGE*(PWMMAX-PWMVAL)/PWMMAX
+ *
+ * PWMVAL=PWMMAX-PWMMAX*PWMOV/PWMVOLTAGE
  * 
- *  VOUT=-1.25+51/22(1.25-VIN)
- * 
- * VOUT =-1.25*51/22(1.25-INTIN*2.85/0xFFFF)
- * VOUT/2.8977 = 1.25-INTIN*2.85/0xffff
- * (vout/2.8977-1.25)/(2.85/0xFFFF)=INITIN
- * 
- * VOUT = -1.25+2.8977-INITIN*1.0081e-04
- * INITIN = (1.6477 - VOUT)/1.0081e-4
+ * Offset Adjustment Voltage
+ * VO=VREFL-OFFSETRFB*(PWMOV-VREFL)/OFFSETRG
+ *
+ * (OFFSETRG/-OFFSETRFB)*(VO-VREFL)+VREFL=PWMOV
+ *
+ *
+ * Voltage Outputs
+ * VO=PWMOV*(1+VORFB/VORG)
+ *
+ * PWMOV=VO/(1+VORFB/VORG)
+ *
+ *
  * 
  */
 int setVoltage(uint8_t channel, float voltage, float gainerror, float offset)
 {
-	uint16_t dacvalue;
+    uint16_t pwmval;
 	uint8_t databuffer[3];
+    float pwmov, zeerooffset;
 
-	if( (channel == HSADCOFFSET0) || (channel == HSADCOFFSET1))
+    zeerooffset = -(VREFL+ (VREFT-VREFL)/2);
+
+    if( (channel == HSADCOFFSET0) || (channel == HSADCOFFSET1) || (channel == LAOFFSET) )
 	{
-		dacvalue = (uint16_t) round( (65535/2.85+gainerror)*(1.25-(22.0/51.0)*(voltage-1.25)) +offset );
+        pwmov = (-OFFSETRG/OFFSETRFB)*(zeerooffset+voltage-VREFL)+VREFL;
+        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE+gainerror)*pwmov + offset  );
 	}
+    else if(channel == LADVREF)
+    {
+        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE+gainerror)*voltage + offset  );
+    }
 	else
 	{
-		dacvalue = (uint16_t) round( offset + (voltage*( 1.2865e+04 + gainerror ) ) );
+        pwmov = voltage/(1+VORFB/VORG);
+        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE+gainerror)*pwmov + offset  );
 	}
 	databuffer[0] = channel;
-	databuffer[1] = 0x00ff & (dacvalue >> 8);
-	databuffer[2] = dacvalue & 0x00ff;
+    databuffer[1] = 0x00ff & (pwmval >> 8);
+    databuffer[2] = pwmval & 0x00ff;
 	
-	spiCommand( WRITE, addrI2Cdac, 3 );
+    spiCommand( WRITE, addrDCIO, 3 );
 	spiWrite( databuffer, 3 );
-	printf( "written voltage: %f dacvalue: %d \n", voltage, dacvalue );
+    printf( "written voltage: %f pwmvalue: %d \n", voltage, pwmval );
 	
     usleep(20000);
 	return 1;
@@ -61,7 +76,7 @@ float getVoltage(uint8_t config)
     float gain;
 
 	databuffer[0] = config;
-	
+/*
 	spiCommand( WRITE, addrI2Cdac | i2cadcConfig, 1 );
 	spiWrite( databuffer, 1 );
     usleep(30000);
@@ -70,7 +85,7 @@ float getVoltage(uint8_t config)
     usleep(30000);
 	spiCommand( READ, addrI2Cdac, 2);
     usleep(20000);
-	spiRead(databuffer, 2);
+    spiRead(databuffer, 2);*/
 
     gainDig = 0x03 & config;
     if (gainDig == LOGGERGAIN1 )
