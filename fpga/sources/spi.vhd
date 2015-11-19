@@ -9,37 +9,42 @@ library ieee;
 use ieee.std_logic_1164.all, ieee.numeric_std.all;
 
 
-entity s74595 is
+entity spi is
 	generic( nr_of_bits : natural := 16 ;
-	         frequency_div : natural := 5000;
-	         frequency_div_half : natural := 2500;
-	         address : std_logic_vector( 7 downto 0) := "00000100");
+	         frequency_div : natural := 20;
+	         frequency_div_half : natural := 10;
+	         address : std_logic_vector( 7 downto 0) := "00000010");
 	
 	port (
 		clk : in std_logic;
 		rst : in std_logic;
 		datain : in std_logic_vector( 7 downto 0);
+		dataout : out std_logic_vector(7 downto 0);
 		addr : in std_logic_vector( 7 downto 0);
 		wr : in std_logic;
+		rd : in std_logic;
 		busy : out std_logic;
-		ser : out std_logic;
-		rck :  out std_logic;
+		cs1 : out std_logic;
+		cs2 : out std_logic;
+		sdo : out std_logic;
+		sdi : in std_logic;
 		sck : out std_logic);
-end s74595;
+end spi;
 
-architecture rtl of s74595 is
+architecture rtl of spi is
 	--constant
 	--
 	--type machine is (idle, 
-type datamachine is (first_byte, second_byte);
-type serialmachine is ( wait_for_trigger, start_transfer, wait_delay, shift_data, finish_transfer );
-signal data_state : datamachine := first_byte; 
-signal serial_state : serialmachine;
+type datamachine is (transfertype, first_byte, second_byte);
+type serialmachine is ( wait_for_trigger, start_transfer, wait_delay, first_edge, second_edge, shift_data, finish_transfer );
+signal data_state, read_data_state : datamachine := transfertype;
+signal serial_state, serial_state_next : serialmachine;
 signal trigger_serial_transfer, serial_transfer_triggered : std_logic := '0';
 
-signal recieved_data, shift_reg : std_logic_vector( nr_of_bits-1 downto 0 );
-signal boot, boot_2 : std_logic := '1'; 
+signal transmitt_data, shift_reg, recieved_data, shift_in_reg : std_logic_vector( nr_of_bits-1 downto 0 );
 signal serial_busy : std_logic;
+signal recieve_mode, shift_pol, clock_pol :  std_logic := '0';
+signal channel1en, channel2en, cs : std_logic := '0';
 
 begin
 
@@ -47,36 +52,54 @@ begin
 	
 	begin
 		if rst = '1' then
-			data_state <= first_byte;
-			recieved_data <= (others => '0');
+			data_state <= transfertype;
+			read_data_state <= transfertype;
+			transmitt_data <= (others => '0');
 			trigger_serial_transfer <= '0';
-			boot <= '1';
+			recieve_mode <= '0';
+			shift_pol <= '0';
+			channel1en <= '1';
+			channel2en <= '1';
+			clock_pol <= '1';
 		elsif rising_edge(clk) then
-			if wr = '1' and addr = address and boot = '0' then
+			if wr = '1' and addr = address then
 				case data_state is
+					when transfertype => 
+						clock_pol <= datain(0);
+						channel1en <= not datain(1);
+						channel2en <= not datain(2);
+						shift_pol <= datain(3);
+						data_state <= first_byte;
 					when first_byte =>
-						recieved_data( nr_of_bits-1 downto nr_of_bits-8 ) <= datain;
+						transmitt_data( nr_of_bits-1 downto nr_of_bits-8 ) <= datain;
 						data_state <= second_byte;
 					when second_byte =>
-						recieved_data( nr_of_bits/2 -1 downto 0) <= datain;
-						data_state <= first_byte;
+						transmitt_data( nr_of_bits/2 -1 downto 0) <= datain;
+						data_state <= transfertype;
 						trigger_serial_transfer <= '1';
 				end case;
-			elsif boot = '1' then -- Make sure relays don't start with voltage 
-				case data_state is
-					when first_byte =>
-						recieved_data( nr_of_bits-1 downto nr_of_bits-8 ) <= "00000000";
-						data_state <= second_byte;
-					when second_byte =>
-						recieved_data( nr_of_bits/2 -1 downto 0) <= "00000000";
-						data_state <= first_byte;
-						trigger_serial_transfer <= '1';
-				end case;
-				if boot_2 = '0' and serial_busy = '0' then
-					boot <= '0';
-				end if;
-				boot_2 <= '0';
 			end if;
+			
+			if rd = '1' and addr(2 downto 0) = address(2 downto 0) then
+				case read_data_state is
+					when transfertype =>
+						dataout(0) <= clock_pol;
+						dataout(1) <= channel1en;
+						dataout(2) <= channel2en;
+						dataout(3) <= shift_pol;
+						dataout(4) <= serial_busy;
+						dataout(7 downto 5) <= (others => '1');
+						read_data_state <= first_byte;
+					when first_byte =>
+						dataout <= recieved_data( nr_of_bits-1 downto nr_of_bits-8 );
+						read_data_state <= second_byte;
+					when second_byte =>
+						dataout <= recieved_data( nr_of_bits/2 -1 downto 0);
+						read_data_state <= transfertype;
+					
+				end case;
+			end if;
+			
 			
 			if serial_transfer_triggered = '1' then
 				trigger_serial_transfer <= '0';
@@ -84,20 +107,24 @@ begin
 		end if;
 	end process getData;
 	
+	
 	-- CS ____
 	--        |______________________
 	-- CLK       __    __    __
 	--    ______|  |__|  |__|  |___
 	-- DATA
 	--        |XXXX|XXXXX|XXXXX|
+	
 	busy <= serial_busy;
-	serialTransfer: process(rst, clk, trigger_serial_transfer, recieved_data) is
+	cs1 <= cs or channel1en;
+	cs2 <= cs or channel2en;
+	serialTransfer: process(rst, clk, trigger_serial_transfer, transmitt_data) is
 		variable count : integer range 0 to frequency_div;
 		variable bitcount : integer range 0 to nr_of_bits;
 	begin
 		if rst = '1' then
 			serial_transfer_triggered <= '0';
-			rck <= '1';
+			cs <= '1';
 			sck <= '0';
 			count := 0;
 			bitcount := 0;
@@ -106,47 +133,68 @@ begin
 		
 			case serial_state is
 				when wait_for_trigger =>
+					cs <= '1';
 					if trigger_serial_transfer = '1' then
 						serial_transfer_triggered <= '1';
 						serial_busy <= '1';
-						shift_reg <= recieved_data;
+						shift_reg <= transmitt_data;
 						serial_state <= start_transfer;
+						sck <= not clock_pol;
 					end if;
 				when start_transfer =>
-					rck <= '0';
+					cs <= '0';
 					serial_state <= wait_delay;
-					
-				when wait_delay =>
-			
+					serial_state_next <= first_edge; 
+				when wait_delay =>	
 					if count = frequency_div_half then
-						sck <= '1';
-					end if;
-					
-					if count = frequency_div then
-						serial_state <= shift_data;
+						serial_state <= serial_state_next;
 						count := 0;
-						sck <= '0';
 					else
 						count := count +1;
 					end if;
-				when shift_data =>
-					if bitcount = nr_of_bits-1 then
-						serial_state <= finish_transfer;
-						bitcount := 0;
+				when first_edge =>
+					sck <= clock_pol;
+					if shift_pol = '1' then
+						serial_state <= shift_data;
 					else
 						serial_state <= wait_delay;
+						serial_state_next <= second_edge;
+					end if;
+				when second_edge =>
+					sck <= not clock_pol;
+					if shift_pol = '1' then
+						serial_state <= wait_delay;
+						serial_state_next <= first_edge;
+					else
+						serial_state <= shift_data;
+					end if;
+				when shift_data =>
+					if bitcount = nr_of_bits-1 then
+						serial_state <= wait_delay;
+						serial_state_next <= finish_transfer;
+						bitcount := 0;
+						
+					else
+						serial_state <= wait_delay;
+						if shift_pol = '1' then
+							serial_state_next <= second_edge;
+						else
+							serial_state_next <= first_edge;
+						end if;
 						shift_reg <= shift_reg( nr_of_bits-2 downto 0) & '0';
 						bitcount := bitcount + 1;
 					end if;
-				
+					shift_in_reg <= shift_in_reg(nr_of_bits-2 downto 0) & sdi;
 				when finish_transfer =>
-					rck <= '1';
 					serial_busy <= '0';
-					serial_state <= wait_for_trigger;
+					serial_state_next <= wait_for_trigger;
+					serial_state <= wait_delay;
+					recieved_data <= shift_in_reg;
+					sck <= not clock_pol;
 				
 			end case;
 			
-			ser <= shift_reg(nr_of_bits -1);
+			sdo <= shift_reg(nr_of_bits -1);
 			
 			if serial_transfer_triggered = '1' and trigger_serial_transfer = '0' then
 				serial_transfer_triggered <= '0';

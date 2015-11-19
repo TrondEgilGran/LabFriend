@@ -148,6 +148,28 @@ component SPIMASTER is
            WR : out  STD_LOGIC);
 end component SPIMASTER;
 
+component spi is
+	generic( nr_of_bits : natural := 16 ;
+	         frequency_div : natural := 20;
+	         frequency_div_half : natural := 10;
+	         address : std_logic_vector( 7 downto 0) := "00000010");
+	
+	port (
+		clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		dataout : out std_logic_vector(7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		rd : in std_logic;
+		busy : out std_logic;
+		cs1 : out std_logic;
+		cs2 : out std_logic;
+		sdo : out std_logic;
+		sdi : in std_logic;
+		sck : out std_logic);
+end component spi;
+
 component i2s is
 	generic( 	DATA    : integer := 48;
 			RADDR    : integer := 12;
@@ -545,7 +567,20 @@ begin
 				RD  => spimRD,
 				WR   => spimWR );
 				
-			   
+	spi_1 : spi port map (	clk => global_clk,
+				rst => global_rst,
+				datain => spimdataout,
+				dataout => spimdatain2,
+				addr => spimcommand,
+				wr  => spimWR,
+				rd  => spimRD,
+				busy => open,
+				cs1 => AU_CSN,
+				cs2 => DC_CS,
+				sdo => AU_CDTI, 
+				sdi => DC_DOUT,
+				sck => AU_CCLK); 
+				
 	S75595_1: s74595 port map( clk => global_clk,
 				  rst => global_rst,
 				  datain => spimdataout,
@@ -596,8 +631,8 @@ begin
 				i2sdin  => I2SDATAOUT,
 				bck     => I2SBCK,
 				lrck  	=> I2SLRCK,
-				conf0	=> ASEL0,
-				conf1	=> ASEL1);
+				conf0	=> AUPDN,
+				conf1	=> CMP_MEAS_SEL);
 				
 	PWM1: pwm port map(	
 				clk  	 =>  global_clk, 
@@ -768,18 +803,13 @@ port map (
 	--Global Signal Assignments	
 	
 	
-	CMP_MEAS_SEL <= '0';
 	CMPMEAS_EN <= '0';
 	CMPMEAS_A <= '1';
 	CMPMEAS_B <= '0';
 	HFDAC_DI <=  '0';
 	HFDAC_CS <= '0';
 	HFDAC_CLK <= '0';
-	AU_CSN <= '1';
-	AU_CCLK <= '0';
-	AU_CDTI <= '0';
-	DC_CS <= '1';
-	AUPDN <= '0';
+
 		
 	
 	--global_clk <= MSTCLK;
@@ -842,54 +872,7 @@ port map (
 	
 	global_reset_n <= not global_rst;
 	
-	-- Test connections
-	testL: process (global_clk, global_rst) is
 
-	begin
-	if global_rst = '1' then
-		testo <= "000";
-	elsif rising_edge(global_clk) then
-		if spimRD = '1' and spimcommand(2 downto 0) = "010" then
-			if testo = "000" then
-				testo <= "001";
-				spimdatain2 <= "00001111";
-			elsif testo = "001" then
-				testo <= "010";
-				spimdatain2( 6 downto 0) <= std_logic_vector(c3_p0_wr_count);
-				spimdatain2(7) <= c3_p0_wr_full;
-			elsif testo = "010" then
-				testo <= "011";
-				spimdatain2(0) <= c3_p0_wr_empty;
-				spimdatain2(1) <= c3_p0_wr_underrun;
-				spimdatain2(2) <= c3_p0_wr_error;
-				spimdatain2(3) <= c3_p0_rd_empty;
-				spimdatain2(4) <= c3_p0_rd_full;
-				spimdatain2(5) <= c3_p0_rd_error;
-				spimdatain2(6) <= c3_p0_rd_overflow;
-				spimdatain2(7) <= c3_p0_rd_en;
-			elsif testo = "011" then
-				testo <= "100";
-				spimdatain2( 6 downto 0) <= std_logic_vector(c3_p0_rd_count);
-				spimdatain2( 7 ) <= c3_calib_done;
-			elsif testo = "100" then
-				testo <= "101";
-				spimdatain2(5 downto 0) <= std_logic_vector(c3_p0_cmd_bl);
-				spimdatain2(7 downto 6) <= "00";
-			elsif testo = "101" then
-				testo <= "110";
-				spimdatain2(2 downto 0) <= std_logic_vector( c3_p0_cmd_instr);
-				spimdatain2(7 downto 3) <= "10000";
-			elsif testo = "110" then
-				testo <= "111";
-				spimdatain2 <= std_logic_vector(c3_p0_cmd_byte_addr(7 downto 0));
-			elsif testo = "111" then
-				testo <= "000";
-				--spimdatain2 <= std_logic_vector(c3_p0_cmd_byte_addr(15 downto 8));
-				spimdatain2 <= quack;
-			end if;
-		end if;
-	end if;
-	end process testL;
 	
 	--LAD815 <= "01010101"
 	

@@ -114,7 +114,7 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
 
    -- Clock period definitions
    constant clk_period : time := 20 ns;
-   constant hs_clock_period : time := 10 ns;
+   constant hs_clock_period : time := 5 ns;
    
    --type ram_array is array ( 0 to 524287 ) of std_logic_vector( 17 downto 0 );
    --signal sram : ram_array;
@@ -241,7 +241,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00000001"; --combus 1
+	datain <= "10000001"; --combus 1
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
