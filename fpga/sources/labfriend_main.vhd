@@ -418,6 +418,18 @@ component hs_serial_dac is
 		sck : out std_logic);
 end component hs_serial_dac;
 
+component digital_output is
+	generic( address : std_logic_vector( 7 downto 0) );
+	port (
+		clk : in std_logic;
+		hs_clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		digiout : out std_logic_vector(7 downto 0));
+end component digital_output;
+
 
 
 signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_4x_180_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_logic;
@@ -671,6 +683,16 @@ begin
 					ser => HFDAC_DI,
 					rck => HFDAC_CS, 
 					sck => HFDAC_CLK); 
+					
+	dwg_1 : digital_output generic map( address => "00011000") 
+			 port map (	hs_clk => global_clk,
+					clk => global_clk,
+					rst => global_rst,
+					datain => spimdataout,
+					addr => spimcommand,
+					wr  => spimWR,
+					digiout => LAD815); 
+					
 			
 				
 	BUFG_inst_1 : BUFG
@@ -678,148 +700,144 @@ begin
 		O => global_clk, -- 1-bit output Clock buffer output
 		I => global_clk_fb -- 1-bit input Clock buffer input
 	);
-	--BUFG_inst_2 : BUFG
-	--port map (
-	--	O => global_rst, -- 1-bit output Clock buffer output
-	--	I => USBGPIO1 -- 1-bit input Clock buffer input
-	--);
-u_ddr3memory : ddr3memory
-    generic map (
-    C3_P0_MASK_SIZE => C3_P0_MASK_SIZE,
-    C3_P0_DATA_PORT_SIZE => C3_P0_DATA_PORT_SIZE,
-    C3_P1_MASK_SIZE => C3_P1_MASK_SIZE,
-    C3_P1_DATA_PORT_SIZE => C3_P1_DATA_PORT_SIZE,
-    C3_MEMCLK_PERIOD => C3_MEMCLK_PERIOD,
-    C3_RST_ACT_LOW => C3_RST_ACT_LOW,
-    C3_INPUT_CLK_TYPE => C3_INPUT_CLK_TYPE,
-    C3_CALIB_SOFT_IP => C3_CALIB_SOFT_IP,
-    C3_SIMULATION => C3_SIMULATION,
-    DEBUG_EN => DEBUG_EN,
-    C3_MEM_ADDR_ORDER => C3_MEM_ADDR_ORDER,
-    C3_NUM_DQ_PINS => C3_NUM_DQ_PINS,
-    C3_MEM_ADDR_WIDTH => C3_MEM_ADDR_WIDTH,
-    C3_MEM_BANKADDR_WIDTH => C3_MEM_BANKADDR_WIDTH
-)
-port map (
-   c3_sys_clk_p  =>         memclk_0_b,
-   c3_sys_clk_n    =>       memclk_180,
-   c3_sys_rst_i    =>       global_rst,                        
-   mcb3_dram_dq       =>    mcb3_dram_dq,  
-   mcb3_dram_a        =>    mcb3_dram_a,  
-   mcb3_dram_ba       =>    mcb3_dram_ba,
-   mcb3_dram_ras_n    =>    mcb3_dram_ras_n,                        
-   mcb3_dram_cas_n    =>    mcb3_dram_cas_n,                        
-   mcb3_dram_we_n     =>    mcb3_dram_we_n,                          
-   mcb3_dram_odt    =>      mcb3_dram_odt,
-   mcb3_dram_cke      =>    mcb3_dram_cke,                          
-   mcb3_dram_ck       =>    mcb3_dram_ck,                          
-   mcb3_dram_ck_n     =>    mcb3_dram_ck_n,       
-   mcb3_dram_dqs      =>    mcb3_dram_dqs,                          
-   mcb3_dram_dqs_n    =>    mcb3_dram_dqs_n,
-   mcb3_dram_reset_n =>     mcb3_dram_reset_n, 
-   mcb3_dram_dm  =>       mcb3_dram_dm,
-   c3_clk0	=>	        user_clock_ddr,
-   c3_rst0		=>        open,	
-   c3_calib_done      =>    c3_calib_done,
-   mcb3_rzq         =>            mcb3_rzq,       
-   c3_p0_cmd_clk                           =>  ram_clock,
-   c3_p0_cmd_en                            =>  ram_cmd_en,
-   c3_p0_cmd_instr                         =>  ram_command,
-   c3_p0_cmd_bl                            =>  ram_bl,
-   c3_p0_cmd_byte_addr                     =>  ram_addr,
-   c3_p0_cmd_empty                         =>  c3_p0_cmd_empty,
-   c3_p0_cmd_full                          =>  open,
-   c3_p0_wr_clk                            =>  ram_clock,
-   c3_p0_wr_en                             =>  ram_wr_en,
-   c3_p0_wr_mask                           =>  wr_mask_g,
-   c3_p0_wr_data                           =>  ram_data_write,
-   c3_p0_wr_full                           =>  c3_p0_wr_full,
-   c3_p0_wr_empty                          =>  c3_p0_wr_empty ,
-   c3_p0_wr_count                          =>  c3_p0_wr_count,
-   c3_p0_wr_underrun                       =>  c3_p0_wr_underrun,
-   c3_p0_wr_error                          =>  c3_p0_wr_error,
-   c3_p0_rd_clk                            =>  ram_clock,
-   c3_p0_rd_en                             =>  ram_rd_en,
-   c3_p0_rd_data                           =>  ram_data_read,
-   c3_p0_rd_full                           =>  c3_p0_rd_full,
-   c3_p0_rd_empty                          =>  ram_rd_empty,
-   c3_p0_rd_count       		   =>  c3_p0_rd_count ,
-   c3_p0_rd_overflow                       =>  c3_p0_rd_overflow,
-   c3_p0_rd_error                          =>  c3_p0_rd_error,
-   c3_p1_cmd_clk                           =>  ram_clock,
-   c3_p1_cmd_en                            =>  gnd,
-   c3_p1_cmd_instr                         =>  cmd_instr_g,
-   c3_p1_cmd_bl                            =>  cmd_bl_g,
-   c3_p1_cmd_byte_addr                     =>  cmd_byte_addr_g,
-   c3_p1_cmd_empty                         =>  open,
-   c3_p1_cmd_full                          =>  open,
-   c3_p1_wr_clk                            =>  ram_clock,
-   c3_p1_wr_en                             =>  gnd,
-   c3_p1_wr_mask                           =>  wr_mask_g,
-   c3_p1_wr_data                           =>  wr_data_g,
-   c3_p1_wr_full                           =>  open,
-   c3_p1_wr_empty                          =>  open,
-   c3_p1_wr_count                          =>  open,
-   c3_p1_wr_underrun                       =>  open,
-   c3_p1_wr_error                          =>  open,
-   c3_p1_rd_clk                            =>  ram_clock,
-   c3_p1_rd_en                             =>  gnd,
-   c3_p1_rd_data                           =>  open,
-   c3_p1_rd_full                           =>  open,
-   c3_p1_rd_empty                          =>  open,
-   c3_p1_rd_count                          =>  open,
-   c3_p1_rd_overflow                       =>  open,
-   c3_p1_rd_error                          =>  open,
-   c3_p2_cmd_clk                           =>  ram_clock,
-   c3_p2_cmd_en                            =>  gnd,
-   c3_p2_cmd_instr                         =>  cmd_instr_g,
-   c3_p2_cmd_bl                            =>  cmd_bl_g,
-   c3_p2_cmd_byte_addr                     =>  cmd_byte_addr_g,
-   c3_p2_cmd_empty                         =>  open,
-   c3_p2_cmd_full                          =>  open,
-   c3_p2_wr_clk                            =>  ram_clock,
-   c3_p2_wr_en                             =>  gnd,
-   c3_p2_wr_mask                           =>  wr_mask_g,
-   c3_p2_wr_data                           =>  wr_data_g,
-   c3_p2_wr_full                           =>  open,
-   c3_p2_wr_empty                          =>  open,
-   c3_p2_wr_count                          =>  open,
-   c3_p2_wr_underrun                       =>  open,
-   c3_p2_wr_error                          =>  open,
-   c3_p2_rd_clk                            =>  ram_clock,
-   c3_p2_rd_en                             =>  gnd,
-   c3_p2_rd_data                           =>  open,
-   c3_p2_rd_full                           =>  open,
-   c3_p2_rd_empty                          =>  open,
-   c3_p2_rd_count                          =>  open,
-   c3_p2_rd_overflow                       =>  open,
-   c3_p2_rd_error                          =>  open,
-   c3_p3_cmd_clk                           =>  global_clk,
-   c3_p3_cmd_en                            =>  gnd,
-   c3_p3_cmd_instr                         =>  cmd_instr_g,
-   c3_p3_cmd_bl                            =>  cmd_bl_g,
-   c3_p3_cmd_byte_addr                     =>  cmd_byte_addr_g,
-   c3_p3_cmd_empty                         =>  open,
-   c3_p3_cmd_full                          =>  open,
-   c3_p3_wr_clk                            =>  global_clk,
-   c3_p3_wr_en                             =>  gnd,
-   c3_p3_wr_mask                           =>  wr_mask_g,
-   c3_p3_wr_data                           =>  wr_data_g,
-   c3_p3_wr_full                           =>  open,
-   c3_p3_wr_empty                          =>  open,
-   c3_p3_wr_count                          =>  open,
-   c3_p3_wr_underrun                       =>  open,
-   c3_p3_wr_error                          =>  open,
-   c3_p3_rd_clk                            =>  global_clk,
-   c3_p3_rd_en                             =>  gnd,
-   c3_p3_rd_data                           =>  open,
-   c3_p3_rd_full                           =>  open,
-   c3_p3_rd_empty                          =>  open,
-   c3_p3_rd_count                          =>  open,
-   c3_p3_rd_overflow                       =>  open,
-   c3_p3_rd_error                          =>  open
-);
-	
+
+	u_ddr3memory : ddr3memory
+	generic map (
+		C3_P0_MASK_SIZE => C3_P0_MASK_SIZE,
+		C3_P0_DATA_PORT_SIZE => C3_P0_DATA_PORT_SIZE,
+		C3_P1_MASK_SIZE => C3_P1_MASK_SIZE,
+		C3_P1_DATA_PORT_SIZE => C3_P1_DATA_PORT_SIZE,
+		C3_MEMCLK_PERIOD => C3_MEMCLK_PERIOD,
+		C3_RST_ACT_LOW => C3_RST_ACT_LOW,
+		C3_INPUT_CLK_TYPE => C3_INPUT_CLK_TYPE,
+		C3_CALIB_SOFT_IP => C3_CALIB_SOFT_IP,
+		C3_SIMULATION => C3_SIMULATION,
+		DEBUG_EN => DEBUG_EN,
+		C3_MEM_ADDR_ORDER => C3_MEM_ADDR_ORDER,
+		C3_NUM_DQ_PINS => C3_NUM_DQ_PINS,
+		C3_MEM_ADDR_WIDTH => C3_MEM_ADDR_WIDTH,
+		C3_MEM_BANKADDR_WIDTH => C3_MEM_BANKADDR_WIDTH
+	)
+	port map (
+		c3_sys_clk_p  =>         memclk_0_b,
+		c3_sys_clk_n    =>       memclk_180,
+		c3_sys_rst_i    =>       global_rst,                        
+		mcb3_dram_dq       =>    mcb3_dram_dq,  
+		mcb3_dram_a        =>    mcb3_dram_a,  
+		mcb3_dram_ba       =>    mcb3_dram_ba,
+		mcb3_dram_ras_n    =>    mcb3_dram_ras_n,                        
+		mcb3_dram_cas_n    =>    mcb3_dram_cas_n,                        
+		mcb3_dram_we_n     =>    mcb3_dram_we_n,                          
+		mcb3_dram_odt    =>      mcb3_dram_odt,
+		mcb3_dram_cke      =>    mcb3_dram_cke,                          
+		mcb3_dram_ck       =>    mcb3_dram_ck,                          
+		mcb3_dram_ck_n     =>    mcb3_dram_ck_n,       
+		mcb3_dram_dqs      =>    mcb3_dram_dqs,                          
+		mcb3_dram_dqs_n    =>    mcb3_dram_dqs_n,
+		mcb3_dram_reset_n =>     mcb3_dram_reset_n, 
+		mcb3_dram_dm  =>       mcb3_dram_dm,
+		c3_clk0	=>	        user_clock_ddr,
+		c3_rst0		=>        open,	
+		c3_calib_done      =>    c3_calib_done,
+		mcb3_rzq         =>            mcb3_rzq,       
+		c3_p0_cmd_clk                           =>  ram_clock,
+		c3_p0_cmd_en                            =>  ram_cmd_en,
+		c3_p0_cmd_instr                         =>  ram_command,
+		c3_p0_cmd_bl                            =>  ram_bl,
+		c3_p0_cmd_byte_addr                     =>  ram_addr,
+		c3_p0_cmd_empty                         =>  c3_p0_cmd_empty,
+		c3_p0_cmd_full                          =>  open,
+		c3_p0_wr_clk                            =>  ram_clock,
+		c3_p0_wr_en                             =>  ram_wr_en,
+		c3_p0_wr_mask                           =>  wr_mask_g,
+		c3_p0_wr_data                           =>  ram_data_write,
+		c3_p0_wr_full                           =>  c3_p0_wr_full,
+		c3_p0_wr_empty                          =>  c3_p0_wr_empty ,
+		c3_p0_wr_count                          =>  c3_p0_wr_count,
+		c3_p0_wr_underrun                       =>  c3_p0_wr_underrun,
+		c3_p0_wr_error                          =>  c3_p0_wr_error,
+		c3_p0_rd_clk                            =>  ram_clock,
+		c3_p0_rd_en                             =>  ram_rd_en,
+		c3_p0_rd_data                           =>  ram_data_read,
+		c3_p0_rd_full                           =>  c3_p0_rd_full,
+		c3_p0_rd_empty                          =>  ram_rd_empty,
+		c3_p0_rd_count       		   =>  c3_p0_rd_count ,
+		c3_p0_rd_overflow                       =>  c3_p0_rd_overflow,
+		c3_p0_rd_error                          =>  c3_p0_rd_error,
+		c3_p1_cmd_clk                           =>  ram_clock,
+		c3_p1_cmd_en                            =>  gnd,
+		c3_p1_cmd_instr                         =>  cmd_instr_g,
+		c3_p1_cmd_bl                            =>  cmd_bl_g,
+		c3_p1_cmd_byte_addr                     =>  cmd_byte_addr_g,
+		c3_p1_cmd_empty                         =>  open,
+		c3_p1_cmd_full                          =>  open,
+		c3_p1_wr_clk                            =>  ram_clock,
+		c3_p1_wr_en                             =>  gnd,
+		c3_p1_wr_mask                           =>  wr_mask_g,
+		c3_p1_wr_data                           =>  wr_data_g,
+		c3_p1_wr_full                           =>  open,
+		c3_p1_wr_empty                          =>  open,
+		c3_p1_wr_count                          =>  open,
+		c3_p1_wr_underrun                       =>  open,
+		c3_p1_wr_error                          =>  open,
+		c3_p1_rd_clk                            =>  ram_clock,
+		c3_p1_rd_en                             =>  gnd,
+		c3_p1_rd_data                           =>  open,
+		c3_p1_rd_full                           =>  open,
+		c3_p1_rd_empty                          =>  open,
+		c3_p1_rd_count                          =>  open,
+		c3_p1_rd_overflow                       =>  open,
+		c3_p1_rd_error                          =>  open,
+		c3_p2_cmd_clk                           =>  ram_clock,
+		c3_p2_cmd_en                            =>  gnd,
+		c3_p2_cmd_instr                         =>  cmd_instr_g,
+		c3_p2_cmd_bl                            =>  cmd_bl_g,
+		c3_p2_cmd_byte_addr                     =>  cmd_byte_addr_g,
+		c3_p2_cmd_empty                         =>  open,
+		c3_p2_cmd_full                          =>  open,
+		c3_p2_wr_clk                            =>  ram_clock,
+		c3_p2_wr_en                             =>  gnd,
+		c3_p2_wr_mask                           =>  wr_mask_g,
+		c3_p2_wr_data                           =>  wr_data_g,
+		c3_p2_wr_full                           =>  open,
+		c3_p2_wr_empty                          =>  open,
+		c3_p2_wr_count                          =>  open,
+		c3_p2_wr_underrun                       =>  open,
+		c3_p2_wr_error                          =>  open,
+		c3_p2_rd_clk                            =>  ram_clock,
+		c3_p2_rd_en                             =>  gnd,
+		c3_p2_rd_data                           =>  open,
+		c3_p2_rd_full                           =>  open,
+		c3_p2_rd_empty                          =>  open,
+		c3_p2_rd_count                          =>  open,
+		c3_p2_rd_overflow                       =>  open,
+		c3_p2_rd_error                          =>  open,
+		c3_p3_cmd_clk                           =>  global_clk,
+		c3_p3_cmd_en                            =>  gnd,
+		c3_p3_cmd_instr                         =>  cmd_instr_g,
+		c3_p3_cmd_bl                            =>  cmd_bl_g,
+		c3_p3_cmd_byte_addr                     =>  cmd_byte_addr_g,
+		c3_p3_cmd_empty                         =>  open,
+		c3_p3_cmd_full                          =>  open,
+		c3_p3_wr_clk                            =>  global_clk,
+		c3_p3_wr_en                             =>  gnd,
+		c3_p3_wr_mask                           =>  wr_mask_g,
+		c3_p3_wr_data                           =>  wr_data_g,
+		c3_p3_wr_full                           =>  open,
+		c3_p3_wr_empty                          =>  open,
+		c3_p3_wr_count                          =>  open,
+		c3_p3_wr_underrun                       =>  open,
+		c3_p3_wr_error                          =>  open,
+		c3_p3_rd_clk                            =>  global_clk,
+		c3_p3_rd_en                             =>  gnd,
+		c3_p3_rd_data                           =>  open,
+		c3_p3_rd_full                           =>  open,
+		c3_p3_rd_empty                          =>  open,
+		c3_p3_rd_count                          =>  open,
+		c3_p3_rd_overflow                       =>  open,
+		c3_p3_rd_error                          =>  open
+	);
+		
 	--spimdatain6 <= "01011010";
 
 	
@@ -870,71 +888,9 @@ port map (
 	end process por;
 	
 
-	testc : process(ram_clock)
-	begin
-		if rising_edge(ram_clock) then
-			testtCounterA <= testtCounterA + 1;
-			testtCounterB <= testtCounterB + 2;
-			--testtCounterC <= testtCounterC + 3;
-			if ram_rd_en = '1' then
-				tmp4bit(1) <= not tmp4bit(1);
-				tmp4bit(0) <= '1';
-			end if;
-			if ram_wr_en = '1' then
-				tmp4bit(3) <= not tmp4bit(3);
-				tmp4bit(2) <= '1';
-			end if;
-			
-		end if;
-	end process testc;
-	LAD815(7) <= tmp4bit(1);
-	LAD815(5) <= tmp4bit(3);
-	LAD815(4) <= tmp4bit(2);
-	LAD815(6) <= tmp4bit(0);
 	
 	global_reset_n <= not global_rst;
 	
-
-	
-	--LAD815 <= "01010101"
-	
-	
-	
-	
-	LAD815(0) <= ram_rd_empty;
-	LAD815(1) <= c3_p0_wr_full;
-	LAD815(2) <= c3_p0_wr_empty;
-	LAD815(3) <= c3_p0_wr_underrun;
-	--LAD815(7 downto 4) <= "1111";
-	
-	
-	
-	
-	
-	
-	--LAD815(7 downto 1) <= std_logic_vector(ddrclktestcounter(7 downto 1));
-	
-	
-	DigiOut: process (global_clk, global_rst) is
-
-	begin
-	if global_rst = '1' then
---		LAD815 <= "11101010";
-		wonder <= "00000000";
-	elsif rising_edge(global_clk) then
-		if spimWR = '1'  and spimcommand(2 downto 0) = "101" then
---			LAD815 <= spimdataout;
-			wonder <= spimdataout;
-		end if;
-	end if;
-	end process DigiOut;
-
-	--LAD815 <= "10101100";
-	--spimdatain5 <= "10100001";
-	--spimdatain7 <= "01010010";
-	
-
-
 
 	
 	BUFG_inst_2 : BUFG

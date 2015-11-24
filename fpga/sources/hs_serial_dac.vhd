@@ -127,13 +127,13 @@ begin
 		DO => ram_output_data, -- Output read data port, width defined by READ_WIDTH parameter
 		DI => ram_input_data, -- Input write data port, width defined by WRITE_WIDTH parameter
 		RDADDR => ram_read_address, -- Input read address, width defined by read port depth
-		RDCLK => clk, -- 1-bit input read clock
+		RDCLK => hs_clk, -- 1-bit input read clock
 		RDEN => ram_read_en, -- 1-bit input read port enable
 		REGCE => '1', -- 1-bit input read output register enable
 		RST => rst, -- 1-bit input reset
 		WE => ram_write_en_vec, -- Input write enable, width defined by write port depth
 		WRADDR => ram_write_adddress, -- Input write address, width defined by write port depth 
-		WRCLK => hs_clk, -- 1-bit input write clock
+		WRCLK => clk, -- 1-bit input write clock
 		WREN => ram_write_en -- 1-bit input write port enable
 	);	
 	-- End of BRAM_SDP_MACRO_inst instantiation
