@@ -403,6 +403,21 @@ component pwm is
 		);
 end component;
 
+component hs_serial_dac is
+	generic( address : std_logic_vector( 7 downto 0) );
+	
+	port (
+		clk : in std_logic;
+		hs_clk : in std_logic;
+		rst : in std_logic;
+		datain : in std_logic_vector( 7 downto 0);
+		addr : in std_logic_vector( 7 downto 0);
+		wr : in std_logic;
+		ser : out std_logic;
+		rck :  out std_logic;
+		sck : out std_logic);
+end component hs_serial_dac;
+
 
 
 signal global_clk_4x, global_clk_4x_180, global_clk_4x_b, global_clk_4x_180_b, global_clk_2x, global_clk_fb, global_clk_90, gnd : std_logic;
@@ -646,6 +661,16 @@ begin
 				pwmoffs1 =>  PWMOFFS1, 
 				ladvref  =>  LADVREF
 				);
+	hs_serial_dac_1 : hs_serial_dac generic map( address => "00001000") 
+			 port map (	hs_clk => global_clk,
+					clk => global_clk,
+					rst => global_rst,
+					datain => spimdataout,
+					addr => spimcommand,
+					wr  => spimWR,
+					ser => HFDAC_DI,
+					rck => HFDAC_CS, 
+					sck => HFDAC_CLK); 
 			
 				
 	BUFG_inst_1 : BUFG
@@ -806,9 +831,6 @@ port map (
 	CMPMEAS_EN <= '0';
 	CMPMEAS_A <= '1';
 	CMPMEAS_B <= '0';
-	HFDAC_DI <=  '0';
-	HFDAC_CS <= '0';
-	HFDAC_CLK <= '0';
 
 		
 	
