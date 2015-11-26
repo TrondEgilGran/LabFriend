@@ -13,9 +13,10 @@ int spiOpen( void )
 {
 	
 	int retval = EXIT_FAILURE;
-    if((spiP = MPSSE(SPI0,THIRTY_MHZ , MSB)) != NULL && spiP->open)
+
+    if((spiP = Open(0X0403,0x6014, SPI0, THIRTY_MHZ, MSB, IFACE_A, "TEG LabFriend", 0)) != NULL && spiP->open)
 	{
-		printf("%s initialized atO %dHz (SPI mode 0)\n", GetDescription(spiP), GetClock(spiP));
+        printf("LabFriend initialized atO %dHz (SPI mode 0)\n", GetClock(spiP));
 		
 		retval = EXIT_SUCCESS;
 	}
