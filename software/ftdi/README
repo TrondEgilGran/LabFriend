@@ -1,0 +1,13 @@
+To write SPI EEPROM on the ftdi chip using the programming tool from libftdi:
+erase:
+ftdi_eeprom --erase-eeprom  labfriend-usb.conf
+flash:
+ftdi_eeprom --flash-eeprom  labfriend-usb.conf
+
+Make sure normal users have access to the FTDI device put the following
+file:
+53-teg-labfriend-usb.rules
+to
+/etc/udev/rules.d/
+(this is for most modern Linux distributions in 2015 running udev)
+
