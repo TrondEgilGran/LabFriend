@@ -89,7 +89,7 @@ signal read_ram_stop, ram_read_size : unsigned( ram_depth+1 downto 0 ) := (other
 signal ram_counter_wr_stop : std_logic_vector( ram_depth-1 downto 0 ) := (others => '0');
 signal ram_data_in, ram_data_out : std_logic_vector(ram_data_width-1 downto 0 ) := (others => '0');
 signal adc_clk_a_select, adc_clk_b_select, read_ready, ram_data_available, ram_read_finished, ram_ready : std_logic := '0';
-signal trigger_source, trigger_source_tmp, trigger_d1, trigger_d2, trigger_val , trigger_val_hs: std_logic_vector(7 downto 0) := (others => '0');
+signal trigger_source, trigger_source_tmp, trigger_d1, trigger_d2, trigger_val, trigger_val_d1, trigger_val_hs: std_logic_vector(7 downto 0) := (others => '0');
 signal start_ram_capture, ram_full, data_capture_started, trigger_edge, triggered, manual_trigger : std_logic := '0';
 signal ram_addr_adder : unsigned( ram_depth downto 0 ) := (others => '0');
 signal ram_addr_adder_l, ram_address_offset_l, ram_trigger_address_l : std_logic_vector( ram_depth downto 0 ) := (others => '0');
@@ -422,6 +422,7 @@ begin
 				start_ram_read <= '0';
 			end if;
 		end if;
+		trigger_val_d1 <= trigger_val;
 	end process getData;
 	
 	
@@ -460,9 +461,6 @@ begin
 				ram_addr <= (others => '0');
 			end if;
 			
-			if ram_wr_sig = '1' then
-				fill_write_buffer <= '1';
-			end if;
 		
 			--Register data to store in RAM. data_to_ram should be strobed every fourth clock cycle.
 			-----------------------------------------------------------------------------------------
@@ -476,6 +474,7 @@ begin
 						if adc_a_enable = '1' then
 							ram_wr_en_sig <= '1';
 							ram_data_write_sig <= adc_a_to_ram_reg;
+							fill_write_buffer <= '1';
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -486,6 +485,7 @@ begin
 						if adc_b_enable = '1' then
 							ram_wr_en_sig <= '1';
 							ram_data_write_sig <= adc_b_to_ram_out;
+							fill_write_buffer <= '1';
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -495,6 +495,7 @@ begin
 						if digital_in_enable = '1' then
 							ram_wr_en_sig <= '1';
 							ram_data_write_sig <= digital_in_to_ram_out;
+							fill_write_buffer <= '1';
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -576,7 +577,7 @@ begin
 			end if;
 			trigger_select_HS <= trigger_select;
 			trigger_source <= trigger_source_tmp;
-			trigger_val_hs <= trigger_val; 
+			trigger_val_hs <= trigger_val_d1; 
 		end if;
 	end process SpeedDevil;
 	ram_cmd_en <= ram_cmd_en_sig;
@@ -637,7 +638,7 @@ begin
 				trig_it <= '0';
 			end if;
 			
-			if manual_trigger = '1' and triggered = '0' then
+			if manual_trigger = '1' and triggered = '0' and ram_wr_sig = '1' then
 				triggered <= '1';
 				ram_trigger_address <= ram_write_counter;
 			end if;
@@ -679,7 +680,7 @@ begin
 	MULT_MACRO_inst : MULT_MACRO
 	generic map (
 			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-			LATENCY => 1, -- Desired clock cycle latency, 0-4
+			LATENCY => 0, -- Desired clock cycle latency, 0-4
 			WIDTH_A => 18, -- Multiplier A-input bus width, 1-25
 			WIDTH_B => 3) -- Multiplier B-input bus width, 1-18
 	port map (
@@ -834,9 +835,11 @@ begin
 					if read_ready = '1' then
 						ram_data_available <= '0';
 						ram_count_state_rd <= read_data;
+					else
+						ram_read_signal <= '1';
 					end if;
 					
-					ram_read_signal <= '1';
+					
 					
 					
 			end case;
