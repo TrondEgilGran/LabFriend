@@ -136,6 +136,8 @@ signal ram_data_collected : std_logic := '0';
 
 signal fill_write_buffer : std_logic := '0';
 
+--signal testc : unsigned( 7 downto 0) := "00000000";
+
 begin
 	hs_clock_n <= not hs_clock;
 	adc_clk_a_select_n <= not adc_clk_a_select;
@@ -280,6 +282,7 @@ begin
 									dataout(2 downto 0) <= ram_counter_wr_stop( ram_depth-1 downto 16 );
 									dataout(7 downto 3) <= (others => '0');
 									combus <= "000";
+									data_state <= idle;
 								when others =>
 									combus <= "000";
 									data_state <= idle;
@@ -295,7 +298,8 @@ begin
 							dataout(2) <= triggered;
 							dataout(3) <= ram_read_finished;
 							dataout(4) <= read_ready;
-							dataout(7 downto 5) <= "110"; 
+							dataout(5) <= manual_trigger;
+							dataout(7 downto 6) <= "11"; 
 							data_state <= idle;
 						end if;
 					when read_ram =>
@@ -326,14 +330,14 @@ begin
 										data_state <= idle;
 								end case;
 							else
-								--dataout(0) <= manual_trigger;
-								--dataout(1) <= trigger_edge;
-								--dataout(2) <= configdone;
-								--dataout(3) <= data_capture_started;
-								--dataout(4) <= read_ready;
-								--dataout(5) <= start_ram_capture;
-								--dataout(7 downto 6) <= "00";
-								dataout <= "00001010";
+								dataout(0) <= manual_trigger;
+								dataout(1) <= trigger_edge;
+								dataout(2) <= configdone;
+								dataout(3) <= data_capture_started;
+								dataout(4) <= read_ready;
+								dataout(5) <= start_ram_capture;
+								dataout(7 downto 6) <= "00";
+								--dataout <= "00001010";
 							end if;
 							rdcnt <= rdcnt + 1;
 						end if;
@@ -461,6 +465,9 @@ begin
 				ram_addr <= (others => '0');
 			end if;
 			
+			if ram_wr_en_sig = '1' and ram_machine_1 /= write_buffer then
+				fill_write_buffer <= '1';
+			end if;
 		
 			--Register data to store in RAM. data_to_ram should be strobed every fourth clock cycle.
 			-----------------------------------------------------------------------------------------
@@ -471,10 +478,9 @@ begin
 						
 						adc_b_to_ram_out <= adc_b_to_ram_reg;
 						digital_in_to_ram_out <= digital_in_to_ram_reg;
+						ram_data_write_sig <= adc_a_to_ram_reg;
 						if adc_a_enable = '1' then
-							ram_wr_en_sig <= '1';
-							ram_data_write_sig <= adc_a_to_ram_reg;
-							fill_write_buffer <= '1';
+							ram_wr_en_sig <= '1';	
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -485,7 +491,6 @@ begin
 						if adc_b_enable = '1' then
 							ram_wr_en_sig <= '1';
 							ram_data_write_sig <= adc_b_to_ram_out;
-							fill_write_buffer <= '1';
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -495,7 +500,6 @@ begin
 						if digital_in_enable = '1' then
 							ram_wr_en_sig <= '1';
 							ram_data_write_sig <= digital_in_to_ram_out;
-							fill_write_buffer <= '1';
 						else
 							ram_wr_en_sig <= '0';
 						end if;
@@ -507,6 +511,7 @@ begin
 							store_start_address <= '1';
 							ram_buffer_counter <= (others => '0');
 							fill_write_buffer <= '0';
+							
 						else
 							ram_buffer_counter <= ram_buffer_counter + unsigned(ram_address_counter_inc_m);
 						end if;
@@ -516,6 +521,7 @@ begin
 							store_start_address <= '0';
 							ram_addr( 20 downto 0) <= ram_write_address; 
 							ram_addr( ram_addr_width-1 downto 21) <= (others => '0');
+							
 						end if;
 						
 				end case;
@@ -574,7 +580,10 @@ begin
 			
 			if ram_cmd_en_sig = '1' then
 				ram_cmd_en_sig <= '0';
+				
 			end if;
+			
+			
 			trigger_select_HS <= trigger_select;
 			trigger_source <= trigger_source_tmp;
 			trigger_val_hs <= trigger_val_d1; 
@@ -638,7 +647,7 @@ begin
 				trig_it <= '0';
 			end if;
 			
-			if manual_trigger = '1' and triggered = '0' and ram_wr_sig = '1' then
+			if manual_trigger = '1' and triggered = '0' then
 				triggered <= '1';
 				ram_trigger_address <= ram_write_counter;
 			end if;
@@ -838,7 +847,7 @@ begin
 					else
 						ram_read_signal <= '1';
 					end if;
-					
+					--ram_read_signal <= '1';
 					
 					
 					
