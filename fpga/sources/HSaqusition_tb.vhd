@@ -42,17 +42,21 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
     COMPONENT HSaqusition
     generic( ram_addr_width : natural := 30; --Number of bits in SRAM addr bus
 		 ram_data_width : natural := 32;
-		 ram_depth : natural := 19;
+		 ram_depth : natural := 24;
 		 address : std_logic_vector( 7 downto 0 ) := "00000001"
 	);
     PORT(
-		clk : in std_logic;
-		rst : in std_logic;
-		datain : in std_logic_vector( 7 downto 0);
-		addr : in std_logic_vector( 7 downto 0);
-		wr : in std_logic;
-		rd : in std_logic;
-		dataout : out std_logic_vector( 7 downto 0);
+		--Data communication ports used to communicate with the master system
+		clk : in std_logic; --system clock 
+		rst : in std_logic; --system reset
+		datain : in std_logic_vector( 7 downto 0); --datainput from comm master 
+		addr : in std_logic_vector( 7 downto 0);   --address input from comm master
+		wr : in std_logic; --write pulse from comm master
+		rd : in std_logic; --read pulse from comm master
+		dataout : out std_logic_vector( 7 downto 0); --data output to comm master
+		-------------------------------------------------------------------------
+		--
+		--DDR3 interface 
 		ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
 		ram_data_write : out std_logic_vector( ram_data_width-1 downto 0);
 		ram_wr_en : out std_logic;
@@ -63,15 +67,25 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
 		ram_command : out std_logic_vector(2 downto 0);
 		ram_bl : out std_logic_vector(5 downto 0);
 		ram_clock : out std_logic;
-		digital_in : in std_logic_vector( 7 downto 0);
+		-----------------------------------------------------------------------
+		--
+		--Data aqusition signals
+		digital_in : in std_logic_vector( 7 downto 0); 
 		hs_adc_a : in std_logic_vector( 7 downto 0);
 		hs_adc_b : in std_logic_vector( 7 downto 0);
 		adc_clk_a : out std_logic;
 		adc_clk_b : out std_logic;
 		adc_pwd_d : out std_logic;
-		hs_clock_2 : in std_logic;
-		hs_clock_4 : in std_logic;
-		debug_out1 : out std_logic
+		--
+		--High speed clock inputs
+		hs_clock_2 : in std_logic;  --2x master clock 
+		hs_clock_4 : in std_logic;  --4x master clock
+		-------------------------------------------------------------------
+		--
+		--External triggers
+		trigger_in1 : in std_logic;
+		trigger_in2 : in std_logic;
+		trigger_out : out std_logic
         );
     END COMPONENT;
     
@@ -154,7 +168,9 @@ BEGIN
           adc_pwd_d => adc_pwd_d,
           hs_clock_2 => hs_clock,
           hs_clock_4 => hs_clock,
-          debug_out1 => full_ram
+          trigger_in1 => '0',
+	  trigger_in2 => '0',
+	  trigger_out => full_ram
         );
         
         
@@ -293,7 +309,7 @@ BEGIN
 	wr <= '0';
 	
 	---------------------------------------
-	wait until rising_edge(full_ram);
+	--wait until rising_edge(full_ram);
 	
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
@@ -413,7 +429,7 @@ end process test;
 	wait for clk_period*10;
       -- insert stimulus here 
 
-   wait for 13900000 ns;
+   wait for 50000 ns;
     rst  <= '1';
    end process;
 

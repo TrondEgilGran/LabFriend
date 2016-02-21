@@ -1,4 +1,11 @@
+-------------------------------------------------------------------------
+--High speed data aqusition module for TEG Electronics 
+--LabFriend Measurement system.
 --
+--Description: 	Stores data from AD coverters and digital inputs to then
+--		DDR3 Ram.
+--Written: 2015 by Trond Egil Gran
+--------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all, ieee.numeric_std.all;
 
@@ -10,19 +17,23 @@ use UNIMACRO.Vcomponents.all;
 
 entity HSaqusition is
 	generic( ram_addr_width : natural := 30; --Number of bits in SRAM addr bus
-		 ram_data_width : natural := 32;
-		 ram_depth : natural := 19;
-		 address : std_logic_vector( 7 downto 0 ) := "00000001"
+		 ram_data_width : natural := 32; --Width of the ddr interface data bus
+		 ram_depth : natural := 24;  --Max level size to use for ram addressing, shold be less than max level of one bank
+		 address : std_logic_vector( 7 downto 0 ) := "00000001" --Module address used to address this dev device, should be defined
+									--in gerneric map on top level.
 		 );
 
-	port (
-		clk : in std_logic;
-		rst : in std_logic;
-		datain : in std_logic_vector( 7 downto 0);
-		addr : in std_logic_vector( 7 downto 0);
-		wr : in std_logic;
-		rd : in std_logic;
-		dataout : out std_logic_vector( 7 downto 0);
+	port (  --Data communication ports used to communicate with the master system
+		clk : in std_logic; --system clock 
+		rst : in std_logic; --system reset
+		datain : in std_logic_vector( 7 downto 0); --datainput from comm master 
+		addr : in std_logic_vector( 7 downto 0);   --address input from comm master
+		wr : in std_logic; --write pulse from comm master
+		rd : in std_logic; --read pulse from comm master
+		dataout : out std_logic_vector( 7 downto 0); --data output to comm master
+		-------------------------------------------------------------------------
+		--
+		--DDR3 interface 
 		ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
 		ram_data_write : out std_logic_vector( ram_data_width-1 downto 0);
 		ram_wr_en : out std_logic;
@@ -33,15 +44,25 @@ entity HSaqusition is
 		ram_command : out std_logic_vector(2 downto 0);
 		ram_bl : out std_logic_vector(5 downto 0);
 		ram_clock : out std_logic;
-		digital_in : in std_logic_vector( 7 downto 0);
+		-----------------------------------------------------------------------
+		--
+		--Data aqusition signals
+		digital_in : in std_logic_vector( 7 downto 0); 
 		hs_adc_a : in std_logic_vector( 7 downto 0);
 		hs_adc_b : in std_logic_vector( 7 downto 0);
 		adc_clk_a : out std_logic;
 		adc_clk_b : out std_logic;
 		adc_pwd_d : out std_logic;
-		hs_clock_2 : in std_logic;
-		hs_clock_4 : in std_logic;
-		debug_out1 : out std_logic
+		--
+		--High speed clock inputs
+		hs_clock_2 : in std_logic;  --2x master clock 
+		hs_clock_4 : in std_logic;  --4x master clock
+		-------------------------------------------------------------------
+		--
+		--External triggers
+		trigger_in1 : in std_logic;
+		trigger_in2 : in std_logic;
+		trigger_out : out std_logic
 		);
 end HSaqusition;
 
@@ -49,11 +70,10 @@ architecture RTL of HSaqusition is
 
 component COUNTER_LOAD_INC_MACRO is
   generic ( 
-    DEVICE : string := "VIRTEX5";
+	    DEVICE : string;
             STYLE : string := "AUTO";
-            WIDTH_DATA : integer := 48
-       );
-
+            WIDTH_DATA : integer
+	  );
   port (
       Q : out std_logic_vector(WIDTH_DATA-1 downto 0);   
       CE : in std_logic;
@@ -66,8 +86,8 @@ component COUNTER_LOAD_INC_MACRO is
      );   
 end component COUNTER_LOAD_INC_MACRO;
 
-type ram_machine is (write_adc_a, write_adc_b, write_digital_in, write_buffer);
-signal ram_machine_1 : ram_machine:= write_adc_a;
+type ram_machine is (idle, write_adc_a, write_adc_b, write_digital_in, write_buffer);
+signal ram_machine_1 : ram_machine := idle;
 type singlestrobe is (idle, strobe_triggered);
 signal ram_write_strobe, ram_full_strobe  : singlestrobe := idle;
 type datamachine is (idle, process_command, read_trigger, read_ram, read_status, configure);
@@ -136,24 +156,61 @@ signal ram_data_collected : std_logic := '0';
 
 signal fill_write_buffer : std_logic := '0';
 
+--Counter signals
+signal counter_1 : unsigned(ram_depth-1 downto 0) := (others => '0');
+signal counter_2 : unsigned(ram_depth-1 downto 0) := (others => '0');
+signal counter_3 : unsigned(14 downto 0) := (others => '0');
+
+
+signal counter_0_free_en : std_logic := '0';
+signal counter_1_ram_address_en : std_logic := '0';
+signal counter_3_sample_rate_en : std_logic := '1';
+
+signal counter_1_ram_address_reset : std_logic := '0';
+signal counter_2_trig_offset_reset : std_logic := '0';
+signal counter_3_sample_rate_rst : std_logic := '0';
+
+signal counter_1_ram_address_count_by : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+
+signal counter_1_ram_address_load_start_en : std_logic := '0';
+signal counter_1_ram_address_load_start : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+signal counter_2_trig_offset_load : std_logic_vector(ram_depth-1 downto 0) := "000000000000000101010001";
+
+signal counter_0_free_output : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+signal counter_1_ram_address_output : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+signal counter_2_trig_offset_output : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+signal counter_3_sample_rate_output : std_logic_vector(13 downto 0) := (others => '0');
+
+--counter compare signals
+signal counter_1_ram_address_buffer_size : std_logic_vector(ram_depth-1 downto 0) := "000000000000010101000110";
+signal counter_3_sample_rate_value : std_logic_vector(13 downto 0) := "00000000000000";
+
+signal count_by_one : std_logic_vector( ram_depth-1 downto 0) := (others => '0');
+
+signal ram_clock_en : std_logic := '0';
+
 --signal testc : unsigned( 7 downto 0) := "00000000";
 
 begin
+
 	hs_clock_n <= not hs_clock;
 	adc_clk_a_select_n <= not adc_clk_a_select;
 	adc_clk_b_select_n <= not adc_clk_b_select;
 	gnd <= '0';
 	vcc <= '1';
+	trigger_out <= ram_full;
+	
+	--  High speed clock selection using two Xilinx Global Mux Buffers
 	--
 	--   CLK_1----|-------|
 	--   CLK_2----|-------|----|------|
 	--   CLK_3-----------------|------|----CLKO
-	--            
+	--   
+	--   clocksel = 1x hs_clock = 4 x msaster clock
+	--   clocksel = 00 hs_clock = master clock
+	--   clocksel = 01 hs_clock = 2 x master clock
 	--
-	--
-	--
-	debug_out1 <= ram_full;
-	
+	------------------------------------------------------------------------------------------
 	-- BUFGMUX: Global Clock Mux Buffer
 	-- Spartan-6
 	-- Xilinx HDL Libraries Guide, version 12.4
@@ -167,10 +224,6 @@ begin
 		I1 => hs_clock_4, -- 1-bit input Clock buffer input (S=1)
 		S => clocksel(1) -- 1-bit input Clock buffer select
 	);
-	-- End of BUFGMUX_inst instantiation
-	-- BUFGMUX: Global Clock Mux Buffer
-	-- Spartan-6
-	-- Xilinx HDL Libraries Guide, version 12.4
 	BUFGMUX_inst_2 : BUFGMUX
 	generic map (
 		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
@@ -181,8 +234,15 @@ begin
 		I1 => hs_clock_2, -- 1-bit input Clock buffer input (S=1)
 		S => clocksel(0) -- 1-bit input Clock buffer select
 	);
-
-
+	---------------------------------------------------------------------------------------------
+	
+	
+	-- ADC clock outputs since the ADCs are connected to regular in pins and not dedicated global clock pins
+	-- a ddr output register is used to allow the clock singel to be passed to the io pin. The DDR output register
+	-- is also able to select clock polarity, so two registers is used one for each ADC so it's possible to interleave
+	-- the data from both ADCs by inverting the clock on one of the ADCs
+	--
+	------------------------------------------------------------------------------------------------------------------
 	-- ODDR2: Output Double Data Rate Output Register with Set, Reset
 	-- and Clock Enable.
 	-- Spartan-6
@@ -218,11 +278,14 @@ begin
 		S => gnd -- 1-bit set input
 	);
 	-- End of ODDR2_inst instantiation
+	--------------------------------------------------------------------------------------------------------------------
 	
+	--Use the high speed clock for the DDR user ram interface
 	ram_clock <= hs_clock;
-
-	getData: process (rst, clk, datain, addr) is
+	---------------------------------------------------------
 	
+	--Communicate with master module, used to set configuration data and read back aquired data
+	masterComms: process (rst, clk, datain, addr) is
 	begin
 		if rising_edge(clk) then
 			if addr( 3 downto 0 ) = address( 3 downto 0 ) then
@@ -401,7 +464,7 @@ begin
 									combus <= "110";
 								when "110" =>
 									ram_address_offset(18 downto 16) <= unsigned(datain(2 downto 0));
-									start_ram_capture <= datain(3);
+									start_ram_capture <= datain(3);  ---Starts the data capture if datain(3)=1
 									combus <= "000";
 									configdone <= '1';
 									data_state <= idle;
@@ -427,13 +490,102 @@ begin
 			end if;
 		end if;
 		trigger_val_d1 <= trigger_val;
-	end process getData;
+	end process masterComms;
 	
 	
+	-- Counters used for oscilloscope action, implimented using DSP blocks
+	--
+	------------------------------------------------------------------------------------------------
+	-- COUNTER_LOAD_MACRO: Loadable variable counter implemented in a DSP48E
+	-- Spartan-6
+	-- Xilinx HDL Libraries Guide, version 12.4
+	COUNTER_0_inst : COUNTER_LOAD_INC_MACRO  -- This is a free running "time stamp" counter used for synchronisation
+	generic map (
+		DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
+		WIDTH_DATA => ram_depth) -- Counter output bus width, 1-48
+	port map (
+		Q => counter_0_free_output, -- Counter ouput, width determined by WIDTH_DATA generic
+		CLK => hs_clock, -- 1-bit clock input
+		CE => counter_0_free_en, -- 1-bit clock enable input
+		DIRECTION => '1', -- 1-bit up/down count direction input, high is count up
+		COUNT_BY => count_by_one,
+		LOAD => '0', -- 1-bit active high load input
+		LOAD_DATA => (others => '0'), -- Counter load data, width determined by WIDTH_DATA generic
+		RST => rst -- 1-bit active high synchronous reset
+	);
+	
+	counter_1_proc : process(hs_clock, counter_1_ram_address_en, counter_1_ram_address_reset, ram_cmd_en_sig)
+	begin
+		if rising_edge(hs_clock) then
+			if counter_1_ram_address_reset = '1' then
+				counter_1 <= (others => '0');
+			elsif ram_cmd_en_sig = '1' and counter_1_ram_address_en = '1' then
+				if counter_1_ram_address_load_start_en = '1' then
+					counter_1 <= unsigned(counter_1_ram_address_load_start);
+				else
+					if counter_1 = unsigned(counter_1_ram_address_buffer_size) then
+						counter_1 <= (others => '0');
+					else	
+						counter_1 <= counter_1 + unsigned(counter_1_ram_address_count_by);
+					end if;		
+				end if;
+			end if;
+			ram_addr(ram_depth-1 downto 0) <= std_logic_vector(counter_1);
+			ram_addr(ram_addr_width-1 downto ram_depth) <= (others => '0');
+		end if;	
+	end process counter_1_proc;
+	--
+	counter_2_proc : process(hs_clock, counter_2_trig_offset_reset, ram_cmd_en_sig)
+	begin
+		if rising_edge(hs_clock) then
+			if counter_2_trig_offset_reset = '1' then
+				ram_full <= '0';
+				counter_2 <= unsigned(counter_2_trig_offset_load);
+			elsif ram_cmd_en_sig = '1' and triggered = '1' then
+					if counter_2 = 0 then
+						counter_2 <= (others => '0'); --finish ram write or read
+						if data_capture_started = '1' then
+							ram_full <= '1';
+						end if;
+					else	
+						counter_2 <= counter_2 - 1;
+					end if;		
+			end if;
+		end if;	
+	end process counter_2_proc;
+	
+	counter_3_proc : process(hs_clock, counter_3_sample_rate_en, counter_3_sample_rate_rst)
+	begin
+		if rising_edge(hs_clock) then
+			if counter_3_sample_rate_rst = '1' then
+				counter_3 <= (others => '0');
+			elsif counter_3_sample_rate_en = '1' then
+				if counter_3 = unsigned(counter_3_sample_rate_value) then
+					counter_3 <= (others => '0');
+					ram_clock_en <= '1';
+				else	
+					ram_clock_en <= '0';
+					counter_3 <= counter_3 + 1 ;
+				end if;		
+			else
+				ram_clock_en <= '1';
+			end if;
+		end if;	
+	end process counter_3_proc;
+	---------------------------------------------------------------------------------------------------------
+	
+	ram_address_counter_inc_m(0) <= ((digital_in_enable and adc_a_enable) and adc_b_enable) or (( not digital_in_enable and adc_a_enable) and not adc_b_enable) or 
+					((adc_b_enable xor digital_in_enable) and not adc_a_enable);
+	ram_address_counter_inc_m(1) <= (adc_a_enable and adc_b_enable) or ((adc_a_enable xor adc_b_enable) and digital_in_enable);
+	ram_address_counter_inc_m(2) <= '0';
+	
+	--Counter 0, continous at hs_clock, capture at trigger and first counter 1 after trigger. free running
+	--counter 1, ram address counter count by buffer size, return to 0 at wanted ram size
+	--Counter 2, Start at trigger, load time offset value, count down buffer, capture Counter 1
+	--           and Counter 0 at 0.
 	SpeedDevil : process( hs_clock, rst )
 	begin
 		if rising_edge(hs_clock) then
-			ram_wr_sig_delayed <= ram_wr_sig; --delay wr_sig to synch with counter
 			
 			--Store adc and digital input data in registers
 			-----------------------------------------------
@@ -461,21 +613,32 @@ begin
 			digital_in_to_ram_reg( 31 downto 24 ) <= digital_in_to_ram_reg( 23 downto 16 );
 			--------------------------------------------------------------------------------
 			
-			if ram_write_counter_reset = '1' then
-				ram_addr <= (others => '0');
-			end if;
 			
-			if ram_wr_en_sig = '1' and ram_machine_1 /= write_buffer then
-				fill_write_buffer <= '1';
-			end if;
 		
 			--Register data to store in RAM. data_to_ram should be strobed every fourth clock cycle.
 			-----------------------------------------------------------------------------------------
-			if (ram_wr_sig = '1') or (fill_write_buffer = '1') then --ram_wr_sig_delayed = '1' and 
+			if (ram_clock_en = '1') then 
 			
 				case ram_machine_1 is
-					when write_adc_a =>
+					when idle =>
+						if start_ram_capture = '1' then
+							data_capture_started <= '1';
+							ram_machine_1 <= write_adc_a;
+							counter_0_free_en <= '1';
+							counter_1_ram_address_en <= '1';
+							counter_1_ram_address_reset <= '1';
+							counter_2_trig_offset_reset <= '1';
+							counter_1_ram_address_count_by <= "000000000000000000010010";
+						end if;
 						
+						if ram_full = '1' then
+							counter_0_free_en <= '0';
+							counter_1_ram_address_en <= '0';
+							data_capture_started <= '0';
+						end if;
+					when write_adc_a =>
+						counter_1_ram_address_reset <= '0';
+						counter_2_trig_offset_reset <= '0';
 						adc_b_to_ram_out <= adc_b_to_ram_reg;
 						digital_in_to_ram_out <= digital_in_to_ram_reg;
 						ram_data_write_sig <= adc_a_to_ram_reg;
@@ -507,23 +670,18 @@ begin
 					when write_buffer =>
 						if ram_buffer_counter >= 15 then	
 							ram_command <= "000";
-							ram_cmd_en_sig <= '1';
-							store_start_address <= '1';
+							ram_cmd_en_sig <= '1'; -- also used to increment ram counter
 							ram_buffer_counter <= (others => '0');
-							fill_write_buffer <= '0';
-							
 						else
 							ram_buffer_counter <= ram_buffer_counter + unsigned(ram_address_counter_inc_m);
 						end if;
-						ram_machine_1 <= write_adc_a;
-						ram_wr_en_sig <= '0';
-						if store_start_address = '1' then
-							store_start_address <= '0';
-							ram_addr( 20 downto 0) <= ram_write_address; 
-							ram_addr( ram_addr_width-1 downto 21) <= (others => '0');
-							
-						end if;
 						
+						if ram_full = '1' then
+							ram_machine_1 <= idle;
+						else
+							ram_machine_1 <= write_adc_a;
+						end if;
+						ram_wr_en_sig <= '0';
 				end case;
 				--3 byte = 18
 				--2 byte = 
@@ -601,31 +759,7 @@ begin
 			   "XXXXXXXX";
 
 	--		   
-	-- ADDSUB_MACRO: Variable width & latency - Adder / Subtrator implemented in a DSP48E
-	-- Spartan-6
-	-- Xilinx HDL Libraries Guide, version 12.4
-	ADDSUB_MACRO_inst : ADDSUB_MACRO
-	generic map (
-			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-			LATENCY => 0, -- Desired clock cycle latency, 0-2
-			WIDTH => ram_depth+1) -- Input / Output bus width, 1-48
-		port map (
-				CARRYOUT => open, -- 1-bit carry-out output signal
-				RESULT => ram_addr_adder_l, -- Add/sub result output, width defined by WIDTH generic
-				A => ram_address_offset_l, -- Input A bus, width defined by WIDTH generic
-				ADD_SUB => vcc, -- 1-bit add/sub input, high selects add, low selects subtract
-				B => ram_trigger_address_l, -- Input B bus, width defined by WIDTH generic
-				CARRYIN => gnd, -- 1-bit carry-in input
-				CE => vcc, -- 1-bit clock enable input
-				CLK =>hs_clock, -- 1-bit clock input
-				RST => rst -- 1-bit active high synchronous reset
-		);
-	-- End of ADDSUB_MACRO_inst instantiation
-	--ram_addr_adder <= ('0' & ram_address_offset) + ('0' & ram_trigger_address);
-	ram_addr_adder <= unsigned(ram_addr_adder_l);
-	ram_counter_wr_stop <= std_logic_vector(ram_addr_adder( ram_depth-1 downto 0 ));
-	ram_address_offset_l <= std_logic_vector('0' & ram_address_offset);
-	ram_trigger_address_l <= std_logic_vector('0' & ram_trigger_address);
+
 	procTrigger: process ( rst, hs_clock ) is
 	begin
 		if rising_edge(hs_clock) then
@@ -663,104 +797,10 @@ begin
 	end process procTrigger;
 	
 	
-	-- COUNTER_LOAD_MACRO: Loadable variable counter implemented in a DSP48E
-	-- Spartan-6
-	-- Xilinx HDL Libraries Guide, version 12.4
-	COUNTER_LOAD_INC_MACRO_inst : COUNTER_LOAD_INC_MACRO
-	generic map (
-		DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-		WIDTH_DATA => ram_depth + 10) -- Counter output bus width, 1-48
-	port map (
-		Q => counter_connection, -- Counter ouput, width determined by WIDTH_DATA generic
-		CLK => hs_clock, -- 1-bit clock input
-		CE => ram_write_counter_enable, -- 1-bit clock enable input
-		DIRECTION => '1', -- 1-bit up/down count direction input, high is count up
-		COUNT_BY => count_inc_by,
-		LOAD => '0', -- 1-bit active high load input
-		LOAD_DATA => (others => '0'), -- Counter load data, width determined by WIDTH_DATA generic
-		RST => ram_write_counter_reset -- 1-bit active high synchronous reset
-	);
-	-- End of COUNTER_LOAD_MACRO_inst instantiation
-	ram_write_counter <= unsigned(counter_connection( ram_depth+9 downto 10)); 
-	
-	-- MULT_MACRO: Multiply Function implemented in a DSP48E
-	-- Spartan-6
-	-- Xilinx HDL Libraries Guide, version 13.1
-	MULT_MACRO_inst : MULT_MACRO
-	generic map (
-			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
-			LATENCY => 0, -- Desired clock cycle latency, 0-4
-			WIDTH_A => 18, -- Multiplier A-input bus width, 1-25
-			WIDTH_B => 3) -- Multiplier B-input bus width, 1-18
-	port map (
-			P => write_counter_connection, -- Multiplier ouput bus, width determined by WIDTH_P generic
-			A => counter_connection_m, -- Multiplier input A bus, width determined by WIDTH_A generic
-			B => ram_address_counter_inc_m, -- Multiplier input B bus, width determined by WIDTH_B generic
-			CE => ram_write_counter_enable, -- 1-bit active high input clock enable
-			CLK => hs_clock, -- 1-bit positive edge clock input
-			RST => rst -- 1-bit input active high reset
-		);
-	-- End of MULT_MACRO_inst instantiation
-	ram_write_address(20 downto 2) <= write_counter_connection(18 downto 0);
 
-	counter_connection_m(17) <= '0';
-	counter_connection_m(16 downto 0) <= counter_connection(ram_depth+9 downto 12);
-	ram_write_address(1 downto 0) <= "00";
-	ram_address_counter_inc_m(0) <= ((digital_in_enable and adc_a_enable) and adc_b_enable) or (( not digital_in_enable and adc_a_enable) and not adc_b_enable) or 
-					((adc_b_enable xor digital_in_enable) and not adc_a_enable);
-	ram_address_counter_inc_m(1) <= (adc_a_enable and adc_b_enable) or ((adc_a_enable xor adc_b_enable) and digital_in_enable);
-	ram_address_counter_inc_m(2) <= '0';
 
 	
-	RamWriteCounter: process ( rst, hs_clock, ram_counter_wr_stop ) is
-	begin
-		if rst = '1' then
-			ram_write_counter_reset <= '1';
-		elsif rising_edge(hs_clock) then  --We change address on falling edge
-			case ram_count_state_wr is
-				when idle =>
-					if start_ram_capture = '1' then
-						ram_count_state_wr <= counting;
-						data_capture_started <= '1';
-						ram_full <= '0';
-						ram_wr_sig <= '1';
-						ram_write_counter_enable <= '1';
-					end if;	
-				when counting =>
-					if std_logic_vector(ram_write_counter) = ram_counter_wr_stop and triggered = '1' then
-						ram_count_state_wr <= wait_ready;
-						ram_wr_sig <= '0';
-					end if;
-				when wait_ready =>
-					if fill_write_buffer = '0' then
-						ram_write_counter_reset <= '1';
-						ram_write_counter_enable <= '1';
-						ram_full <= '1';
-						ram_count_state_wr <= idle;
-					end if;
-				when others =>
-					ram_count_state_wr <= idle;
-					ram_wr_sig <= '0';
-			end case;
-			
-			if data_capture_started = '1' and start_ram_capture = '0' then
-				data_capture_started <= '0';
-			end if;
-			
-			if ram_write_counter_reset = '1' then
-				ram_write_counter_enable <= '0';
-				ram_write_counter_reset <= '0';
-			end if;
-			
-			if interruptdataread = '1' or ram_read_finished = '1' then
-				ram_write_counter_reset <= '1';
-				ram_write_counter_enable <= '1';
-				ram_full <= '0';
-				data_capture_started <= '0';
-				ram_wr_sig <= '0';
-			end if;
-		end if;	
-	end process RamWriteCounter;
+
 	
 	RamReadCounter: process ( rst, clk ) is
 	begin	
