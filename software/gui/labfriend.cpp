@@ -341,6 +341,7 @@ void labfriend::ScopeRun(void)
                 {
                     if(scope_data_available())
                     {
+                        //scope_read_trigger();
                         struct timeval begin, end;
                         double elapsedTime;
                         gettimeofday(&begin, NULL);
@@ -559,12 +560,12 @@ void labfriend::scopeStart(void)
                 true); //start_capture*/
 
     set_scope_config( triggerValue,
-                  triggerSource ,
+                  triggerSource,
                   triggerType,
                   7,  //channel
                   0,
-                  0, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
-                  3 ,
+                  4, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
+                  0 ,
                   scopeOffsetValue,
                   1);
 

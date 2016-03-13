@@ -154,7 +154,7 @@ int scope_data_available(void);
 int set_digital_out( uint8_t outputByte);
 int new_read_ram(void);
 
-
+int scope_read_trigger(void);
 
 
 

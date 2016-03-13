@@ -579,6 +579,10 @@ begin
 	ram_address_counter_inc_m(1) <= (adc_a_enable and adc_b_enable) or ((adc_a_enable xor adc_b_enable) and digital_in_enable);
 	ram_address_counter_inc_m(2) <= '0';
 	
+	---debug signal
+	trigger_out <= ram_full;
+	--.finished debug signal
+	
 	--Counter 0, continous at hs_clock, capture at trigger and first counter 1 after trigger. free running
 	--counter 1, ram address counter count by buffer size, return to 0 at wanted ram size
 	--Counter 2, Start at trigger, load time offset value, count down buffer, capture Counter 1

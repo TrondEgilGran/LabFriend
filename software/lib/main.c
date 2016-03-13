@@ -56,10 +56,31 @@ int main(void)
 	
 	printf("databuffer %x %x %x \n", databuffer[0], databuffer[1], databuffer[2]);
 	
-	while(1)
-	{
-		audioSPI(2, 3);
-	}
+	databuffer[0] = 0x01;
+	databuffer[1] = 0x0f;
+	databuffer[2] = 0x00;
+	databuffer[3] = 0x00;
+
+	databuffer[4] = 0;
+	databuffer[5] = 5;
+	databuffer[6] = 10;
+	databuffer[7] = 12;
+	databuffer[8] = 15;
+	databuffer[9] = 25;
+	databuffer[10] = 35;
+	databuffer[11] = 55;
+	databuffer[12] = 75;
+	databuffer[13] = 60;
+	databuffer[14] = 40;
+	databuffer[15] = 30;
+	databuffer[16] = 25;
+	databuffer[17] = 20;
+	databuffer[18] = 15;
+	databuffer[19] = 7;
+	
+	
+	spiCommand( WRITE, 8, 20);
+	spiWrite(databuffer, 20);
 /*
 	sleep(1);
 	set_scope_config( 2,

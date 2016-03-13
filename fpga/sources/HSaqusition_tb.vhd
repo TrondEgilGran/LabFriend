@@ -309,7 +309,7 @@ BEGIN
 	wr <= '0';
 	
 	---------------------------------------
-	--wait until rising_edge(full_ram);
+	wait until rising_edge(full_ram);
 	
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);

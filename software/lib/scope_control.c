@@ -252,11 +252,33 @@ int scope_data_available(void)
     spiWrite( databuffer, 1 );
     spiCommand( READ, addrHSaqusition, 1 );
     spiRead( databuffer, 1 );
+    printf("status: %x\n", databuffer[0]);
 
     if( (scope_status_ram_data_full & databuffer[0]) ==  scope_status_ram_data_full )
     {
         returnvalue = 1;
     }
+
+    return returnvalue;
+}
+
+int scope_read_trigger(void)
+{
+    uint8_t databuffer[6];
+    int returnvalue = 0;
+
+    databuffer[command] = cmd_read_trigger;
+    spiCommand( WRITE, addrHSaqusition, 1 );
+    spiWrite( databuffer, 1 );
+    spiCommand( READ, addrHSaqusition, 6 );
+    spiRead( databuffer, 6 );
+
+    printf("data 1 %x\n", databuffer[0]);
+    printf("data 2 %x\n", databuffer[1]);
+    printf("data 3 %x\n", databuffer[2]);
+    printf("data 4 %x\n", databuffer[3]);
+    printf("data 5 %x\n", databuffer[4]);
+    printf("data 6 %x\n", databuffer[5]);
 
     return returnvalue;
 }
