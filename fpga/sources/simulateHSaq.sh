@@ -8,7 +8,7 @@ ghdl -i --work=unimacro -fexplicit /home/teg/programs/xilinx/14.7/ISE_DS/ISE/vhd
 echo "own design"
 ghdl -i  ../HSaqusition.vhd ../HSaqusition_tb.vhd ../DSPMAcroCounter.vhd
 echo "itsi"
-ghdl -m -g -Punisim --warn-unused --ieee=synopsys -fexplicit HSaqusition_tb
+ghdl -m -g -Punisim --warn-unused  --ieee=synopsys -fexplicit HSaqusition_tb
 echo "oo"
-ghdl -r  HSaqusition_tb --stop-time=50000ns --wave=../hsaqusition.ghw > debug
+ghdl -r --ieee=synopsys -fexplicit HSaqusition_tb --stop-time=50000ns --wave=../hsaqusition.ghw > debug
 cd ..
