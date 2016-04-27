@@ -210,42 +210,58 @@ component s74595 is
 		sck : out std_logic);
 end component s74595;
 
-component HSaqusition is
-	generic( ram_addr_width : natural := 30; --Number of bits in SRAM addr bus
-		 ram_data_width : natural := 32;
-		 ram_depth : natural := 19;
-		 address : std_logic_vector( 7 downto 0 ) := "00000001"
-		 );
-
-	port (
-		clk : in std_logic;
-		rst : in std_logic;
-		datain : in std_logic_vector( 7 downto 0);
-		addr : in std_logic_vector( 7 downto 0);
-		wr : in std_logic;
-		rd : in std_logic;
-		dataout : out std_logic_vector( 7 downto 0);
-		ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
-		ram_data_write : out std_logic_vector( ram_data_width-1 downto 0);
-		ram_wr_en : out std_logic;
-		ram_rd_en : out std_logic;
-		ram_rd_empty : in std_logic;
-		ram_cmd_en : out std_logic;
-		ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
-		ram_command : out std_logic_vector(2 downto 0);
-		ram_bl : out std_logic_vector(5 downto 0);
-		ram_clock : out std_logic;
-		digital_in : in std_logic_vector( 7 downto 0);
-		hs_adc_a : in std_logic_vector( 7 downto 0);
-		hs_adc_b : in std_logic_vector( 7 downto 0);
-		adc_clk_a : out std_logic;
-		adc_clk_b : out std_logic;
-		adc_pwd_d : out std_logic;
-		hs_clock_2 : in std_logic;
-		hs_clock_4 : in std_logic;
-		debug_out1 : out std_logic
-		);
-end component HSaqusition;
+ 
+    -- Component Declaration for the Unit Under Test (UUT)
+ 
+component HSaqusition       
+generic( ram_addr_width : natural := 30; --Number of bits in SRAM addr bus
+	 ram_data_width : natural := 32;
+	 ram_depth : natural := 24;
+	 address : std_logic_vector( 7 downto 0 ) := "00000001"
+	);
+PORT(
+	--Data communication ports used to communicate with the master system
+	clk : in std_logic; --system clock 
+	rst : in std_logic; --system reset
+	datain : in std_logic_vector( 7 downto 0); --datainput from comm master 
+	addr : in std_logic_vector( 7 downto 0);   --address input from comm master
+	wr : in std_logic; --write pulse from comm master
+	rd : in std_logic; --read pulse from comm master
+	dataout : out std_logic_vector( 7 downto 0); --data output to comm master
+	-------------------------------------------------------------------------
+	--
+	--DDR3 interface 
+	ram_addr : out std_logic_vector( ram_addr_width-1 downto 0);
+	ram_data_write : out std_logic_vector( ram_data_width-1 downto 0);
+	ram_wr_en : out std_logic;
+	ram_rd_en : out std_logic;
+	ram_rd_empty : in std_logic;
+	ram_cmd_en : out std_logic;
+	ram_data_read : in std_logic_vector( ram_data_width-1 downto 0);
+	ram_command : out std_logic_vector(2 downto 0);
+	ram_bl : out std_logic_vector(5 downto 0);
+	ram_clock : out std_logic;
+	-----------------------------------------------------------------------
+	--
+	--Data aqusition signals
+	digital_in : in std_logic_vector( 7 downto 0); 
+	hs_adc_a : in std_logic_vector( 7 downto 0);
+	hs_adc_b : in std_logic_vector( 7 downto 0);
+	adc_clk_a : out std_logic;
+	adc_clk_b : out std_logic;
+	adc_pwd_d : out std_logic;
+	--
+	--High speed clock inputs
+	hs_clock_2 : in std_logic;  --2x master clock 
+	hs_clock_4 : in std_logic;  --4x master clock
+	-------------------------------------------------------------------
+	--
+	--External triggers
+	trigger_in1 : in std_logic;
+	trigger_in2 : in std_logic;
+	trigger_out : out std_logic
+        );
+end component;
 
 component ddr3memory
  generic(
@@ -643,7 +659,9 @@ begin
 						adc_pwd_d => ADAP,
 						hs_clock_2 => global_clk_2x,
 						hs_clock_4 => global_clk_4x_b,
-						debug_out1 => open
+						trigger_in1 => '0',
+						trigger_in2 => '0',
+						trigger_out => open
 						);
 	I2S1: i2s port map( 	clk	=> global_clk, 
 				rst     => global_rst,

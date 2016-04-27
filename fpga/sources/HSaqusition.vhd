@@ -6,6 +6,7 @@
 --		DDR3 Ram.
 --Written: 2015 by Trond Egil Gran
 --------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all, ieee.numeric_std.all;
 
@@ -64,6 +65,9 @@ entity HSaqusition is
 		trigger_in2 : in std_logic;
 		trigger_out : out std_logic
 		);
+		--attribute period: string;
+		--attribute period of ram_clock : signal is "5 ns";
+		--attribute period of hs_clock_4 : signal is "5 ns";
 end HSaqusition;
 
 architecture RTL of HSaqusition is
@@ -90,7 +94,7 @@ type ram_machine is (idle, write_adc_a, write_adc_b, write_digital_in, write_buf
 signal ram_machine_1 : ram_machine := idle;
 type singlestrobe is (idle, strobe_triggered);
 signal ram_write_strobe, ram_full_strobe  : singlestrobe := idle;
-type datamachine is (idle, process_command, read_trigger, read_ram, read_status, configure);
+type datamachine is (idle, process_command, read_trigger, read_ram, read_status, config1, config2);
 signal data_state : datamachine := idle; 
 type WRcountermachine is (idle, counting, read_data, wait_ready);
 signal ram_count_state_wr, ram_count_state_rd : WRcountermachine := idle;
@@ -121,7 +125,7 @@ signal ram_wr_sig, ram_wr_sig_delayed, configdone, interruptdataread, ram_wr_en_
 signal ram_rd_en_sig : std_logic := '0';
 signal rdcnt : unsigned(7 downto 0) := (others => '0');
 signal first_ram_write : std_logic := '1';
-signal clocksel : std_logic_vector(1 downto 0) := (others => '0');
+signal clocksel : std_logic_vector(1 downto 0) := "10";
 signal clock_mux_con,  clock_mux_con_n : std_logic :='0';
 signal hs_clock, hs_clock_n : std_logic := '0';
 signal adc_clk_a_select_n, adc_clk_b_select_n : std_logic := '0';
@@ -157,7 +161,7 @@ signal fill_write_buffer : std_logic := '0';
 
 --Counter signals
 signal counter_1 : unsigned(ram_depth-1 downto 0) := (others => '0');
-signal counter_2 : unsigned(ram_depth-1 downto 0) := (others => '0');
+signal counter_2 : unsigned(ram_depth-1 downto 0) := (others => '1');
 signal counter_3 : unsigned(14 downto 0) := (others => '0');
 
 
@@ -195,6 +199,7 @@ signal ram_read_start_address : std_logic_vector(ram_depth-1 downto 0) := (other
 
 
 signal ram_read_mode : std_logic := '0';
+signal debug_1, debug_2 : std_logic := '0';
 
 
 --signal testc : unsigned( 7 downto 0) := "00000000";
@@ -222,28 +227,28 @@ begin
 	-- BUFGMUX: Global Clock Mux Buffer
 	-- Spartan-6
 	-- Xilinx HDL Libraries Guide, version 12.4
-	BUFGMUX_inst_1 : BUFGMUX
-	generic map (
-		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
-	)
-	port map (
-		O => hs_clock, -- 1-bit output Clock buffer output
-		I0 => clock_mux_con, -- 1-bit input Clock buffer input (S=0)
-		I1 => hs_clock_4, -- 1-bit input Clock buffer input (S=1)
-		S => clocksel(1) -- 1-bit input Clock buffer select
-	);
-	BUFGMUX_inst_2 : BUFGMUX
-	generic map (
-		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
-	)
-	port map (
-		O => clock_mux_con, -- 1-bit output Clock buffer output
-		I0 => clk, -- 1-bit input Clock buffer input (S=0)
-		I1 => hs_clock_2, -- 1-bit input Clock buffer input (S=1)
-		S => clocksel(0) -- 1-bit input Clock buffer select
-	);
+--	BUFGMUX_inst_1 : BUFGMUX
+--	generic map (
+--		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
+--	)
+--	port map (
+--		O => hs_clock, -- 1-bit output Clock buffer output
+--		I0 => clock_mux_con, -- 1-bit input Clock buffer input (S=0)
+--		I1 => hs_clock_4, -- 1-bit input Clock buffer input (S=1)
+--		S => clocksel(1) -- 1-bit input Clock buffer select
+--	);
+--	BUFGMUX_inst_2 : BUFGMUX
+--	generic map (
+--		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
+--	)
+--	port map (
+--		O => clock_mux_con, -- 1-bit output Clock buffer output
+--		I0 => clk, -- 1-bit input Clock buffer input (S=0)
+--		I1 => hs_clock_2, -- 1-bit input Clock buffer input (S=1)
+--		S => clocksel(0) -- 1-bit input Clock buffer select
+--	);
 	---------------------------------------------------------------------------------------------
-	
+hs_clock <= hs_clock_4;	
 	
 	-- ADC clock outputs since the ADCs are connected to regular in pins and not dedicated global clock pins
 	-- a ddr output register is used to allow the clock singel to be passed to the io pin. The DDR output register
@@ -316,12 +321,14 @@ begin
 								release_ram <= '0';
 								start_ram_read <= '1';
 							when "010" =>
-								data_state <= configure;
+								data_state <= config1;
 							when "011" =>
 								data_state <= read_status;
 							when "100" =>
 								data_state <= idle;
 								release_ram <= control_signals(0);
+                                                        when "101" =>
+                                                                data_state <= config2;
 							when others =>
 								data_state <= idle;
 						end case;
@@ -335,8 +342,7 @@ begin
 									dataout <= std_logic_vector(ram_trigger_address( 15 downto 8));
 									combus <= "010";
 								when "010" =>
-									dataout(2 downto 0) <= std_logic_vector(ram_trigger_address( ram_depth-1 downto 16));
-									dataout(7 downto 3) <= (others => '0');
+									dataout(7 downto 0) <= std_logic_vector(ram_trigger_address( ram_depth-1 downto 16));
 									combus <= "011";
 								when "011" =>
 									dataout <= ram_counter_wr_stop( 7 downto 0 );
@@ -345,8 +351,7 @@ begin
 									dataout <= ram_counter_wr_stop( 15 downto 8 );
 									combus <= "101";
 								when "101" =>
-									dataout(2 downto 0) <= ram_counter_wr_stop( ram_depth-1 downto 16 );
-									dataout(7 downto 3) <= (others => '0');
+									dataout(7 downto 0) <= ram_counter_wr_stop( ram_depth-1 downto 16 );
 									combus <= "000";
 									data_state <= idle;
 								when others =>
@@ -365,7 +370,8 @@ begin
 							dataout(3) <= ram_read_finished;
 							dataout(4) <= read_ready;
 							dataout(5) <= manual_trigger;
-							dataout(7 downto 6) <= "11"; 
+							dataout(6) <= debug_1;
+							dataout(7) <= debug_2;
 							data_state <= idle;
 						end if;
 					when read_ram =>
@@ -413,7 +419,7 @@ begin
 							combus <= "000";
 							interruptdataread  <= '1';
 						end if;
-					when configure =>
+					when config1 =>
 						if wr = '1' then
 							case combus is
 								when "000" =>
@@ -443,12 +449,38 @@ begin
 									ram_address_offset(15 downto 8) <= unsigned(datain);
 									combus <= "110";
 								when "110" =>
-									ram_address_offset(18 downto 16) <= unsigned(datain(2 downto 0));
-									start_ram_capture <= datain(3);  ---Starts the data capture if datain(3)=1
+									ram_address_offset(ram_depth-1 downto 16) <= unsigned(datain);
+									combus <= "111";
+								when "111" =>
+									start_ram_capture <= datain(0);  ---Starts the data capture if datain(0)=1
 									combus <= "000";
 									configdone <= '1';
 									data_state <= idle;
 								when others => 
+									combus <= "000";
+									data_state <= idle;
+							end case;
+						end if;
+					when config2 =>
+						if WR = '1' then
+							case combus is
+								when "000" =>
+									counter_1_ram_address_buffer_size(7 downto 0) <= datain;
+									combus <= "001";
+								when "001" =>
+									counter_1_ram_address_buffer_size(15 downto 8) <= datain;
+									combus <= "010";
+								when "010" =>
+									counter_1_ram_address_buffer_size(ram_depth-1 downto 16) <= datain;
+									combus <= "011";
+								when "011" =>
+									counter_3_sample_rate_value(7 downto 0) <= datain;
+									combus <= "100";
+								when "100" =>
+									counter_3_sample_rate_value(13 downto 8) <= datain(5 downto 0);
+									data_state <= idle;
+									combus <= "000";
+								when others =>
 									combus <= "000";
 									data_state <= idle;
 							end case;
@@ -503,8 +535,9 @@ begin
 		if rising_edge(hs_clock) then
 			if counter_2_trig_offset_reset = '1' then
 				ram_full <= '0';
-				counter_2 <= unsigned(counter_2_trig_offset_load);
-			elsif ram_cmd_en_sig = '1' and triggered = '1' then
+				counter_2 <= unsigned(ram_address_offset);
+				debug_1 <= '1';
+			elsif ram_cmd_en_sig = '1' and triggered = '1'  then
 					if counter_2 = 0 then
 						counter_2 <= (others => '0'); --finish ram write or read
 						if data_capture_started = '1' then
@@ -586,126 +619,127 @@ begin
 			-----------------------------------------------------------------------------------------
 			if (ram_clock_en = '1') then 
 			
-				case ram_machine_1 is
-					when idle =>
-						if start_ram_capture = '1' then
-							data_capture_started <= '1';
+				if ram_full = '0' then
+			
+					case ram_machine_1 is
+						when idle =>
+							if start_ram_capture = '1' then
+								data_capture_started <= '1';
+								ram_machine_1 <= write_adc_a;
+								counter_0_free_en <= '1';
+								counter_1_ram_address_en <= '1';
+								counter_1_ram_address_reset <= '1';
+								counter_2_trig_offset_reset <= '1';
+								counter_1_ram_address_count_by <= "000000000000000001001000";
+							end if;
+							
+						when write_adc_a =>
+							counter_1_ram_address_reset <= '0';
+							counter_2_trig_offset_reset <= '0';
+							adc_b_to_ram_out <= adc_b_to_ram_reg;
+							digital_in_to_ram_out <= digital_in_to_ram_reg;
+							ram_data_write_sig <= adc_a_to_ram_reg;
+							if adc_a_enable = '1'  then
+								ram_wr_en_sig <= '1';	
+							else
+								ram_wr_en_sig <= '0';
+							end if;
+							ram_machine_1 <= write_adc_b;
+						when write_adc_b =>
+							
+							if adc_b_enable = '1' then
+								ram_wr_en_sig <= '1';
+								ram_data_write_sig <= adc_b_to_ram_out;
+							else
+								ram_wr_en_sig <= '0';
+							end if;
+							ram_machine_1 <= write_digital_in;
+						when write_digital_in =>
+							
+							if digital_in_enable = '1' and ram_full = '0' then
+								ram_wr_en_sig <= '1';
+								ram_data_write_sig <= digital_in_to_ram_out;
+							else
+								ram_wr_en_sig <= '0';
+							end if;
+							ram_machine_1 <= write_buffer;
+						when write_buffer =>
+							if ram_buffer_counter >= 15 then	
+								ram_command <= "000";
+								ram_cmd_en_sig <= '1'; -- also used to increment ram counter
+								ram_buffer_counter <= (others => '0');
+								debug_2 <= '1';
+							else
+								ram_buffer_counter <= ram_buffer_counter + unsigned(ram_address_counter_inc_m);
+							end if;
+							
 							ram_machine_1 <= write_adc_a;
-							counter_0_free_en <= '1';
-							counter_1_ram_address_en <= '1';
-							counter_1_ram_address_reset <= '1';
-							counter_2_trig_offset_reset <= '1';
-							counter_1_ram_address_count_by <= "000000000000000000010010";
-						end if;
-						
-						if ram_full = '1' then
-							counter_0_free_en <= '0';
-							counter_1_ram_address_en <= '0';
-							data_capture_started <= '0';
-						end if;
-					when write_adc_a =>
-						counter_1_ram_address_reset <= '0';
-						counter_2_trig_offset_reset <= '0';
-						adc_b_to_ram_out <= adc_b_to_ram_reg;
-						digital_in_to_ram_out <= digital_in_to_ram_reg;
-						ram_data_write_sig <= adc_a_to_ram_reg;
-						if adc_a_enable = '1' then
-							ram_wr_en_sig <= '1';	
-						else
 							ram_wr_en_sig <= '0';
-						end if;
-						ram_machine_1 <= write_adc_b;
-						
-					when write_adc_b =>
-						
-						if adc_b_enable = '1' then
-							ram_wr_en_sig <= '1';
-							ram_data_write_sig <= adc_b_to_ram_out;
-						else
-							ram_wr_en_sig <= '0';
-						end if;
-						ram_machine_1 <= write_digital_in;
-					when write_digital_in =>
-						
-						if digital_in_enable = '1' then
-							ram_wr_en_sig <= '1';
-							ram_data_write_sig <= digital_in_to_ram_out;
-						else
-							ram_wr_en_sig <= '0';
-						end if;
-						ram_machine_1 <= write_buffer;
-					when write_buffer =>
-						if ram_buffer_counter >= 15 then	
-							ram_command <= "000";
-							ram_cmd_en_sig <= '1'; -- also used to increment ram counter
-							ram_buffer_counter <= (others => '0');
-						else
-							ram_buffer_counter <= ram_buffer_counter + unsigned(ram_address_counter_inc_m);
-						end if;
-						
-						if ram_full = '1' then
-							ram_machine_1 <= idle;
-						else
-							ram_machine_1 <= write_adc_a;
-						end if;
-						ram_wr_en_sig <= '0';
-				end case;
-				--3 byte = 18
-				--2 byte = 
-				if ram_address_counter_inc_m = "01" then
-					ram_bl <= "001111"; --fill half of the ram buffer
-				else
-					ram_bl <= "010001"; --fill half of the ram buffer
-				end if;
-                            
-                            if ram_full = '1' then
-                                ram_read_mode <= '1';
-                                counter_2_trig_offset_reset <= '1';
-                            end if;
-                            
-                            if ram_read_mode = '1' then
-                                    counter_2_trig_offset_reset <= '0';
-                                    ram_wr_en_sig <= '0';
-                                    ram_write_strobe <= idle;
-                                    first_ram_write <= '1';
-                                    store_start_address <= '0';
-                                    ram_buffer_counter <= (others => '0');
-                                    --We use digital_in channel to read back data.
-                                    if ram_read_signal = '1' then
-                                            case ram_read_strobe is
-                                                    when idle =>
-                                                            ram_read_strobe <= send_read_command;
-                                                            ram_command <= "001"; --read ram data
-                                                            ram_bl <= "000000"; --read one word at a time
-                                                            counter_1_ram_address_count_by <= "000000000000000000000001";
-                                                    when send_read_command =>
-                                                            ram_cmd_en_sig <= '1';
-                                                            ram_read_strobe <= strobe_triggered;
-                                                    when strobe_triggered =>
-                                                            
-                                                            if ram_rd_empty = '0'  and ram_data_collected = '0' then
-                                                                    ram_rd_en_sig <= '1';
-                                                                    data_from_ram_reg <= ram_data_read;
-                                                                    ram_data_collected <= '1';
-                                                                    counter_1_ram_address_en <= '1';
-                                                            end if;	
-                                            end case;
-                                    else
-                                            ram_read_strobe <= idle;
-                                            if ram_data_available = '1' or ram_read_finished = '1' then
-                                                    ram_data_collected <= '0';
-                                            end if;
-                                    
-                                    end if;
-                                    if ram_read_finished = '1' then
-                                        counter_1_ram_address_en <= '0';
-                                    end if;
-                            end if;
+					end case;
+					
+					ram_data_write <= ram_data_write_sig;
+					ram_wr_en <= ram_wr_en_sig;
+					
+					--3 byte = 18
+					--2 byte = 
+					if ram_address_counter_inc_m = "01" then
+						ram_bl <= "001111"; --fill half of the ram buffer
+					else
+						ram_bl <= "010001"; --fill half of the ram buffer
+					end if;
 				
+                           -- if ram_full = '1' then
+                           --     ram_read_mode <= '1';
+                           --     counter_2_trig_offset_reset <= '1';
+                           -- end if;
+                            
+			--if ram_read_mode = '1' then
+			else
+				counter_0_free_en <= '0';
+				--counter_1_ram_address_en <= '0';
+				data_capture_started <= '0';
+				counter_2_trig_offset_reset <= '0';
+				ram_wr_en_sig <= '0';
+				ram_write_strobe <= idle;
+				first_ram_write <= '1';
+				store_start_address <= '0';
+				ram_buffer_counter <= (others => '0');
+				ram_machine_1 <= idle;
+				--We use digital_in channel to read back data.
+				if ram_read_signal = '1' then
+					case ram_read_strobe is
+						when idle =>
+							--counter_2_trig_offset_reset <= '1';  ---keep counter in reset
+							ram_read_strobe <= send_read_command;
+							ram_command <= "001"; --read ram data
+							ram_bl <= "000000"; --read one word at a time
+							counter_1_ram_address_count_by <= "000000000000000000000100";
+						when send_read_command =>
+							ram_cmd_en_sig <= '1';
+							ram_read_strobe <= strobe_triggered;
+						when strobe_triggered =>
+								
+						if ram_rd_empty = '0'  and ram_data_collected = '0' then
+							ram_rd_en_sig <= '1';
+							data_from_ram_reg <= ram_data_read;
+							ram_data_collected <= '1';
+							counter_1_ram_address_en <= '1';
+						end if;	
+					end case;
+					else
+						ram_read_strobe <= idle;
+						if ram_data_available = '1' or ram_read_finished = '1' then
+							ram_data_collected <= '0';
+						end if;
+					
+					end if;
+					if ram_read_finished = '1' then
+						counter_1_ram_address_en <= '0';
+					end if;
+				end if;
 			end if;
 			
-			ram_data_write <= ram_data_write_sig;
-			ram_wr_en <= ram_wr_en_sig;
+			
 			
 			
 			
@@ -788,7 +822,7 @@ begin
 			end if;
 			case ram_count_state_rd is
 				when idle =>
-					if ram_read_mode = '1' then
+					if ram_full = '1' then
                                                 ram_count_state_rd <= read_data;
                                                 ram_read_signal <= '1';
                                                 ram_read_started <= '1';

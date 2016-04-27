@@ -317,8 +317,8 @@ NET  "mcb3_rzq"                                  LOC = "M4" ;
 
 
 ###Timing Constraints
-NET "ram_clock" TNM_NET = "ram_clock";
-TIMESPEC "TS_ram_clock" = PERIOD "ram_clock" 5 ns;
+#NET "ram_clock" TNM_NET = "ram_clock";
+#TIMESPEC "TS_ram_clock" = PERIOD "ram_clock" 5 ns;
 NET "global_clk" TNM_NET = "global_clk";
 TIMESPEC "TS_global_clk" = PERIOD "global_clk" 20 ns;
 
