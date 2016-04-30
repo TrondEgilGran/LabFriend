@@ -37,7 +37,7 @@ int main(void)
 	//set_Attenuation( 0, ON );
 	//set_gain( 0, GAINx2);
 	setVoltage(EXVO, 3.5, 0, 0);
-	sleep(1);
+        sleep(1);
 	//00001101
 	databuffer[0] = 0x05;
 	//11110001
@@ -45,7 +45,7 @@ int main(void)
 	//10000011
 	databuffer[2] = 0x83;
 	
-	spiCommand( WRITE, 2, 3);
+        spiCommand( WRITE, 2, 3);
 	spiWrite(databuffer, 3);
 	sleep(1);
 	spiCommand( WRITE, 2, 3);
@@ -80,24 +80,29 @@ int main(void)
 	
 	
 	spiCommand( WRITE, 8, 20);
-	spiWrite(databuffer, 20);
-/*
+        spiWrite(databuffer, 20);
+
+
+        setVoltage(HSADCOFFSET0, 0, 0, 0);
+
+        setVoltage(HSADCOFFSET1, 0, 0, 0);
+
 	sleep(1);
 	set_scope_config( 2,
 			  0,
 			  2,
 			  7,  //channel
 			  0,
-			  0, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
+                          4, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
 		          0,
-		          260000,
+                          255,
 		          1);
 	sleep(1);
 	new_read_ram( );
 			
-	setVoltage(HSADCOFFSET0, -2.1, 0, 0);
+//	setVoltage(HSADCOFFSET0, -2.1, 0, 0);
 	
-	setVoltage(HSADCOFFSET1, -1.9, 0, 0);
+//	setVoltage(HSADCOFFSET1, -1.9, 0, 0);
 	
 	setVoltage(LAOFFSET, 0.0, 0, 0);
 	
@@ -106,7 +111,7 @@ int main(void)
 	setVoltage(LADVREF, 0.5, 0, 0);
 	
 	setVoltage(LAVIO, 3.3, 0, 0);
-	*/
+
 	
 	spiClose();
 }

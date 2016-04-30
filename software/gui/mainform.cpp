@@ -149,6 +149,15 @@ void MainForm::InitOPtions()
     ui.cmbAudioInputConfig->addItem("GND");
     ui.cmbAnalysis->addItem("Time");
     ui.cmbAnalysis->addItem("Frequency");
+    ui.cmbBufferSize->addItem("18k"); //18432
+    ui.cmbBufferSize->addItem("73k"); //73728
+    ui.cmbBufferSize->addItem("147k"); //147456
+    ui.cmbBufferSize->addItem("294k"); //294912
+    ui.cmbBufferSize->addItem("589k"); //589824
+    ui.cmbBufferSize->addItem("1.1M"); //1179648
+    ui.cmbBufferSize->addItem("2.3Mk"); //2359296
+    ui.cmbBufferSize->addItem("4.7M"); //4718592
+    ui.cmbBufferSize->addItem("9.4M"); //9437184
 
 }
 

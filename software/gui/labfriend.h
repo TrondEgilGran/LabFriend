@@ -120,6 +120,7 @@ public slots:
     void setAudioRecTime(double time);
     void setAudioRecRepeate(bool checked);
     void setAudioAnalysis(QString qsSource);
+    void scopeBufferSizeF(QString qsSource);
 
 
 signals:
@@ -237,6 +238,7 @@ private:
     int audioAnalysisType;
     const int audioAnalysisType_time=0;
     const int audioAnalysisType_frequency=1;
+    uint32_t scopeBufferSizeV=18432;
 
 };
 

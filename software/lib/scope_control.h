@@ -40,6 +40,7 @@
 #define cmd_read_ram 		1
 #define cmd_configure 		2
 #define cmd_read_status		3
+#define cmd_configure2      5
 
 #define command 			0
 #define conf_ram_mux 			1
@@ -139,16 +140,17 @@ int set_Attenuation( uint8_t channel, uint8_t attenuation);
 int set_probe_attenuation(uint8_t channel, float attenuation);
 void init_scope_control(void);
 uint8_t set_trigger_voltage( uint8_t channel, float trigger_voltage);
-int set_scope_config( 	uint8_t trigger_value, 
-			uint8_t trigger_source,
-		        uint8_t trigger_edge,
-			uint8_t ram0_sel, 
-		        uint8_t ram_digi_muxed,
-			uint8_t adc_powerdown, 
-		        uint8_t adc_clock,
-			uint32_t trigger_ram_offset,
-			uint8_t start_capture);
-int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint8_t *ram_group_3);
+int set_scope_config(uint8_t trigger_value,
+            uint8_t trigger_source,
+                uint8_t trigger_edge,
+            uint8_t ram0_sel,
+                uint8_t ram_digi_muxed,
+            uint8_t adc_powerdown,
+                uint8_t adc_clock,
+            uint32_t trigger_ram_offset,
+            uint8_t start_capture, uint32_t scopedatasize);
+
+int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint32_t buffersize, uint8_t number_of_channels);
 int read_ram_fast( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint8_t *ram_group_3);
 int scope_data_available(void);
 int set_digital_out( uint8_t outputByte);

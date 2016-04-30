@@ -347,11 +347,11 @@ void labfriend::ScopeRun(void)
                         gettimeofday(&begin, NULL);
                         if(ScopeFastRead)
                         {
-                            read_ram_fast( trace_1_raw, trace_2_raw, trace_3_raw, trace_4_raw );
+                           // read_ram_fast( trace_1_raw, trace_2_raw, trace_3_raw );
                         }
                         else
                         {
-                            read_ram( trace_1_raw, trace_2_raw, trace_3_raw, trace_4_raw );
+                            read_ram( trace_1_raw, trace_2_raw, trace_3_raw, scopeBufferSizeV ,3 );
                         }
                         gettimeofday(&end, NULL);
                             elapsedTime = (end.tv_sec - begin.tv_sec) * 1000.0;      // sec to ms
@@ -365,12 +365,12 @@ void labfriend::ScopeRun(void)
                         trace_4_data.resize(scopeBufferSize);
 
 
-                        byte2FloatingBits(trace_3_raw);
+                        byte2FloatingBits(trace_1_raw);
                         for(i=0; i < scopeBufferSize; i++ )
                         {
                               xaxis[i] = i/scopeSampleRate;
-                              trace_1_data[i] = (double)trace_1_raw[i]/32.0;
-                              trace_2_data[i] = (double)trace_2_raw[i]/32.0;
+                              trace_1_data[i] = (double)trace_2_raw[i]/32.0;
+                              trace_2_data[i] = (double)trace_3_raw[i]/32.0;
                         }
                             superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setData(xaxis, trace_1_data);
                             superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setData(xaxis, trace_2_data);
@@ -566,8 +566,9 @@ void labfriend::scopeStart(void)
                   0,
                   4, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
                   0 ,
-                  scopeOffsetValue,
-                  1);
+                  scopeBufferSizeV/72 >> 1,
+                  1,
+                  scopeBufferSizeV);
 
     firstScopeCapture = true;
     printf("ramsel0 -ramsel3, %x %x %x %x\n", trace1source, trace2source, trace3source, trace4source);
@@ -685,6 +686,46 @@ void labfriend::setTraceSource4(QString qsSource)
     }
 }
 
+void labfriend::scopeBufferSizeF(QString qsSource)
+{
+    if( !qsSource.compare("18k") )
+    {
+        scopeBufferSizeV = 18432;
+    }
+    else if( !qsSource.compare("73k") )
+    {
+        scopeBufferSizeV = 73728;
+    }
+    else if( !qsSource.compare("147k") )
+    {
+        scopeBufferSizeV = 147456;
+    }
+    else if( !qsSource.compare("294k") )
+    {
+        scopeBufferSizeV = 294912;
+    }
+    else if( !qsSource.compare("589k") )
+    {
+        scopeBufferSizeV = 589824;
+    }
+    else if( !qsSource.compare("1.1M") )
+    {
+        scopeBufferSizeV = 1179648;
+    }
+    else if( !qsSource.compare("2.3") )
+    {
+        scopeBufferSizeV = 2359296;
+    }
+    else if( !qsSource.compare("4.7M") )
+    {
+        scopeBufferSizeV = 4718592;
+    }
+    else if( !qsSource.compare("9.4M") )
+    {
+        scopeBufferSizeV = 9427184;
+    }
+    scopeBufferSize = scopeBufferSizeV/3;
+}
 
 void labfriend::setVoltDiv(uint8_t channel, QString qsSource)
 {
@@ -1561,6 +1602,7 @@ void labfriend::scopeConnections(void)
     QObject::connect( superplot.ui.smbSignalType, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioGenerateType1(QString)));
     QObject::connect( superplot.ui.smbSignalType_2, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioGenerateType2(QString)));
     QObject::connect( superplot.ui.qcpAudioDisplay, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(mouseReleaseAudio(QMouseEvent*)));
+    QObject::connect( superplot.ui.cmbBufferSize, SIGNAL( currentIndexChanged(QString)), this, SLOT(scopeBufferSizeF(QString)));
 
 
 }
@@ -1723,6 +1765,7 @@ void labfriend::initScopeRun(void)
     zoomYaxis = false;
     zoomYaxisAudio = false;
     audioRecFinished = true;
+    scopeBufferSize = scopeBufferSizeV/3;
 }
 
 
