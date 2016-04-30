@@ -98,7 +98,7 @@ type datamachine is (idle, process_command, read_trigger, read_ram, read_status,
 signal data_state : datamachine := idle; 
 type WRcountermachine is (idle, counting, read_data, wait_ready);
 signal ram_count_state_wr, ram_count_state_rd : WRcountermachine := idle;
-type ram_read_strober is (idle, send_read_command, strobe_triggered);
+type ram_read_strober is (idle, send_read_command, read_data,  strobe_triggered, strobe_reset);
 signal ram_read_strobe : ram_read_strober := idle;
 
 
@@ -201,6 +201,8 @@ signal ram_read_start_address : std_logic_vector(ram_depth-1 downto 0) := (other
 signal ram_read_mode : std_logic := '0';
 signal debug_1, debug_2 : std_logic := '0';
 
+signal reset_signal : std_logic := '0';
+
 
 --signal testc : unsigned( 7 downto 0) := "00000000";
 
@@ -302,190 +304,201 @@ hs_clock <= hs_clock_4;
 	begin
 		if rising_edge(clk) then
 			if addr( 3 downto 0 ) = address( 3 downto 0 ) then
-				case data_state is
-					when idle =>
-						if wr = '1' then
-							command <= datain( 2 downto 0);
-							data_state <= process_command;
-							control_signals <= datain( 7 downto 3);
-						end if;
-						interruptdataread  <= '0';
-					when process_command =>
-						case command is
-							when "000" =>
-								data_state <= read_trigger;
-							when "001" =>
-								data_state <= read_ram;
-								read_ready <= '0';
-								aq_channel <= control_signals(1 downto 0);
-								release_ram <= '0';
-								start_ram_read <= '1';
-							when "010" =>
-								data_state <= config1;
-							when "011" =>
-								data_state <= read_status;
-							when "100" =>
-								data_state <= idle;
-								release_ram <= control_signals(0);
-                                                        when "101" =>
-                                                                data_state <= config2;
-							when others =>
-								data_state <= idle;
-						end case;
-					when read_trigger  =>
-						if rd = '1' then
-							case combus is
+			
+				if addr(4) = '1' then
+					reset_signal <= '1';
+					data_state <= idle;
+					start_ram_capture <= '0';
+					start_ram_read <= '0';
+				else
+					reset_signal <= '0';
+					case data_state is
+						when idle =>
+							if wr = '1' then
+								command <= datain( 2 downto 0);
+								data_state <= process_command;
+								control_signals <= datain( 7 downto 3);
+							end if;
+							interruptdataread  <= '0';
+						when process_command =>
+							case command is
 								when "000" =>
-									dataout <= std_logic_vector(ram_trigger_address( 7 downto 0));
-									combus <= "001";
+									data_state <= read_trigger;
 								when "001" =>
-									dataout <= std_logic_vector(ram_trigger_address( 15 downto 8));
-									combus <= "010";
+									data_state <= read_ram;
+									read_ready <= '0';
+									aq_channel <= control_signals(1 downto 0);
+									release_ram <= '0';
+									start_ram_read <= '1';
 								when "010" =>
-									dataout(7 downto 0) <= std_logic_vector(ram_trigger_address( ram_depth-1 downto 16));
-									combus <= "011";
+									data_state <= config1;
 								when "011" =>
-									dataout <= ram_counter_wr_stop( 7 downto 0 );
-									combus <= "100";
+									data_state <= read_status;
 								when "100" =>
-									dataout <= ram_counter_wr_stop( 15 downto 8 );
-									combus <= "101";
-								when "101" =>
-									dataout(7 downto 0) <= ram_counter_wr_stop( ram_depth-1 downto 16 );
-									combus <= "000";
 									data_state <= idle;
+									release_ram <= control_signals(0);
+								when "101" =>
+									data_state <= config2;
+								when "110" =>
+									reset_signal <= '1';
+									data_state <= idle;
+									start_ram_capture <= '0';
+									start_ram_read <= '0';
 								when others =>
-									combus <= "000";
 									data_state <= idle;
 							end case;
-						end if;
-						if wr = '1' then
-							data_state <= idle; --make sure we can interrupt a transfer so it won't lock up
-						end if;
-					when read_status =>
-						if rd = '1' then
-							dataout(0) <= ram_data_available;
-							dataout(1) <= ram_full;
-							dataout(2) <= triggered;
-							dataout(3) <= ram_read_finished;
-							dataout(4) <= read_ready;
-							dataout(5) <= manual_trigger;
-							dataout(6) <= debug_1;
-							dataout(7) <= debug_2;
-							data_state <= idle;
-						end if;
-					when read_ram =>
-						if rd = '1' then
-							if ram_data_available = '1'  then
-								
+						when read_trigger  =>
+							if rd = '1' then
 								case combus is
 									when "000" =>
-										dataout <= combus_0;
+										dataout <= std_logic_vector(ram_trigger_address( 7 downto 0));
 										combus <= "001";
-										read_ready <= '0';
 									when "001" =>
-										dataout <= combus_1;
+										dataout <= std_logic_vector(ram_trigger_address( 15 downto 8));
 										combus <= "010";
 									when "010" =>
-										dataout <= combus_2;
+										dataout(7 downto 0) <= std_logic_vector(ram_trigger_address( ram_depth-1 downto 16));
 										combus <= "011";
 									when "011" =>
-										dataout <= combus_3;
-										--dataout <= std_logic_vector(rdcnt);
+										dataout <= ram_counter_wr_stop( 7 downto 0 );
+										combus <= "100";
+									when "100" =>
+										dataout <= ram_counter_wr_stop( 15 downto 8 );
+										combus <= "101";
+									when "101" =>
+										dataout(7 downto 0) <= ram_counter_wr_stop( ram_depth-1 downto 16 );
 										combus <= "000";
-										read_ready <= '1';
-										if ram_read_finished = '1' then
-											data_state <= idle;
-										end if;
+										data_state <= idle;
 									when others =>
 										combus <= "000";
 										data_state <= idle;
 								end case;
-							else
-								dataout(0) <= manual_trigger;
-								dataout(1) <= trigger_edge;
-								dataout(2) <= configdone;
-								dataout(3) <= data_capture_started;
-								dataout(4) <= read_ready;
-								dataout(5) <= start_ram_capture;
-								dataout(7 downto 6) <= "00";
-								--dataout <= "00001010";
 							end if;
-							rdcnt <= rdcnt + 1;
-						end if;
-						if wr = '1' then
-							data_state <= idle; --make sure we can interrupt a transfer so it won't lock up
-							read_ready <= '0';
-							combus <= "000";
-							interruptdataread  <= '1';
-						end if;
-					when config1 =>
-						if wr = '1' then
-							case combus is
-								when "000" =>
-									adc_a_enable <= datain(0);
-									adc_b_enable <= datain(1);
-									digital_in_enable <= datain(2);
-									combus <= "001";
-									configdone <= '0';
-								when "001" =>
-									adc_clk_a_select <= datain(3);
-									adc_clk_b_select <= datain(4);
-									adc_pwd_d <= datain(5);
-									clocksel <= datain(7 downto 6);
-									combus <= "010";
-								when "010" =>
-									trigger_select <= datain( 1 downto 0);
-									trigger_edge <= datain(2);
-									manual_trigger <= datain(3);
-									combus <= "011";
-								when "011" =>
-									trigger_val <= datain;
-									combus <= "100";
-								when "100" =>
-									ram_address_offset(7 downto 0) <= unsigned(datain);
-									combus <= "101";
-								when "101" =>
-									ram_address_offset(15 downto 8) <= unsigned(datain);
-									combus <= "110";
-								when "110" =>
-									ram_address_offset(ram_depth-1 downto 16) <= unsigned(datain);
-									combus <= "111";
-								when "111" =>
-									start_ram_capture <= datain(0);  ---Starts the data capture if datain(0)=1
-									combus <= "000";
-									configdone <= '1';
-									data_state <= idle;
-								when others => 
-									combus <= "000";
-									data_state <= idle;
-							end case;
-						end if;
-					when config2 =>
-						if WR = '1' then
-							case combus is
-								when "000" =>
-									counter_1_ram_address_buffer_size(7 downto 0) <= datain;
-									combus <= "001";
-								when "001" =>
-									counter_1_ram_address_buffer_size(15 downto 8) <= datain;
-									combus <= "010";
-								when "010" =>
-									counter_1_ram_address_buffer_size(ram_depth-1 downto 16) <= datain;
-									combus <= "011";
-								when "011" =>
-									counter_3_sample_rate_value(7 downto 0) <= datain;
-									combus <= "100";
-								when "100" =>
-									counter_3_sample_rate_value(13 downto 8) <= datain(5 downto 0);
-									data_state <= idle;
-									combus <= "000";
-								when others =>
-									combus <= "000";
-									data_state <= idle;
-							end case;
-						end if;
-				end case;
+							if wr = '1' then
+								data_state <= idle; --make sure we can interrupt a transfer so it won't lock up
+							end if;
+						when read_status =>
+							if rd = '1' then
+								dataout(0) <= ram_data_available;
+								dataout(1) <= ram_full;
+								dataout(2) <= triggered;
+								dataout(3) <= ram_read_finished;
+								dataout(4) <= read_ready;
+								dataout(5) <= manual_trigger;
+								dataout(6) <= debug_1;
+								dataout(7) <= debug_2;
+								data_state <= idle;
+							end if;
+						when read_ram =>
+							if rd = '1' then
+								if ram_data_available = '1'  then
+									
+									case combus is
+										when "000" =>
+											dataout <= combus_0;
+											combus <= "001";
+											
+										when "001" =>
+											dataout <= combus_1;
+											combus <= "010";
+										when "010" =>
+											dataout <= combus_2;
+											combus <= "011";
+										when "011" =>
+											dataout <= combus_3;
+											--dataout <= std_logic_vector(rdcnt);
+											combus <= "000";
+											read_ready <= '1';
+										when others =>
+											combus <= "000";
+											data_state <= idle;
+									end case;
+								else
+									dataout(0) <= manual_trigger;
+									dataout(1) <= trigger_edge;
+									dataout(2) <= configdone;
+									dataout(3) <= data_capture_started;
+									dataout(4) <= read_ready;
+									dataout(5) <= start_ram_capture;
+									dataout(7 downto 6) <= "00";
+									--dataout <= "00001010";
+								end if;
+								rdcnt <= rdcnt + 1;
+							end if;
+							if wr = '1' then
+								data_state <= idle; --make sure we can interrupt a transfer so it won't lock up
+								read_ready <= '0';
+								combus <= "000";
+								interruptdataread  <= '1';
+							end if;
+						when config1 =>
+							if wr = '1' then
+								case combus is
+									when "000" =>
+										adc_a_enable <= datain(0);
+										adc_b_enable <= datain(1);
+										digital_in_enable <= datain(2);
+										combus <= "001";
+										configdone <= '0';
+									when "001" =>
+										adc_clk_a_select <= datain(3);
+										adc_clk_b_select <= datain(4);
+										adc_pwd_d <= datain(5);
+										clocksel <= datain(7 downto 6);
+										combus <= "010";
+									when "010" =>
+										trigger_select <= datain( 1 downto 0);
+										trigger_edge <= datain(2);
+										manual_trigger <= datain(3);
+										combus <= "011";
+									when "011" =>
+										trigger_val <= datain;
+										combus <= "100";
+									when "100" =>
+										ram_address_offset(7 downto 0) <= unsigned(datain);
+										combus <= "101";
+									when "101" =>
+										ram_address_offset(15 downto 8) <= unsigned(datain);
+										combus <= "110";
+									when "110" =>
+										ram_address_offset(ram_depth-1 downto 16) <= unsigned(datain);
+										combus <= "111";
+									when "111" =>
+										start_ram_capture <= datain(0);  ---Starts the data capture if datain(0)=1
+										combus <= "000";
+										configdone <= '1';
+										data_state <= idle;
+									when others => 
+										combus <= "000";
+										data_state <= idle;
+								end case;
+							end if;
+						when config2 =>
+							if WR = '1' then
+								case combus is
+									when "000" =>
+										counter_1_ram_address_buffer_size(7 downto 0) <= datain;
+										combus <= "001";
+									when "001" =>
+										counter_1_ram_address_buffer_size(15 downto 8) <= datain;
+										combus <= "010";
+									when "010" =>
+										counter_1_ram_address_buffer_size(ram_depth-1 downto 16) <= datain;
+										combus <= "011";
+									when "011" =>
+										counter_3_sample_rate_value(7 downto 0) <= datain;
+										combus <= "100";
+									when "100" =>
+										counter_3_sample_rate_value(13 downto 8) <= datain(5 downto 0);
+										data_state <= idle;
+										combus <= "000";
+									when others =>
+										combus <= "000";
+										data_state <= idle;
+								end case;
+							end if;
+					end case;
+				end if;
 			
 			end if;
 			
@@ -500,6 +513,10 @@ hs_clock <= hs_clock_4;
 			if ram_read_started = '1' then 
 				start_ram_read <= '0';
 			end if;
+			
+			if read_ready = '1' then
+				read_ready <= '0';
+			end if;
 		end if;
 		trigger_val_d1 <= trigger_val;
 	end process masterComms;
@@ -512,7 +529,7 @@ hs_clock <= hs_clock_4;
 	counter_1_proc : process(hs_clock, counter_1_ram_address_en, counter_1_ram_address_reset, ram_cmd_en_sig)
 	begin
 		if rising_edge(hs_clock) then
-			if counter_1_ram_address_reset = '1' then
+			if counter_1_ram_address_reset = '1' or reset_signal = '1' then
 				counter_1 <= (others => '0');
 			elsif ram_cmd_en_sig = '1' and counter_1_ram_address_en = '1' then
 				if counter_1_ram_address_load_start_en = '1' then
@@ -533,7 +550,7 @@ hs_clock <= hs_clock_4;
 	counter_2_proc : process(hs_clock, counter_2_trig_offset_reset, ram_cmd_en_sig)
 	begin
 		if rising_edge(hs_clock) then
-			if counter_2_trig_offset_reset = '1' then
+			if counter_2_trig_offset_reset = '1'  or reset_signal = '1' then 
 				ram_full <= '0';
 				counter_2 <= unsigned(ram_address_offset);
 				debug_1 <= '1';
@@ -680,67 +697,67 @@ hs_clock <= hs_clock_4;
 					ram_data_write <= ram_data_write_sig;
 					ram_wr_en <= ram_wr_en_sig;
 					
+					
 					--3 byte = 18
 					--2 byte = 
 					if ram_address_counter_inc_m = "01" then
 						ram_bl <= "001111"; --fill half of the ram buffer
 					else
 						ram_bl <= "010001"; --fill half of the ram buffer
+					
 					end if;
-				
-                           -- if ram_full = '1' then
-                           --     ram_read_mode <= '1';
-                           --     counter_2_trig_offset_reset <= '1';
-                           -- end if;
-                            
-			--if ram_read_mode = '1' then
-			else
-				counter_0_free_en <= '0';
-				--counter_1_ram_address_en <= '0';
-				data_capture_started <= '0';
-				counter_2_trig_offset_reset <= '0';
-				ram_wr_en_sig <= '0';
-				ram_write_strobe <= idle;
-				first_ram_write <= '1';
-				store_start_address <= '0';
-				ram_buffer_counter <= (others => '0');
-				ram_machine_1 <= idle;
-				--We use digital_in channel to read back data.
-				if ram_read_signal = '1' then
+
+				else							--if ram is full we go to read mode
+					counter_0_free_en <= '0';
+					--counter_1_ram_address_en <= '0';
+					data_capture_started <= '0';
+					counter_2_trig_offset_reset <= '0';
+					ram_wr_en_sig <= '0';
+					ram_write_strobe <= idle;
+					first_ram_write <= '1';
+					store_start_address <= '0';
+					ram_buffer_counter <= (others => '0');
+					ram_machine_1 <= idle;
+					ram_bl <= "000000"; --read one word at a time
+					ram_command <= "001"; --read ram data
+					counter_1_ram_address_count_by <= "000000000000000000000100";
 					case ram_read_strobe is
 						when idle =>
 							--counter_2_trig_offset_reset <= '1';  ---keep counter in reset
 							ram_read_strobe <= send_read_command;
-							ram_command <= "001"; --read ram data
-							ram_bl <= "000000"; --read one word at a time
-							counter_1_ram_address_count_by <= "000000000000000000000100";
-						when send_read_command =>
-							ram_cmd_en_sig <= '1';
+							ram_cmd_en_sig <= '1';	--set to read mode
+						when send_read_command =>  --wait for data to arrive at the output
+							if ram_rd_empty = '0' then
+								ram_read_strobe <= read_data;
+								ram_rd_en_sig <= '1';		--signal to collect next word from ram
+							end if;
+						when read_data =>   --read data from ram
+							combus_0 <= ram_data_read(7 downto 0);
+							combus_1 <= ram_data_read(15 downto 8);
+							combus_2 <= ram_data_read(23 downto 16);
+							combus_3 <= ram_data_read(31 downto 24);
+							ram_data_available <= '1';
 							ram_read_strobe <= strobe_triggered;
-						when strobe_triggered =>
-								
-						if ram_rd_empty = '0'  and ram_data_collected = '0' then
-							ram_rd_en_sig <= '1';
-							data_from_ram_reg <= ram_data_read;
-							ram_data_collected <= '1';
-							counter_1_ram_address_en <= '1';
-						end if;	
+						when strobe_triggered =>   --wait for data to be collected from PC
+							if read_ready = '1' then
+								ram_read_strobe <= strobe_reset;
+							end if;
+						when strobe_reset =>
+							if read_ready = '0' then
+								ram_read_strobe <= idle;
+							end if;
+						
 					end case;
-					else
-						ram_read_strobe <= idle;
-						if ram_data_available = '1' or ram_read_finished = '1' then
-							ram_data_collected <= '0';
-						end if;
-					
-					end if;
-					if ram_read_finished = '1' then
-						counter_1_ram_address_en <= '0';
-					end if;
 				end if;
 			end if;
 			
 			
-			
+			if reset_signal = '1' then
+				ram_read_strobe <= idle;
+				ram_machine_1 <= idle;
+				ram_data_available <= '0';
+				
+			end if;
 			
 			
 			if ram_rd_en_sig = '1' then
@@ -797,86 +814,13 @@ hs_clock <= hs_clock_4;
 				ram_trigger_address <= counter_1;
 			end if;
 			
-			if start_ram_capture = '1' then
-				triggered <= '0';
-			end if;
 			
-			if interruptdataread = '1' or ram_read_finished = '1' then
+			if interruptdataread = '1' or ram_read_finished = '1' or start_ram_capture = '1' then
 				triggered <= '0';
 			end if;
 		end if;
 	end process procTrigger;
-	
-	
 
 
-	
-
-	
-	RamReadCounter: process ( rst, clk ) is
-	begin	
-		
-		if rising_edge(clk) then
-			if start_ram_read = '0' then 
-				ram_read_started <= '0';
-			end if;
-			case ram_count_state_rd is
-				when idle =>
-					if ram_full = '1' then
-                                                ram_count_state_rd <= read_data;
-                                                ram_read_signal <= '1';
-                                                ram_read_started <= '1';
-					end if;
-					if read_ready = '1' then
-						ram_data_available <= '0';
-					end if;
-					ram_read_finished <= '0';
-
-					
-				when read_data =>
-					if ram_data_available = '0' then
-						if ram_read_counter(ram_depth+1 downto 2) =  read_ram_stop(ram_depth+1 downto 2)  then
-							ram_count_state_rd <= idle;
-							if release_ram = '1' then --if release ram then ram_full will become '0' otherwise read ram can be redone.
-								ram_read_finished <= '1';
-							end if;
-						else	
-							if ram_data_collected = '1' then
-								combus_0 <= data_from_ram_reg(7 downto 0);
-								combus_1 <= data_from_ram_reg(15 downto 8);
-								combus_2 <= data_from_ram_reg(23 downto 16);
-								combus_3 <= data_from_ram_reg(31 downto 24);
-								ram_data_available <= '1';
-								ram_read_finished <= '0';
-								ram_count_state_rd <= counting;
-								ram_read_signal <= '0';
-							end if;
-						end if;
-					end if;
-				when counting =>		
-					if read_ready = '0' then
-                                           ram_count_state_rd <= wait_ready;
-						
-					end if;
-				when wait_ready =>
-					if read_ready = '1' then
-						ram_data_available <= '0';
-						ram_count_state_rd <= read_data;
-					else
-						ram_read_signal <= '1';
-					end if;					
-					
-					
-			end case;
-			
-			if interruptdataread = '1' then
-				ram_count_state_rd <= idle;
-				ram_data_available <= '0';
-			end if;
-			
-			
-		end if;
-	end process RamReadCounter;
-	
 
 end RTL;
