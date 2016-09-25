@@ -351,7 +351,7 @@ void labfriend::ScopeRun(void)
                         }
                         else
                         {
-                            read_ram( trace_1_raw, trace_2_raw, trace_3_raw, scopeBufferSizeV ,3 );
+                            read_ram( trace_3_raw, trace_2_raw, trace_1_raw, scopeBufferSizeV ,3 );
                         }
                         gettimeofday(&end, NULL);
                             elapsedTime = (end.tv_sec - begin.tv_sec) * 1000.0;      // sec to ms
@@ -547,9 +547,13 @@ void labfriend::singleScopeRun(bool checked)
 void labfriend::scopeStart(void)
 {
 
+    uint32_t offsetval;
+    uint16_t srdiv;
     scopeOffsetValue = round( (scopeBufferSize >> 1) + (scopeSampleRate)*(scopeOffsetTime/scopeTimeOffsetFormat));
+    srdiv = MASATERCLKFREQ*4  / scopeSampleRate - 1;
     printf("ov, %d, srate %f, buffs %d, offsT %f, fmt %f \n", scopeOffsetValue, scopeSampleRate, scopeBufferSize, scopeOffsetTime, scopeTimeOffsetFormat );
-  /*  set_scope_config(	triggerValue,  //trigger_value
+    printf("sample rate div %d", srdiv);
+    /*  set_scope_config(	triggerValue,  //trigger_value
                 triggerSource | srateDiv,  //trigger_source
                 triggerType,  //trigger_edge
                 7,  //ram0_sel
@@ -559,6 +563,16 @@ void labfriend::scopeStart(void)
                 scopeOffsetValue, //trigger_ram_offset
                 true); //start_capture*/
 
+
+    if (triggerType == trigger_automatic)
+    {
+        offsetval =   scopeBufferSizeV/72 -4;
+    }
+    else
+    {
+        offsetval =     scopeBufferSizeV/144;
+    }
+
     set_scope_config( triggerValue,
                   triggerSource,
                   triggerType,
@@ -566,14 +580,15 @@ void labfriend::scopeStart(void)
                   0,
                   4, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
                   0 ,
-                  scopeBufferSizeV/72 >> 1,
+                  offsetval,
                   1,
-                  scopeBufferSizeV);
+                  scopeBufferSizeV,
+                  srdiv);
 
     firstScopeCapture = true;
     printf("ramsel0 -ramsel3, %x %x %x %x\n", trace1source, trace2source, trace3source, trace4source);
     printf("trigger type, source, value: %x %x %d\n", triggerType, triggerSource, triggerValue);
-    printf("scopeOffsetValue %d \n", scopeOffsetValue);
+    printf("scopeOffsetValue %d \n", offsetval);
 
 }
 

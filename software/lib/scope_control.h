@@ -148,7 +148,7 @@ int set_scope_config(uint8_t trigger_value,
             uint8_t adc_powerdown,
                 uint8_t adc_clock,
             uint32_t trigger_ram_offset,
-            uint8_t start_capture, uint32_t scopedatasize);
+            uint8_t start_capture, uint32_t scopedatasize, uint16_t srdiv);
 
 int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint32_t buffersize, uint8_t number_of_channels);
 int read_ram_fast( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2, uint8_t *ram_group_3);

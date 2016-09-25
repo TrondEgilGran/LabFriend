@@ -118,7 +118,7 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
    
   
    signal ram_addr  : std_logic_vector( 30-1 downto 0);	 
-   signal ram_data_write, ram_data_read  : std_logic_vector( 32-1 downto 0);  
+   signal ram_data_write, ram_data_read  : std_logic_vector( 32-1 downto 0) := (others => '0');  
    signal ram_wr_en,  ram_rd_en, ram_rd_empty : std_logic;
    signal ram_cmd_en     : std_logic;
    signal ram_command           : std_logic_vector(2 downto 0);
@@ -135,7 +135,7 @@ ARCHITECTURE behavior OF HSaqusition_tb IS
    --signal ram_data : std_logic_vector(17 downto 0);
    
    signal adc1signal, adc2signal, digitalsignal : unsigned(7 downto 0) := "00000000";
-   signal xabc, xaa, xbb, xcc : unsigned(7 downto 0) := "00000000";
+   signal xabc, xaa, xbb, xcc : unsigned(7 downto 0) := "00000001";
    signal loopcounter  : integer :=0 ;
    
  
@@ -318,7 +318,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "00001100"; --copmbus 2
+	datain <= "00000100"; --copmbus 2
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);
@@ -419,14 +419,21 @@ BEGIN
 	wr <= '0';
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
+	wait until rising_edge(clk);
+	wait until rising_edge(clk);
+	wait until rising_edge(clk);
 	ram_rd_empty <= '0';
+	ram_data_read(7 downto 0) <= "00000001";
+	ram_data_read(15 downto 8) <= "00000010";
+	ram_data_read(23 downto 16) <= "00000011";
+	ram_data_read(31 downto 24) <= "00000100";
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	
+
 	i := 0;
 	while (i <= 65555) loop
 		--if digital_in_ram_rd = '1' then

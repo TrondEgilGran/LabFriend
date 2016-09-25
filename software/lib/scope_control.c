@@ -138,27 +138,33 @@ int set_ACDC( uint8_t channel, uint8_t acdc)
 	
 	global_channel_config[channel] = (global_channel_config[channel] & ~DCMask) | acdc << DCShift;
 
-	databuffer[0] = global_channel_config[0];
-	databuffer[1] = global_channel_config[1];
+    if(channel == 1)
+    {
+        databuffer[0] = global_channel_config[0]& ~DCMask;
+        databuffer[1] = global_channel_config[1];
+    }
+    else
+    {
+        databuffer[0] = global_channel_config[0];
+        databuffer[1] = global_channel_config[1]& ~DCMask;
+    }
 	
 	spiCommand( WRITE, addr74595, 2 );
 	spiWrite( databuffer, 2 );
     printf( "Pre written channel %d, config %x\n", channel,  global_channel_config[channel] );
 	
 	//Wait for dealy for relay to settle
-	sleep(1);
+    usleep(200000);
 	
-
-	global_channel_config[channel] = (global_channel_config[channel] & ~DCMask) | TRIS << DCShift;
 	
-	databuffer[0] = global_channel_config[0];
-	databuffer[1] = global_channel_config[1];
+    databuffer[0] = global_channel_config[0]& ~DCMask;
+    databuffer[1] = global_channel_config[1]& ~DCMask;
 	
 	spiCommand( WRITE, addr74595, 2 );
 	spiWrite( databuffer, 2 );
-    printf( "Post written channel %d, config %x \n", channel,  global_channel_config[channel]);
+
 	
-	global_channel_config[channel] = (global_channel_config[channel] & ~DCMask) | acdc << DCShift;
+    printf( "Post written config0 %x, config1 %x \n", global_channel_config[0], global_channel_config[1]);
 	return 1;
 }
 
@@ -170,24 +176,33 @@ int set_Attenuation( uint8_t channel, uint8_t attenuation)
 	
 	global_channel_config[channel] = (global_channel_config[channel] & ~AttMask) | attenuation << AttShift;
 		
-	databuffer[0] = global_channel_config[0];
-	databuffer[1] = global_channel_config[1];
+
+    if(channel == 1)
+    {
+        databuffer[0] = global_channel_config[0]& ~AttMask;
+        databuffer[1] = global_channel_config[1];
+    }
+    else
+    {
+        databuffer[0] = global_channel_config[0];
+        databuffer[1] = global_channel_config[1]& ~AttMask;
+    }
+
 	
 	spiCommand( WRITE, addr74595, 2 );
 	spiWrite( databuffer, 2 );
     printf( "Pre written channel %d, config %x \n", channel,  global_channel_config[channel]);
 	
 	//Wait for dealy for relay to settle
-	sleep(1);
-	
+    usleep(200000);
 
-	global_channel_config[channel] = (global_channel_config[channel] & ~AttMask) | TRIS << AttShift;
-
-	databuffer[0] = global_channel_config[0];
-	databuffer[1] = global_channel_config[1];
+    databuffer[0] = global_channel_config[0]&~AttMask;
+    databuffer[1] = global_channel_config[1]&~AttMask;
 	
 	spiCommand( WRITE, addr74595, 2 );
 	spiWrite( databuffer, 2 );
+
+
     printf( "Post written channel %d, config %x \n", channel,  global_channel_config[channel]);
 
 	return 1;
@@ -295,7 +310,8 @@ int set_scope_config( 	uint8_t trigger_value,
 		        uint8_t adc_clock,
 			uint32_t trigger_ram_offset,
             uint8_t start_capture,
-            uint32_t scopedatasize   )
+            uint32_t scopedatasize,
+            uint16_t srdiv)
 {
 	uint8_t databuffer[8];
 
@@ -307,8 +323,8 @@ int set_scope_config( 	uint8_t trigger_value,
     databuffer[1] = 0x000000FF & scopedatasize;
     databuffer[2] = 0x000000FF & (scopedatasize >> 8);
     databuffer[3] = 0x000000FF & (scopedatasize >> 16);
-    databuffer[4] = 0;
-    databuffer[5] = 0;
+    databuffer[4] = 0x00FF & srdiv;
+    databuffer[5] = 0x00ff & srdiv >> 8;
 
     spiCommand( WRITE, addrHSaqusition, 6 );
     spiWrite( databuffer, 6 );
@@ -344,6 +360,12 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
     uint8_t *databuffer;
 	int ramadress=0;
 	int i, ia;
+    FILE *f = fopen("didi.txt", "w");
+    if (f == NULL)
+    {
+        printf("Error opening file!\n");
+        exit(1);
+    }
 
     databuffer = (uint8_t *) malloc(min_buffersize+5);
     if (databuffer==NULL) exit (1);
@@ -388,7 +410,11 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
                 *(ram_group_2 + ramadress+2) = databuffer[10+ia];
                 *(ram_group_2 + ramadress+3) = databuffer[11+ia];
                 ramadress = ramadress + 4;
-                //printf(" %d %x %x %x \n", ia, databuffer[0+ia],databuffer[1+ia], databuffer[2+ia]);
+                fprintf(f," %d %x %x %x \n", ia, databuffer[0+ia],databuffer[4+ia], databuffer[8+ia]);
+                fprintf(f," %d %x %x %x \n", ia, databuffer[1+ia],databuffer[5+ia], databuffer[9+ia]);
+                fprintf(f," %d %x %x %x \n", ia, databuffer[2+ia],databuffer[6+ia], databuffer[10+ia]);
+                fprintf(f," %d %x %x %x \n", ia, databuffer[3+ia],databuffer[7+ia], databuffer[11+ia]);
+
             }
          }
          else if(number_of_channels = 2)
@@ -440,7 +466,7 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
 	spiRead( databuffer, 1 );
 	printf("end status %x\n", databuffer[0]);
 	
-
+    fclose(f);
     free(databuffer);
 	return 1;
 }
