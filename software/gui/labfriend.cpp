@@ -89,6 +89,45 @@ void labfriend::open_DO_file(void)
 	
 }
 
+void labfriend::open_AO_file(void)
+{
+
+   double temp_values;
+
+    QString fileName = QFileDialog::getOpenFileName(this);
+
+     QFile file(fileName);
+     if (file.open(QFile::ReadOnly))
+     {
+
+        char buf[1024];
+        qint64 lineLength;
+        char * pEnd;
+        int i=0;
+
+
+        printf("startfile \n");
+        while( !file.atEnd() )
+        {
+            lineLength = file.readLine(buf, sizeof(buf));
+
+            if (lineLength != -1)
+            {
+            // the line is available in buf
+              temp_values = strtod (buf, NULL);
+              aovalue[i] = (uint8_t)round(temp_values*RFDACMAX/RFDACREF);
+              printf("byte %d is %f %d\n", i, temp_values, aovalue[i]);
+              i++;
+
+            }
+
+        }
+        printf("i is %d \n", i);
+        aosize = i;
+    }
+
+}
+
 void labfriend::open_CalibrationFile(void)
 {
 
@@ -272,8 +311,8 @@ void labfriend::get_audio_data()
 void labfriend::byte2FloatingBits(uint8_t *inputByte)
 {
     uint32_t i;
-    const int stepSize = 0.15625;
-    const int channelOffset = 0.062500;
+    const double stepSize = 0.15625;
+    const double channelOffset = 0.062500;
     digitalBit0data.resize(scopeBufferSize);
     digitalBit1data.resize(scopeBufferSize);
     digitalBit2data.resize(scopeBufferSize);
@@ -284,6 +323,7 @@ void labfriend::byte2FloatingBits(uint8_t *inputByte)
     digitalBit7data.resize(scopeBufferSize);
     for(i=0; i < scopeBufferSize; i++)
     {
+        printf("%x \n", inputByte[i]);
         if( i < 8)
         {
             digitalBit0data[i] = 0.0;
@@ -297,14 +337,15 @@ void labfriend::byte2FloatingBits(uint8_t *inputByte)
         }
         else
         {
-            digitalBit0data[i] = ((inputByte[i-8] & 0x01) * stepSize);
-            digitalBit1data[i] = (((inputByte[i-8] >> 1) & 0x01) * stepSize) + (channelOffset+stepSize)*1;
-            digitalBit2data[i] = (((inputByte[i-8] >> 2) & 0x01) * stepSize) + (channelOffset+stepSize)*2;
-            digitalBit3data[i] = (((inputByte[i-8] >> 3) & 0x01) * stepSize) + (channelOffset+stepSize)*3;
-            digitalBit4data[i] = (((inputByte[i-8] >> 4) & 0x01) * stepSize) + (channelOffset+stepSize)*4;
-            digitalBit5data[i] = (((inputByte[i-8] >> 5) & 0x01) * stepSize) + (channelOffset+stepSize)*5;
-            digitalBit6data[i] = (((inputByte[i-8] >> 6) & 0x01) * stepSize) + (channelOffset+stepSize)*6;
-            digitalBit7data[i] = (((inputByte[i-8] >> 7) & 0x01) * stepSize) + (channelOffset+stepSize)*7;
+
+            digitalBit0data[i] = (float(inputByte[i-8] & 0x01) * stepSize);
+            digitalBit1data[i] = (float((inputByte[i-8] >> 1) & 0x01) * stepSize) + (channelOffset+stepSize)*1;
+            digitalBit2data[i] = (float((inputByte[i-8] >> 2) & 0x01) * stepSize) + (channelOffset+stepSize)*2;
+            digitalBit3data[i] = (float((inputByte[i-8] >> 3) & 0x01) * stepSize) + (channelOffset+stepSize)*3;
+            digitalBit4data[i] = (float((inputByte[i-8] >> 4) & 0x01) * stepSize) + (channelOffset+stepSize)*4;
+            digitalBit5data[i] = (float((inputByte[i-8] >> 5) & 0x01) * stepSize) + (channelOffset+stepSize)*5;
+            digitalBit6data[i] = (float((inputByte[i-8] >> 6) & 0x01) * stepSize) + (channelOffset+stepSize)*6;
+            digitalBit7data[i] = (float((inputByte[i-8] >> 7) & 0x01) * stepSize) + (channelOffset+stepSize)*7;
         }
     }
 }
@@ -493,45 +534,6 @@ void labfriend::ScopeRun(void)
         }
 
          GenerateAudioLast = GenerateAudioEnable;
-
-
-        if(doEnabled)
-        {
-            if( doUpdateTimer < doUpdateTimerMax )
-            {
-                doUpdateTimer++;
-            }
-            else
-            {
-                if(doFileEnable)
-                {
-                    if( dobyteCounter < dosize )
-                    {
-
-                        digitalOutputByte = dobit07[dobyteCounter];
-                        dobyteCounter++;
-                    }
-                    else
-                    {
-                        if( doLoopFile == false )
-                        {
-                            doFileEnable = false;
-                            superplot.ui.cbDOfile->setCheckState(Qt::Unchecked);
-                        }
-                        dobyteCounter = 0;
-                    }
-                }
-                if( digitalOutputByte != digitalOutputByte_last )
-                {
-                    set_digital_out(digitalOutputByte);
-                     printf("Output Byte %d %x %d\n", dobyteCounter, digitalOutputByte, dosize);
-                }
-                digitalOutputByte_last = digitalOutputByte;
-                doUpdateTimer = 0;
-
-            }
-        }
-
 
     }
    superplot.timerA->start();
@@ -794,7 +796,7 @@ void labfriend::setVoltDiv(uint8_t channel, QString qsSource)
     }
     else if( !qsSource.compare("500mV/div")  )
     {
-        set_gain(channel, GAINx2 );
+        set_gain(channel, GAINx4 );
         set_Attenuation(channel, ON);
         ADC1OffsetOffsetError = vdiv20mvOffsetErrorCH1;
         ADC2OffsetOffsetError = vdiv20mvOffsetErrorCH2;
@@ -802,7 +804,7 @@ void labfriend::setVoltDiv(uint8_t channel, QString qsSource)
     }
     else if( !qsSource.compare("1V/div")  )
     {
-        set_gain(channel, GAINx4 );
+        set_gain(channel, GAINx2 );
         set_Attenuation(channel, ON);
         ADC1OffsetOffsetError = vdiv50mvOffsetErrorCH1;
         ADC2OffsetOffsetError = vdiv50mvOffsetErrorCH2;
@@ -1341,9 +1343,32 @@ void labfriend::setIOvoltage(double tempvalue)
     digitalIOvoltage = tempvalue;
 }
 
+void labfriend::setdIrefVoltage(double tempvalue)
+{
+    digitalIrefVoltage = tempvalue;
+}
+
+void labfriend::setdIoffsetVoltage(double tempvalue)
+{
+    digitalIoffsetVoltage = tempvalue;
+}
+
+
 void labfriend::IOvoltageButton( void )
 {
     setVoltage( LAVIO , digitalIOvoltage, LAVIOOffsetGainError, LAVIOOffsetOffsetError);
+}
+
+
+void labfriend::DinVrefVoltageButton( void )
+{
+    setVoltage( LADVREF , digitalIrefVoltage, LAVIrefOffsetGainError, LAVIrefOffsetOffsetError);
+}
+
+
+void labfriend::DinOffsetVoltageButton( void )
+{
+    setVoltage( LAOFFSET , digitalIoffsetVoltage, LAVIoffsetGainError, LAVIoffsetOffsetError);
 }
 
 void labfriend::EXvoltageButton( void )
@@ -1520,14 +1545,18 @@ void labfriend::mouseReleaseAudio(QMouseEvent* event)
 
 void labfriend::setInitialCalibration(void)
 {
-    ADC1OffsetGainError = 0;
+    ADC1OffsetGainError = 1;
     ADC1OffsetOffsetError = 0;
-    ADC2OffsetGainError = 0;
+    ADC2OffsetGainError = 1;
     ADC2OffsetOffsetError = 0;
-    LAVIOOffsetGainError = 0;
+    LAVIOOffsetGainError = 1;
     LAVIOOffsetOffsetError = 0;
-    EXVOOffsetGainError = 0;
+    EXVOOffsetGainError = 1;
     EXVOOffsetOffsetError = 0;
+    LAVIrefOffsetGainError = 1.1834;
+    LAVIrefOffsetOffsetError = 0;
+    LAVIoffsetGainError = 1;
+    LAVIoffsetOffsetError = 2;
     open_CalibrationFile();
 }
 
@@ -1556,6 +1585,57 @@ void labfriend::setAudioRecRepeate(bool checked)
 }
 
 
+//AWG and DWG functions----------------------------
+
+void labfriend::setDWGrate(int dwgrate)
+{
+    dwgSampleRate = dwgrate;
+    double realSrate=1/((double)dwgrate*(1/MASATERCLKFREQ)+(1/MASATERCLKFREQ));
+    superplot.ui.tlDWGrate->setNum(realSrate);
+}
+
+void labfriend::setAWGrate(int awgrate)
+{
+    awgSampleRate = awgrate;
+    double realSrate=1/(((double)awgrate*(1/MASATERCLKFREQ)+(1/MASATERCLKFREQ))*8);
+    superplot.ui.tlAWGrate->setNum(realSrate);
+}
+
+void labfriend::dwgRunButton( void )
+{
+    uint8_t config;
+    if(dwgSingle) config=DWG_CONFIG_SINGLE; else config = DWG_CONFIG_LOOP;
+    if(dosize == 0)
+    {
+        printf("NO DATA !!!!!\n");
+        return;
+    }
+    run_dwg(config, dwgSampleRate, dosize, dobit07 );
+}
+
+void labfriend::awgRunButton( void )
+{
+    uint8_t config;
+    if(awgSingle) config=DWG_CONFIG_SINGLE; else config = DWG_CONFIG_LOOP;
+    if(aosize == 0)
+    {
+        printf("NO DATA !!!!!\n");
+        return;
+    }
+    run_awg(config, awgSampleRate, aosize, aovalue );
+}
+
+void labfriend::awgLoopFun( bool lopstat)
+{
+    awgSingle = !lopstat;
+    printf("toggled ? %x %x\n", awgSingle, lopstat);
+}
+
+void labfriend::dwgLoopFun(bool lopstat)
+{
+    dwgSingle = !lopstat;
+    printf("toggled ? %x %x\n", dwgSingle, lopstat);
+}
 
 
 void labfriend::scopeConnections(void)
@@ -1563,7 +1643,6 @@ void labfriend::scopeConnections(void)
     QObject::connect( superplot.ui.pbTrigSingle , SIGNAL(toggled(bool)), this, SLOT(singleScopeRun(bool)));
     QObject::connect( superplot.ui.pbStartStop , SIGNAL( clicked() ), this, SLOT(scopeStart()));
     QObject::connect( superplot.timerA, SIGNAL(timeout()), this, SLOT(ScopeRun()));
-    QObject::connect( superplot.ui.action_Open_Digital_Out, SIGNAL(triggered()), this, SLOT(open_DO_file()));  //May be removed later
     QObject::connect( superplot.ui.pbRecord , SIGNAL(toggled(bool)), this, SLOT( audioToggleReact(bool) ) );
     QObject::connect( superplot.ui.cmbTraceSource1, SIGNAL( currentIndexChanged(QString)), this, SLOT(setTraceSource1(QString)));
     QObject::connect( superplot.ui.cmbTraceSource2, SIGNAL( currentIndexChanged(QString)), this, SLOT(setTraceSource2(QString)));
@@ -1587,22 +1666,19 @@ void labfriend::scopeConnections(void)
     QObject::connect( superplot.ui.cbContinous , SIGNAL(toggled(bool)), this, SLOT( dataLoggerChekerbox(bool) ) );
     QObject::connect( superplot.ui.pbMeasure , SIGNAL( clicked() ), this, SLOT(getLoggerData()));
     QObject::connect( superplot.ui.dbsSampleRate , SIGNAL( valueChanged(double) ), this, SLOT(setLoggerRate(double)));
+    //Connections of DC control values used by PWM system in FPGA---------------------------------------------------------------
     QObject::connect( superplot.ui.dbsExDC , SIGNAL( valueChanged(double) ), this, SLOT(setEXvoltage(double)));
     QObject::connect( superplot.ui.dbsDIOVoltage , SIGNAL( valueChanged(double) ), this, SLOT(setIOvoltage(double)));
+    QObject::connect( superplot.ui.dbsExDiginRef , SIGNAL( valueChanged(double) ), this, SLOT(setdIrefVoltage(double)));
+    QObject::connect( superplot.ui.dbsExDiginOffset , SIGNAL( valueChanged(double) ), this, SLOT(setdIoffsetVoltage(double)));
     QObject::connect( superplot.ui.pbExDcV , SIGNAL( clicked() ), this, SLOT(EXvoltageButton()));
     QObject::connect( superplot.ui.pbDIOvoltage , SIGNAL( clicked() ), this, SLOT(IOvoltageButton()));
+    QObject::connect( superplot.ui.pbExDCDref , SIGNAL( clicked() ), this, SLOT(DinVrefVoltageButton()));
+    QObject::connect( superplot.ui.pbExDCDoffset , SIGNAL( clicked() ), this, SLOT(DinOffsetVoltageButton()));
+    //------------------------------------------------------------------------------------------------------------------------
     QObject::connect( superplot.ui.cbLoggerToFile , SIGNAL(toggled(bool)), this, SLOT( dataLoggerFileChekerbox(bool) ) );
-    QObject::connect( superplot.ui.cbBit0 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut0(bool)) );
-    QObject::connect( superplot.ui.cbBit1 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut1(bool)) );
-    QObject::connect( superplot.ui.cbBit2 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut2(bool)) );
-    QObject::connect( superplot.ui.cbBit3 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut3(bool)) );
-    QObject::connect( superplot.ui.cbBit4 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut4(bool)) );
-    QObject::connect( superplot.ui.cbBit5 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut5(bool)) );
-    QObject::connect( superplot.ui.cbBit6 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut6(bool)) );
-    QObject::connect( superplot.ui.cbBit7 , SIGNAL(toggled(bool)), this, SLOT( setDigiOut7(bool)) );
-    QObject::connect( superplot.ui.cbDOfile , SIGNAL(toggled(bool)), this, SLOT( setFileDOenable(bool)) );
+
     QObject::connect( superplot.ui.cbDOloopfile , SIGNAL(toggled(bool)), this, SLOT( setFileLoop(bool)));
-    QObject::connect( superplot.ui.dbsDORATE , SIGNAL( valueChanged(double) ), this, SLOT(setDOrate(double)));
     QObject::connect( superplot.ui.cmbAudioInputConfig, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioConfig(QString)));
     QObject::connect( superplot.ui.cmbSampleRate, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioSampleRate(QString)));
     QObject::connect( superplot.ui.dbsFrequency1 , SIGNAL( valueChanged(double) ), this, SLOT(setAudioGenerateFrequency1(double)));
@@ -1619,7 +1695,15 @@ void labfriend::scopeConnections(void)
     QObject::connect( superplot.ui.qcpAudioDisplay, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(mouseReleaseAudio(QMouseEvent*)));
     QObject::connect( superplot.ui.cmbBufferSize, SIGNAL( currentIndexChanged(QString)), this, SLOT(scopeBufferSizeF(QString)));
 
-
+    //Connections for AWG and DWG
+    QObject::connect( superplot.ui.sbDOrate , SIGNAL( valueChanged(int) ), this, SLOT(setDWGrate(int)));
+    QObject::connect( superplot.ui.sbAOrate , SIGNAL( valueChanged(int) ), this, SLOT(setAWGrate(int)));
+    QObject::connect( superplot.ui.pbDOrun , SIGNAL( clicked() ), this, SLOT(dwgRunButton() ));
+    QObject::connect( superplot.ui.pbAOrun , SIGNAL( clicked() ), this, SLOT(awgRunButton()) );
+    QObject::connect( superplot.ui.cbDOloopfile , SIGNAL( toggled(bool) ), this, SLOT(dwgLoopFun(bool)) );
+    QObject::connect( superplot.ui.cbAOloopFile, SIGNAL( toggled(bool) ), this, SLOT(awgLoopFun(bool)) );
+    QObject::connect( superplot.ui.action_Open_Digital_Out, SIGNAL(triggered()), this, SLOT(open_DO_file()));
+    QObject::connect( superplot.ui.actionOpenAnalogOutput, SIGNAL(triggered()), this, SLOT(open_AO_file()));
 }
 
 void labfriend::initScopeRun(void)
@@ -1645,9 +1729,12 @@ void labfriend::initScopeRun(void)
     loggerChannel2.reserve(LOGGERMAXSIZE);
     Logxaxis.reserve(LOGGERMAXSIZE);
     dobit07 = new uint8_t[MAXDOFILESIZE];
+    aovalue = new uint8_t[MAXDOFILESIZE];
     audioLeftBuffer = new float[FifoBufferSize+1];
     audioRigthBuffer = new float[FifoBufferSize+1];
 
+    aosize = 0;
+    dosize = 0;
 
     loggersample = 0;
     //Set Master Timer for the system
@@ -1721,9 +1808,6 @@ void labfriend::initScopeRun(void)
     superplot.ui.dbsDIOVoltage->setValue(1.8);
     superplot.ui.dbsExDC->setValue(1.0);
 
-    superplot.ui.dbsDORATE->setDecimals(3);
-    superplot.ui.dbsDORATE->setRange(systemTimerRate, 10.0);
-    superplot.ui.dbsDORATE->setValue(0.1);
 
     superplot.ui.dsbTimeAudioRec->setDecimals(3);
     superplot.ui.dsbTimeAudioRec->setRange(0.001, 10.0);
@@ -1781,6 +1865,11 @@ void labfriend::initScopeRun(void)
     zoomYaxisAudio = false;
     audioRecFinished = true;
     scopeBufferSize = scopeBufferSizeV/3;
+
+    superplot.ui.sbAOrate->setValue(0);
+    superplot.ui.sbDOrate->setValue(0);
+    superplot.ui.cbAOloopFile->setCheckState(Qt::Checked);
+    superplot.ui.cbDOloopfile->setCheckState(Qt::Checked);
 }
 
 

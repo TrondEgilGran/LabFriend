@@ -7,6 +7,8 @@
 #define addr74595		4
 #define addrdigitalOut  5
 #define addrDCIO		0
+#define addrDWG         0x18
+#define addrAWG         8
 #define noCommand		0xFF
 #define READ			0x80
 #define WRITE			0x00

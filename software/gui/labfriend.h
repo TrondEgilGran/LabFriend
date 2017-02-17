@@ -48,6 +48,8 @@ public:
     QVector<double> audioData2;
     uint8_t *dobit07;
     uint32_t dosize;
+    uint8_t *aovalue;
+    uint32_t aosize;
     float *audioLeftBuffer;
     float *audioRigthBuffer;
     void open_CalibrationFile(void);
@@ -65,7 +67,6 @@ public slots:
 	
     void mouseRelease(QMouseEvent* event);
     void mouseReleaseAudio(QMouseEvent* event);
-    void open_DO_file(void);
     void get_audio_data(void);
     void ScopeRun(void);
     void singleScopeRun(bool checked);
@@ -95,6 +96,10 @@ public slots:
     void setIOvoltage(double tempvalue);
     void EXvoltageButton( void );
     void IOvoltageButton( void );
+    void DinVrefVoltageButton( void );
+    void DinOffsetVoltageButton( void );
+    void setdIrefVoltage(double tempvalue);
+    void setdIoffsetVoltage(double tempvalue);
     void dataLoggerFileChekerbox(bool checked);
     void setDigiOut0(bool checked);
     void setDigiOut1(bool checked);
@@ -121,7 +126,15 @@ public slots:
     void setAudioRecRepeate(bool checked);
     void setAudioAnalysis(QString qsSource);
     void scopeBufferSizeF(QString qsSource);
-
+    //AWG and DWG functions
+    void setDWGrate(int dwgrate);
+    void setAWGrate(int awgrate);
+    void dwgRunButton( void );
+    void awgRunButton( void );
+    void awgLoopFun(bool lopstat);
+    void dwgLoopFun( bool lopstat);
+    void open_AO_file(void);
+    void open_DO_file(void);
 
 signals:
 	void replotdatanow();
@@ -186,6 +199,10 @@ private:
     double LAVIOOffsetOffsetError;
     double EXVOOffsetGainError;
     double EXVOOffsetOffsetError;
+    double LAVIrefOffsetGainError;
+    double LAVIrefOffsetOffsetError;
+    double LAVIoffsetGainError;
+    double LAVIoffsetOffsetError;
     double scopeVdiv[2];
     uint32_t scopeOffsetValue;
     double scopeSampleRate;
@@ -198,6 +215,8 @@ private:
     uint8_t loggerGainCH2;
     double EXvoltage;
     double digitalIOvoltage;
+    double digitalIrefVoltage;
+    double digitalIoffsetVoltage;
     bool dataLoggertoFile;
     uint8_t digitalOutputByte;
     uint8_t digitalOutputByte_last;
@@ -239,6 +258,13 @@ private:
     const int audioAnalysisType_time=0;
     const int audioAnalysisType_frequency=1;
     uint32_t scopeBufferSizeV=18432;
+
+    //AWG and DWG signals
+    uint16_t awgSampleRate;
+    uint16_t dwgSampleRate;
+    bool awgSingle;
+    bool dwgSingle;
+
 
 };
 

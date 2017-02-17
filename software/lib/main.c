@@ -96,8 +96,11 @@ int main(void)
                           4, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
 		          0,
                           255,
-		          1);
-	sleep(1);
+		          1,
+			  18432
+			);
+	sleep(10);
+	
 	new_read_ram( );
 			
 //	setVoltage(HSADCOFFSET0, -2.1, 0, 0);

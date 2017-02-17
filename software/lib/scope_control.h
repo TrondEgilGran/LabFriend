@@ -134,6 +134,11 @@
 
 
 
+#define DWG_CONFIG_SINGLE 0x05
+#define DWG_CONFIG_DIRECT 0x03
+#define DWG_CONFIG_LOOP   0x01
+
+
 int set_gain( uint8_t channel, uint8_t gain);
 int set_ACDC( uint8_t channel, uint8_t acdc);
 int set_Attenuation( uint8_t channel, uint8_t attenuation);
@@ -158,5 +163,6 @@ int new_read_ram(void);
 
 int scope_read_trigger(void);
 
-
+int run_awg(uint8_t mode, uint16_t sample_rate, uint16_t buffersize, uint8_t *datain);
+int run_dwg(uint8_t mode, uint16_t sample_rate, uint16_t buffersize, uint8_t *datain);
 

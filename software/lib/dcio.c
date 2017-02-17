@@ -39,20 +39,21 @@ int setVoltage(uint8_t channel, float voltage, float gainerror, float offset)
     float pwmov, zeerooffset;
 
     zeerooffset = -(VREFL+ (VREFT-VREFL)/2);
+    voltage = voltage*gainerror + offset;
 
     if( (channel == HSADCOFFSET0) || (channel == HSADCOFFSET1) || (channel == LAOFFSET) )
 	{
         pwmov = (-OFFSETRG/OFFSETRFB)*(zeerooffset+voltage-VREFL)+VREFL;
-        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE+gainerror)*pwmov + offset  );
+        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE)*pwmov  );
 	}
     else if(channel == LADVREF)
     {
-        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE+gainerror)*voltage + offset  );
+        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE)*voltage  );
     }
 	else
 	{
         pwmov = voltage/(1+VORFB/VORG);
-        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE+gainerror)*pwmov + offset  );
+        pwmval = (uint16_t) round( PWMMAX-(PWMMAX/PWMVOLTAGE)*pwmov  );
 	}
 	databuffer[0] = channel;
     databuffer[1] = 0x00ff & (pwmval >> 8);

@@ -13,6 +13,8 @@
 #define OFFSETRG        19700.0
 #define VORFB           10000.0
 #define VORG            12700.0
+#define RFDACREF        5.0
+#define RFDACMAX        255.0
 
 #define PWMMAX          0xFFFF
 

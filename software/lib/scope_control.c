@@ -121,6 +121,7 @@ int set_gain( uint8_t channel, uint8_t gain)
 	
 }
 
+//Keep for later use when using direct buffer digital out
 int set_digital_out( uint8_t outputByte)
 {
     uint8_t databuffer[3];
@@ -128,6 +129,98 @@ int set_digital_out( uint8_t outputByte)
     spiCommand( WRITE, addrdigitalOut, 1 );
     spiWrite( databuffer, 1 );
     return 1;
+}
+//DWG Config //FPGA
+//Byte 0 Config
+//bit0 - Enable 1=enable 0=diasble
+//bit1 - Direct buffer 1=just one byte data, 0=data with specific buffersize
+//bit2 - Single burst 1=single burst 0=loop data
+//bit3 - reserved
+//bit4 - reserved
+//bit7-5 - buffersize bit 10-8
+//-------------------------------------
+//Byte 1 Buffersize/data
+//If direct buffer = 1 data here else
+//bit7-0 buffersize 7-0
+//-------------------------------------
+//Byte 2
+//bit 2-0 samplerate 10-8
+//-------------------------------------
+//Byte 3
+//bit7-0 samplerate 7-0
+//----------------------------------
+//Byte 4....buffersize
+//DATA
+
+int run_dwg(uint8_t mode, uint16_t sample_rate, uint16_t buffersize, uint8_t *datain)
+{
+    int i;
+    uint8_t *databuffer;
+    uint16_t tempbuffsize = buffersize-1;
+    databuffer = (uint8_t *) malloc(buffersize+4);
+
+    databuffer[0] = mode | (tempbuffsize >> 3)&0x00E0;
+    databuffer[1] = tempbuffsize&0x00FF;
+    databuffer[2] = (sample_rate >> 8)&0x0007;
+    databuffer[3] = (sample_rate)&0x00ff;
+    printf("DWG CONF %x %x %x %x \n", databuffer[0], databuffer[1], databuffer[2], databuffer[3]);
+    for(i=0; i < buffersize; i++)
+    {
+        databuffer[i+4] = datain[i];
+        printf("DWG DO %x \n", databuffer[i+4]);
+    }
+
+    spiCommand(WRITE, addrDWG, buffersize+4);
+    spiWrite(databuffer,buffersize+4);
+
+    free(databuffer);
+
+}
+
+//AWG COnfig
+//Byte 0 Config
+//bit0 - Enable 1=enable 0=diasble
+//bit1 - Direct buffer 1=just one byte data, 0=data with specific buffersize
+//bit2 - Single burst 1=single burst 0=loop data
+//bit3 - reserved
+//bit4 - reserved
+//bit7-5 - buffersize bit 10-8
+//-------------------------------------
+//Byte 1 Buffersize/data
+//If direct buffer = 1 data here else
+//bit7-0 buffersize 7-0
+//-------------------------------------
+//Byte 2
+//bit 2-0 samplerate 10-8
+//-------------------------------------
+//Byte 3
+//bit7-0 samplerate 7-0
+//----------------------------------
+//Byte 4....buffersize
+//DATA
+
+int run_awg(uint8_t mode, uint16_t sample_rate, uint16_t buffersize, uint8_t *datain)
+{
+    int i;
+    uint8_t *databuffer;
+    uint16_t tempbuffsize = buffersize-1;
+    databuffer = (uint8_t *) malloc(buffersize+4);
+
+    databuffer[0] = mode | (tempbuffsize >> 3)&0x00E0;
+    databuffer[1] = tempbuffsize&0x00FF;
+    databuffer[2] = (sample_rate >> 8)&0x0007;
+    databuffer[3] = (sample_rate)&0x00ff;
+    printf("AWG CONF %x %x %x %x \n", databuffer[0], databuffer[1], databuffer[2], databuffer[3]);
+    for(i=0; i < buffersize; i++)
+    {
+        databuffer[i+4] = datain[i];
+    }
+
+    spiCommand(WRITE, addrAWG, buffersize+4);
+    spiWrite(databuffer,buffersize+4);
+
+    free(databuffer);
+
 }
 
 int set_ACDC( uint8_t channel, uint8_t acdc)
@@ -397,18 +490,18 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
         {
             for( ia = 0; ia < min_buffersize; ia=ia+12)
             {
-                *(ram_group_0 + ramadress)   = databuffer[0+ia];
-                *(ram_group_0 + ramadress+1) = databuffer[1+ia];
-                *(ram_group_0 + ramadress+2) = databuffer[2+ia];
-                *(ram_group_0 + ramadress+3) = databuffer[3+ia];
-                *(ram_group_1 + ramadress)   = databuffer[4+ia];
-                *(ram_group_1 + ramadress+1) = databuffer[5+ia];
-                *(ram_group_1 + ramadress+2) = databuffer[6+ia];
-                *(ram_group_1 + ramadress+3) = databuffer[7+ia];
-                *(ram_group_2 + ramadress)   = databuffer[8+ia];
-                *(ram_group_2 + ramadress+1) = databuffer[9+ia];
-                *(ram_group_2 + ramadress+2) = databuffer[10+ia];
-                *(ram_group_2 + ramadress+3) = databuffer[11+ia];
+                *(ram_group_0 + ramadress+3)   = databuffer[0+ia];
+                *(ram_group_0 + ramadress+2) = databuffer[1+ia];
+                *(ram_group_0 + ramadress+1) = databuffer[2+ia];
+                *(ram_group_0 + ramadress+0) = databuffer[3+ia];
+                *(ram_group_1 + ramadress+3)   = databuffer[4+ia];
+                *(ram_group_1 + ramadress+2) = databuffer[5+ia];
+                *(ram_group_1 + ramadress+1) = databuffer[6+ia];
+                *(ram_group_1 + ramadress+0) = databuffer[7+ia];
+                *(ram_group_2 + ramadress+3) = databuffer[8+ia];
+                *(ram_group_2 + ramadress+2) = databuffer[9+ia];
+                *(ram_group_2 + ramadress+1) = databuffer[10+ia];
+                *(ram_group_2 + ramadress+0) = databuffer[11+ia];
                 ramadress = ramadress + 4;
                 fprintf(f," %d %x %x %x \n", ia, databuffer[0+ia],databuffer[4+ia], databuffer[8+ia]);
                 fprintf(f," %d %x %x %x \n", ia, databuffer[1+ia],databuffer[5+ia], databuffer[9+ia]);
