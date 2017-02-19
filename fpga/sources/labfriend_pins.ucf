@@ -303,5 +303,7 @@ NET  "mcb3_rzq"                                  LOC = "M4" ;
 NET "global_clk" TNM_NET = "global_clk";
 TIMESPEC "TS_global_clk" = PERIOD "global_clk" 20 ns;
 
+INST "HSaqusition1/adc_a_register_*" IOB=TRUE;
+INST "HSaqusition1/adc_b_register_*" IOB=TRUE;
 
 
