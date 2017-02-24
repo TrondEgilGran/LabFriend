@@ -1,0 +1,5 @@
+HW BUGS LabFriend needs to be fixed for soldering new board
+
+1. attenuator resistsistors gives wrong attenuation attenuation, gives 25x should be 20x, so 910k=820k, 51k=130k, 39k=47k, 1k=3k
+2. Digital input offset on wrong side of series resistor.
+3. usbconnector shorts USB power.
