@@ -450,7 +450,7 @@ BEGIN
 		
 		------------------size 1
 		--Data IN
-		datain1 <= "01010011";
+		datain1 <= "11010011";
 		--Byte 0
 		--Bit 0
 		spidatain <= '1'; --Data

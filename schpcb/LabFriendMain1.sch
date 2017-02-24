@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.2.0">
+<eagle version="7.7.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -21271,13 +21271,13 @@ Source: ENG_CD_5227161_B1.pdf</description>
 <part name="R259" library="passive" deviceset="RES" device="R0603" value="470k"/>
 <part name="R260" library="passive" deviceset="RES" device="R0603" value="470k"/>
 <part name="C239" library="passive" deviceset="CAP" device="C0603" value="12pF"/>
-<part name="R261" library="passive" deviceset="RES" device="R0603" value="51k"/>
+<part name="R261" library="passive" deviceset="RES" device="R0603" value="130k"/>
 <part name="C240" library="passive" deviceset="CAP" device="C0603" value="220pF"/>
-<part name="R262" library="passive" deviceset="RES" device="R0603" value="39k"/>
+<part name="R262" library="passive" deviceset="RES" device="R0603" value="47k"/>
 <part name="GND151" library="supply1" deviceset="GND" device=""/>
 <part name="C241" library="rcl" deviceset="C-TRIMM" device="TZBX4" value="6/30"/>
-<part name="R263" library="passive" deviceset="RES" device="R0603" value="910k"/>
-<part name="R264" library="passive" deviceset="RES" device="R0603" value="1k"/>
+<part name="R263" library="passive" deviceset="RES" device="R0603" value="820k"/>
+<part name="R264" library="passive" deviceset="RES" device="R0603" value="3k"/>
 <part name="C242" library="passive" deviceset="CAP" device="C0603" value="12pF"/>
 <part name="R265" library="passive" deviceset="RES" device="R0603" value="300R"/>
 <part name="R266" library="passive" deviceset="RES" device="R0603" value="300R"/>
@@ -26732,14 +26732,12 @@ Source: ENG_CD_5227161_B1.pdf</description>
 <pinref part="GND73" gate="1" pin="GND"/>
 <pinref part="C187" gate="G$1" pin="2"/>
 <junction x="81.28" y="40.64"/>
-<pinref part="C187" gate="G$1" pin="2"/>
 </segment>
 <segment>
 <pinref part="R78" gate="G$1" pin="P$2"/>
 <pinref part="GND67" gate="1" pin="GND"/>
 <pinref part="C186" gate="G$1" pin="2"/>
 <junction x="170.18" y="68.58"/>
-<pinref part="C186" gate="G$1" pin="2"/>
 </segment>
 <segment>
 <pinref part="C94" gate="G$1" pin="1"/>

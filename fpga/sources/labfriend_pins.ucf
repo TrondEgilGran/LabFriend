@@ -50,7 +50,7 @@ NET "USBSK" CLOCK_DEDICATED_ROUTE = FALSE;
 # USBDI
 NET "USBDI" LOC = A7;
 NET "USBDI" IOSTANDARD = LVCMOS33;
-NET "USBDI" OUT_TERM = UNTUNED_50;
+#NET "USBDI" OUT_TERM = UNTUNED_50;
 # USBDO
 NET "USBDO" LOC = A9;
 NET "USBDO" IOSTANDARD = LVCMOS33;
@@ -64,6 +64,13 @@ NET "USBGPIO0" IOSTANDARD = LVCMOS33;
 NET "USBGPIO1" LOC = A10;
 NET "USBGPIO1" IOSTANDARD = LVCMOS33;
 
+
+NET "USBSK" TNM_NET = "tnm_usbsk";
+NET "USBDI" TNM_NET = "tnm_usbo";
+TIMESPEC "TS_usbsk" = PERIOD "tnm_usbsk" 33.33 ns;
+#according to ft232h datasheet the hold time should be 16.67-11=5.67ns
+#substracting pcb delay of 413ps gives 5.257nS
+TIMESPEC "TS_USBO" = FROM "tnm_usbsk" TO "tnm_usbo" 6 ns;
 
 ######### PWM outputs ########################
 #
@@ -305,5 +312,9 @@ TIMESPEC "TS_global_clk" = PERIOD "global_clk" 20 ns;
 
 INST "HSaqusition1/adc_a_register_*" IOB=TRUE;
 INST "HSaqusition1/adc_b_register_*" IOB=TRUE;
-
+#NET "ADAC" TNM_NET = "tnm_ADAC";
+#NET "global_clk_4x_b" TNM_NET = "tnm_g4";
+#NET "ADA[0]" TNM_NET = "tnm_ADCA";
+#TIMESPEC "TS_global_clk_4x" = FROM "tnm_g4" TO "tnm_ADAC" 5 ns;
+#TIMESPEC "TS_adcin" = FROM "tnm_ADCA" TO "tnm_g4" 2 ns;
 

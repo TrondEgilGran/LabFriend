@@ -45,6 +45,11 @@ void MainForm::attachCurves()
     ui.qcpDataLog->graph(0)->setPen(QPen(Qt::blue));
     ui.qcpDataLog->addGraph();
     ui.qcpDataLog->graph(1)->setPen(QPen(Qt::red));
+    ui.qcpDataLog->addGraph();
+    ui.qcpDataLog->graph(2)->setPen(QPen(Qt::green));
+    ui.qcpDataLog->addGraph();
+    ui.qcpDataLog->graph(3)->setPen(QPen(Qt::yellow));
+
 
     //Audio Display
     ui.qcpAudioDisplay->addGraph();
@@ -143,6 +148,10 @@ void MainForm::InitOPtions()
     ui.cmbGAINCH2->addItem("X2");
     ui.cmbGAINCH2->addItem("X4");
     ui.cmbGAINCH2->addItem("X8");
+    ui.cmbGAINCH3->addItem("X1");
+    ui.cmbGAINCH3->addItem("X2");
+    ui.cmbGAINCH3->addItem("X4");
+    ui.cmbGAINCH3->addItem("X8");
     ui.cmbAudioInputConfig->addItem("NORMAL");
     ui.cmbAudioInputConfig->addItem("1/10");
     ui.cmbAudioInputConfig->addItem("VREF");
@@ -176,8 +185,6 @@ void MainForm::replotNewData(double xmin, double xmax, double ymin, double ymax)
 
 void MainForm::replotLoggerData()
 {
-
-
     ui.qcpDataLog->replot();
 }
 

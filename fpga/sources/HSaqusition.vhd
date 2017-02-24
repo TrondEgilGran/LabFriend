@@ -212,8 +212,11 @@ signal debug_1, debug_2 : std_logic := '0';
 signal reset_signal : std_logic := '0';
 
 signal readcount : unsigned( 5 downto 0);
-signal ram_bl_eq : unsigned( 7 downto 0);
+signal ram_bl_eq : unsigned( ram_depth-1 downto 0);
 
+signal adc_en_del : std_logic;
+signal adc_delayed_a, adc_delayed_b,  adc_delayed_en : std_logic_vector(7 downto 0);
+signal adc_a_clock_delay_in, adc_b_clock_delay_in : std_logic;
 
 --signal testc : unsigned( 7 downto 0) := "00000000";
 
@@ -226,40 +229,6 @@ begin
 	vcc <= '1';
 	trigger_out <= ram_full;
 	
-	--  High speed clock selection using two Xilinx Global Mux Buffers
-	--
-	--   CLK_1----|-------|
-	--   CLK_2----|-------|----|------|
-	--   CLK_3-----------------|------|----CLKO
-	--   
-	--   clocksel = 1x hs_clock = 4 x msaster clock
-	--   clocksel = 00 hs_clock = master clock
-	--   clocksel = 01 hs_clock = 2 x master clock
-	--
-	------------------------------------------------------------------------------------------
-	-- BUFGMUX: Global Clock Mux Buffer
-	-- Spartan-6
-	-- Xilinx HDL Libraries Guide, version 12.4
---	BUFGMUX_inst_1 : BUFGMUX
---	generic map (
---		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
---	)
---	port map (
---		O => hs_clock, -- 1-bit output Clock buffer output
---		I0 => clock_mux_con, -- 1-bit input Clock buffer input (S=0)
---		I1 => hs_clock_4, -- 1-bit input Clock buffer input (S=1)
---		S => clocksel(1) -- 1-bit input Clock buffer select
---	);
---	BUFGMUX_inst_2 : BUFGMUX
---	generic map (
---		CLK_SEL_TYPE => "SYNC" -- Glitchles ("SYNC") or fast ("ASYNC") clock switch-over
---	)
---	port map (
---		O => clock_mux_con, -- 1-bit output Clock buffer output
---		I0 => clk, -- 1-bit input Clock buffer input (S=0)
---		I1 => hs_clock_2, -- 1-bit input Clock buffer input (S=1)
---		S => clocksel(0) -- 1-bit input Clock buffer select
---	);
 	---------------------------------------------------------------------------------------------
 hs_clock <= hs_clock_4;	
 	
@@ -279,7 +248,7 @@ hs_clock <= hs_clock_4;
 		INIT => '0', -- Sets initial state of the Q output to
 		SRTYPE => "ASYNC") -- Specifies "SYNC" or "ASYNC" set/reset
 	port map (
-		Q => adc_clk_a, -- 1-bit output data
+		Q => adc_a_clock_delay_in, -- 1-bit output data
 		C0 => hs_clock, -- 1-bit clock input
 		C1 => hs_clock_n, -- 1-bit clock input
 		CE => vcc, -- 1-bit clock enable input
@@ -294,7 +263,7 @@ hs_clock <= hs_clock_4;
 		INIT => '0', -- Sets initial state of the Q output to
 		SRTYPE => "ASYNC") -- Specifies "SYNC" or "ASYNC" set/reset
 	port map (
-		Q => adc_clk_b, -- 1-bit output data
+		Q => adc_b_clock_delay_in, -- 1-bit output data
 		C0 => hs_clock, -- 1-bit clock input
 		C1 => hs_clock_n, -- 1-bit clock input
 		CE => vcc, -- 1-bit clock enable input
@@ -309,6 +278,77 @@ hs_clock <= hs_clock_4;
 	--Use the high speed clock for the DDR user ram interface
 	ram_clock <= hs_clock;
 	---------------------------------------------------------
+	
+	
+-- IODELAY2: Input and Output Fixed or Variable Delay Element
+-- Spartan-6
+-- Xilinx HDL Libraries Guide, version 12.4
+IODELAY2_1 : IODELAY2
+generic map (
+COUNTER_WRAPAROUND => "WRAPAROUND", --"STAY_AT_LIMIT" or "WRAPAROUND"
+DATA_RATE => "SDR", --"SDR" or "DDR"
+DELAY_SRC => "ODATAIN", --"IO", "ODATAIN" or "IDATAIN"
+IDELAY2_VALUE => 0,-- Delay value when IDELAY_MODE="PCI" (0-255)
+IDELAY_MODE => "NORMAL",--"NORMAL" or "PCI"
+IDELAY_TYPE => "DEFAULT",-- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX" 
+		-- or "DIFF_PHASE_DETECTOR"
+IDELAY_VALUE => 0, --Amount of taps for fixed input delay (0-255)
+ODELAY_VALUE => 3, --Amount of taps fixed output delay (0-255)
+SERDES_MODE => "NONE",--"NONE", "MASTER" or "SLAVE"
+SIM_TAPDELAY_VALUE => 75 -- Per tap delay used for simulation in ps
+)
+port map (
+BUSY => open,-- 1-bit output Busy output after CAL
+DATAOUT => open,-- 1-bit output Delayed data output to ISERDES/input register
+DATAOUT2 => open,--1-bitoutput Delayed data output to general FPGA fabric
+DOUT => adc_clk_a,--1-bit output Delayed data output
+TOUT => open,--1-bit output Delayed 3-state output
+CAL => '0',--1-bit input Initiate calibration input
+CE => '0',--1-bit input Enable INC input
+CLK => '0',--1-bit input Clock input
+IDATAIN => '0',--1-bit input Data input (connect to top-level port or I/O buffer)
+INC => '0',--1-bit input Increment / decrement input
+IOCLK0 => '0',--1-bit input Input from the I/O clock network
+IOCLK1 => '1',--1-bit input Input from the I/O clock network
+ODATAIN => adc_a_clock_delay_in,--1-bit input Output data input from output register or OSERDES2.
+RST => '0',--1-bit input Reset to zero or 1/2 of total delay period
+T => '0'--1-bit input 3-state input signal
+);
+IODELAY2_2 : IODELAY2
+generic map (
+COUNTER_WRAPAROUND => "WRAPAROUND", --"STAY_AT_LIMIT" or "WRAPAROUND"
+DATA_RATE => "SDR", --"SDR" or "DDR"
+DELAY_SRC => "ODATAIN", --"IO", "ODATAIN" or "IDATAIN"
+IDELAY2_VALUE => 0,-- Delay value when IDELAY_MODE="PCI" (0-255)
+IDELAY_MODE => "NORMAL",--"NORMAL" or "PCI"
+IDELAY_TYPE => "DEFAULT",-- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX" 
+		-- or "DIFF_PHASE_DETECTOR"
+IDELAY_VALUE => 0, --Amount of taps for fixed input delay (0-255)
+ODELAY_VALUE => 3, --Amount of taps fixed output delay (0-255)
+SERDES_MODE => "NONE",--"NONE", "MASTER" or "SLAVE"
+SIM_TAPDELAY_VALUE => 75 -- Per tap delay used for simulation in ps
+)
+port map (
+BUSY => open,-- 1-bit output Busy output after CAL
+DATAOUT => open,-- 1-bit output Delayed data output to ISERDES/input register
+DATAOUT2 => open,--1-bitoutput Delayed data output to general FPGA fabric
+DOUT => adc_clk_b,--1-bit output Delayed data output
+TOUT => open,--1-bit output Delayed 3-state output
+CAL => '0',--1-bit input Initiate calibration input
+CE => '0',--1-bit input Enable INC input
+CLK => '0',--1-bit input Clock input
+IDATAIN => '0',--1-bit input Data input (connect to top-level port or I/O buffer)
+INC => '0',--1-bit input Increment / decrement input
+IOCLK0 => '0',--1-bit input Input from the I/O clock network
+IOCLK1 => '1',--1-bit input Input from the I/O clock network
+ODATAIN => adc_b_clock_delay_in,--1-bit input Output data input from output register or OSERDES2.
+RST => '0',--1-bit input Reset to zero or 1/2 of total delay period
+T => '0'--1-bit input 3-state input signal
+);
+-- End of IODELAY2_inst instantiation
+
+
+	
 	
 	--Communicate with master module, used to set configuration data and read back aquired data
 	masterComms: process (rst, clk, datain, addr) is
@@ -461,6 +501,7 @@ hs_clock <= hs_clock_4;
 										trigger_select <= datain( 1 downto 0);
 										trigger_edge <= datain(2);
 										manual_trigger <= datain(3);
+										adc_en_del <= datain(4);
 										combus <= "011";
 									when "011" =>
 										trigger_val <= datain;
@@ -533,11 +574,23 @@ hs_clock <= hs_clock_4;
 	end process masterComms;
 	
 	
+	
+	ram_bl <= "000000" when  ram_full = '1' else
+		  "001111" when  ram_address_counter_inc_m = "001" else
+		  "010001";
+		  
+	ram_bl_eq <= "000000000000000000111100" when ram_address_counter_inc_m = "001" else
+		     "000000000000000001000100";
+		     
+	counter_1_ram_address_count_by <= "000000000000000000000100" when  ram_full = '1' else
+					"000000000000000001000000" when ram_address_counter_inc_m = "001" else
+					"000000000000000001001000";
+	
 	-- Xilinx adder for address counter
 	-- ADDSUB_MACRO: Variable width & latency - Adder / Subtrator implemented in a DSP48E
 	-- Spartan-6
 	-- Xilinx HDL Libraries Guide, version 12.4
-	ADDSUB_MACRO_inst : ADDSUB_MACRO
+	ADDSUB_MACRO_1 : ADDSUB_MACRO
 	generic map (
 			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
 			LATENCY => 2, -- Desired clock cycle latency, 0-2
@@ -555,6 +608,27 @@ hs_clock <= hs_clock_4;
 		);
 	-- End of ADDSUB_MACRO_inst instantiation
 	
+	-- XIlinx adder for RAM stop
+	-- ADDSUB_MACRO: Variable width & latency - Adder / Subtrator implemented in a DSP48E
+	-- Spartan-6
+	-- Xilinx HDL Libraries Guide, version 12.4
+	ADDSUB_MACRO_2 : ADDSUB_MACRO
+	generic map (
+			DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
+			LATENCY => 2, -- Desired clock cycle latency, 0-2
+			WIDTH => ram_depth) -- Input / Output bus width, 1-48
+		port map (
+				CARRYOUT => open, -- 1-bit carry-out output signal
+				unsigned(RESULT) => counter_1_ram_address_stop, -- Add/sub result output, width defined by WIDTH generic
+				A => std_logic_vector(counter_1_ram_address_buffer_size), -- Input A bus, width defined by WIDTH generic
+				ADD_SUB => vcc, -- 1-bit add/sub input, high selects add, low selects subtract
+				B => std_logic_vector(counter_1_ram_address_stop_read), -- Input B bus, width defined by WIDTH generic
+				CARRYIN => gnd, -- 1-bit carry-in input
+				CE => vcc, -- 1-bit clock enable input
+				CLK =>hs_clock, -- 1-bit clock input
+				RST => rst -- 1-bit active high synchronous reset
+		);
+	-- End of ADDSUB_MACRO_inst instantiation
 	
 	-- Counters used for oscilloscope action, implimented using DSP blocks
 	--
@@ -637,6 +711,15 @@ hs_clock <= hs_clock_4;
 	trigger_out <= ram_full;
 	--.finished debug signal
 	
+        adc_delayed_en(0) <= not adc_en_del;
+        adc_delayed_en(1) <= not adc_en_del;
+        adc_delayed_en(2) <= not adc_en_del;
+        adc_delayed_en(3) <= not adc_en_del;
+        adc_delayed_en(4) <= not adc_en_del;
+        adc_delayed_en(5) <= not adc_en_del;
+        adc_delayed_en(6) <= not adc_en_del;
+        adc_delayed_en(7) <= not adc_en_del;
+	
 	--Counter 0, continous at hs_clock, capture at trigger and first counter 1 after trigger. free running
 	--counter 1, ram address counter count by buffer size, return to 0 at wanted ram size
 	--Counter 2, Start at trigger, load time offset value, count down buffer, capture Counter 1
@@ -689,8 +772,7 @@ hs_clock <= hs_clock_4;
 								counter_1_ram_address_en <= '1';
 								counter_1_ram_address_reset <= '1';
 								counter_2_trig_offset_reset <= '1';
-								counter_1_ram_address_count_by <= "000000000000000001001000";
-								counter_1_ram_address_stop <= unsigned(counter_1_ram_address_buffer_size);
+								counter_1_ram_address_stop_read <= (others => '0');
 							end if;
 							
 						when write_adc_a =>
@@ -730,32 +812,19 @@ hs_clock <= hs_clock_4;
 								ram_cmd_en_sig <= '1'; -- also used to increment ram counter
 								ram_buffer_counter <= (others => '0');
 								debug_2 <= '1';
-								if counter_2 = 0 then
-									ram_machine_1 <= idle;
-								else
+								--if counter_2 = 0 then
+								--	ram_machine_1 <= idle;
+								--else
 									ram_machine_1 <= write_adc_a;
-								end if;
+								--end if;
 							else
 								ram_buffer_counter <= ram_buffer_counter + unsigned(ram_address_counter_inc_m);
-								ram_machine_1 <= write_adc_a;
+								--ram_machine_1 <= write_adc_a;
 							end if;
 							
-							
+							ram_machine_1 <= write_adc_a;
 							ram_wr_en_sig <= '0';
 					end case;
-					
-					
-					
-					--3 byte = 18
-					--2 byte = 
-					if ram_address_counter_inc_m = "01" then
-						ram_bl <= "001111"; --fill half of the ram buffer
-						ram_bl_eq <= "00111100";
-					else
-						ram_bl <= "010001"; --fill half of the ram buffer
-						ram_bl_eq <= "01000100"; 
-					end if;
-					counter_1_ram_address_stop_read <= unsigned(counter_1_ram_address_buffer_size) + ram_bl_eq;
 					
 
 				else							--if ram is full we go to read mode
@@ -769,14 +838,12 @@ hs_clock <= hs_clock_4;
 					store_start_address <= '0';
 					ram_buffer_counter <= (others => '0');
 					ram_machine_1 <= idle;
-					ram_bl <= "000000"; --read one word at a time
 					ram_command <= "001"; --read ram data
-					counter_1_ram_address_count_by <= "000000000000000000000100";
 					case ram_read_strobe is
 						when idle =>
 							--counter_2_trig_offset_reset <= '1';  ---keep counter in reset
 							ram_read_strobe <= send_read_command;
-							counter_1_ram_address_stop <= counter_1_ram_address_stop_read;
+							counter_1_ram_address_stop_read <= ram_bl_eq;
 							ram_cmd_en_sig <= '1';	--set to read mode
 							ram_rd_en_sig <= '1';		--signal to collect next word from ram
 						when send_read_command =>  --wait for data to arrive at the output
@@ -786,7 +853,6 @@ hs_clock <= hs_clock_4;
 								combus_1 <= ram_data_read(15 downto 8);
 								combus_2 <= ram_data_read(23 downto 16);
 								combus_3 <= ram_data_read(31 downto 24);
-								--combus_3 <= std_logic_vector(counter_1(9 downto 2));
 								ram_rd_en_sig <= '0';
 								ram_data_available <= '1';
 							end if;
@@ -806,7 +872,7 @@ hs_clock <= hs_clock_4;
 			end if;
 			
 			ram_data_write <= ram_data_write_sig;
-			ram_wr_en <= ram_wr_en_sig;
+			ram_wr_en <= ram_wr_en_sig and not ram_full;
 					
 			
 			if reset_signal = '1' then

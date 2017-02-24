@@ -63,19 +63,10 @@ begin
 						trigger_serial_transfer <= '1';
 				end case;
 			elsif boot = '1' then -- Make sure relays don't start with voltage 
-				case data_state is
-					when first_byte =>
-						recieved_data( nr_of_bits-1 downto nr_of_bits-8 ) <= "00000000";
-						data_state <= second_byte;
-					when second_byte =>
-						recieved_data( nr_of_bits/2 -1 downto 0) <= "00000000";
-						data_state <= first_byte;
-						trigger_serial_transfer <= '1';
-				end case;
-				if boot_2 = '0' and serial_busy = '0' then
-					boot <= '0';
-				end if;
-				boot_2 <= '0';
+				
+				recieved_data( nr_of_bits-1 downto 0 ) <= "0000000000000000";
+				trigger_serial_transfer <= '1';
+				boot <= '0';
 			end if;
 			
 			if serial_transfer_triggered = '1' then

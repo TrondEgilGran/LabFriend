@@ -25,7 +25,6 @@ extern "C"
     #include <audio_codec.h>
     #include <scope_control.h>
     #include <dcio.h>
-    #include <board.h>
     #include <spicomm.h>
     #include <sys/time.h>
     #include <time.h>
@@ -102,7 +101,6 @@ void labfriend::open_AO_file(void)
 
         char buf[1024];
         qint64 lineLength;
-        char * pEnd;
         int i=0;
 
 
@@ -128,56 +126,7 @@ void labfriend::open_AO_file(void)
 
 }
 
-void labfriend::open_CalibrationFile(void)
-{
 
-
-     QFile file("./calibration.conf");
-     if (file.open(QFile::ReadOnly))
-     {
-
-        char buf[1024];
-        qint64 lineLength;
-        char * pEnd;
-        int i=0;
-
-
-        printf("startfile \n");
-        while( !file.atEnd() )
-        {
-            lineLength = file.readLine(buf, sizeof(buf));
-
-            if (lineLength != -1)
-            {
-            // the line is available in buf
-              if(i == 1)
-              {
-                  vdiv5mvOffsetErrorCH1 = strtod (buf, &pEnd);
-                  vdiv10mvOffsetErrorCH1 = strtod (pEnd, &pEnd);
-                  vdiv20mvOffsetErrorCH1 = strtod (pEnd, &pEnd);
-                  vdiv50mvOffsetErrorCH1 = strtod (pEnd, &pEnd);
-                  vdiv100mvOffsetErrorCH1 = strtod (pEnd, &pEnd);
-                  vdiv200mvOffsetErrorCH1 = strtod (pEnd, NULL);
-              }
-              if(i == 2)
-              {
-                  vdiv5mvOffsetErrorCH2 = strtod (buf, &pEnd);
-                  vdiv10mvOffsetErrorCH2 = strtod (pEnd, &pEnd);
-                  vdiv20mvOffsetErrorCH2 = strtod (pEnd, &pEnd);
-                  vdiv50mvOffsetErrorCH2 = strtod (pEnd, &pEnd);
-                  vdiv100mvOffsetErrorCH2 = strtod (pEnd, &pEnd);
-                  vdiv200mvOffsetErrorCH2 = strtod (pEnd, NULL);
-              }
-              i++;
-
-            }
-
-        }
-        printf("i is %d \n", i);
-        dosize = i;
-    }
-
-}
 
 void labfriend::get_audio_data()
 {
@@ -323,7 +272,6 @@ void labfriend::byte2FloatingBits(uint8_t *inputByte)
     digitalBit7data.resize(scopeBufferSize);
     for(i=0; i < scopeBufferSize; i++)
     {
-        printf("%x \n", inputByte[i]);
         if( i < 8)
         {
             digitalBit0data[i] = 0.0;
@@ -439,7 +387,7 @@ void labfriend::ScopeRun(void)
                         xmax = scopeBufferSize/scopeSampleRate;
                        // emit replotdatanow(0.0 ,xmax, 0.0, 255.0, scopeActualDiv, 32.0 );
 
-                        superplot.replotNewData(0.0 ,xmax, 0.0, 8.0 );
+                        superplot.replotNewData(0.0 ,xmax, 0.0, 8 );
                         printf("data replotted\n");
                         if( scopeSingle == false)
                         {
@@ -568,7 +516,7 @@ void labfriend::scopeStart(void)
 
     if (triggerType == trigger_automatic)
     {
-        offsetval =   scopeBufferSizeV/72 -4;
+        offsetval =   scopeBufferSizeV/72;
     }
     else
     {
@@ -581,7 +529,7 @@ void labfriend::scopeStart(void)
                   7,  //channel
                   0,
                   4, //freq 4 200MHZ 2 100MHZ 0 50 MHZ
-                  0 ,
+                  3 , //3 to invert
                   offsetval,
                   1,
                   scopeBufferSizeV,
@@ -750,83 +698,83 @@ void labfriend::setVoltDiv(uint8_t channel, QString qsSource)
     {
         set_gain(channel, GAINx40 );
         set_Attenuation(channel, OFF);
-        ADC1OffsetOffsetError = vdiv5mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv5mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv5mvOffsetError[channel];
+        ADCGainError[channel] = vdiv5mvGainError[channel];
         scopeVdiv[channel] = 5e-3;
     }
     else if( !qsSource.compare("10mV/div") )
     {
         set_gain(channel, GAINx20 );
         set_Attenuation(channel, OFF);
-        ADC1OffsetOffsetError = vdiv10mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv10mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv10mvOffsetError[channel];
+        ADCGainError[channel] = vdiv10mvGainError[channel];
         scopeVdiv[channel] = 10e-3;
     }
     else if( !qsSource.compare("20mV/div")  )
     {
         set_gain(channel, GAINx10 );
         set_Attenuation(channel, OFF);
-        ADC1OffsetOffsetError = vdiv20mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv20mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv20mvOffsetError[channel];
+        ADCGainError[channel] = vdiv20mvGainError[channel];
         scopeVdiv[channel] = 20e-3;
     }
     else if( !qsSource.compare("50mV/div")  )
     {
         set_gain(channel, GAINx4 );
         set_Attenuation(channel, OFF);
-        ADC1OffsetOffsetError = vdiv50mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv50mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv50mvOffsetError[channel];
+        ADCGainError[channel] = vdiv50mvGainError[channel];
         scopeVdiv[channel] = 50e-3;
     }
     else if( !qsSource.compare("100mV/div")  )
     {
         set_gain(channel, GAINx2 );
         set_Attenuation(channel, OFF);
-        ADC1OffsetOffsetError = vdiv100mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv100mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv100mvOffsetError[channel];
+        ADCGainError[channel] = vdiv100mvGainError[channel];
         scopeVdiv[channel] = 100e-3;
     }
     else if( !qsSource.compare("200mV/div")  )
     {
         set_gain(channel, GAINx1 );
         set_Attenuation(channel, OFF);
-        ADC1OffsetOffsetError = vdiv200mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv200mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv200mvOffsetError[channel];
+        ADCGainError[channel] = vdiv200mvGainError[channel];
         scopeVdiv[channel] = 200e-3;
     }
     else if( !qsSource.compare("500mV/div")  )
     {
         set_gain(channel, GAINx4 );
         set_Attenuation(channel, ON);
-        ADC1OffsetOffsetError = vdiv20mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv20mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv500mvOffsetError[channel];
+        ADCGainError[channel] = vdiv500mvGainError[channel];
         scopeVdiv[channel] = 500e-3;
     }
     else if( !qsSource.compare("1V/div")  )
     {
         set_gain(channel, GAINx2 );
         set_Attenuation(channel, ON);
-        ADC1OffsetOffsetError = vdiv50mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv50mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv1vOffsetError[channel];
+        ADCGainError[channel] = vdiv1vGainError[channel];
         scopeVdiv[channel] = 1.0;
     }
     else if( !qsSource.compare("2V/div")  )
     {
         set_gain(channel, GAINx1 );
         set_Attenuation(channel, ON);
-        ADC1OffsetOffsetError = vdiv100mvOffsetErrorCH1;
-        ADC2OffsetOffsetError = vdiv100mvOffsetErrorCH2;
+        ADCOffsetError[channel] = vdiv2vOffsetError[channel];
+        ADCGainError[channel] = vdiv2vGainError[channel];
         scopeVdiv[channel] = 2.0;
     }
 
-    printf("Offset VOltage, %f %f \n", ADC1OffsetOffsetError, ADC2OffsetOffsetError);
+    printf("Calib Offset VOltage, %f Gain %f \n", ADCOffsetError[channel], ADCGainError[channel]);
     if(channel == 0)
     {
-        setVoltage(HSADCOFFSET0, scopeOffsetCh1/1000.0 + ADC1OffsetOffsetError/1000.0, 0, 0);
+        setOffsetADC1(scopeOffset[channel]);
     }
     else if(channel == 1)
     {
-        setVoltage(HSADCOFFSET1, scopeOffsetCh2/1000.0 + ADC2OffsetOffsetError/1000.0, 0, 0);
+        setOffsetADC2(scopeOffset[channel]);
     }
 }
 
@@ -1219,19 +1167,19 @@ void labfriend::setLoggerGain1(QString qsTrigType)
 {
     if( !qsTrigType.compare("X1") )
     {
-        loggerGainCH1 = 0x00;
+        loggerGainCH1 = LOGGERGAIN1;
     }
     else if( !qsTrigType.compare("X2") )
     {
-        loggerGainCH1 = 0x01;
+        loggerGainCH1 = LOGGERGAIN2;
     }
     else if( !qsTrigType.compare("X4") )
     {
-        loggerGainCH1 = 0x02;
+        loggerGainCH1 = LOGGERGAIN4;
     }
     else if( !qsTrigType.compare("X8") )
     {
-        loggerGainCH1 = 0x03;
+        loggerGainCH1 = LOGGERGAIN8;
     }
 
 }
@@ -1240,19 +1188,40 @@ void labfriend::setLoggerGain2(QString qsTrigType)
 {
     if( !qsTrigType.compare("X1") )
     {
-        loggerGainCH2 = 0x00;
+        loggerGainCH2 = LOGGERGAIN1;
     }
     else if( !qsTrigType.compare("X2") )
     {
-        loggerGainCH2 = 0x01;
+        loggerGainCH2 = LOGGERGAIN2;
     }
     else if( !qsTrigType.compare("X4") )
     {
-        loggerGainCH2 = 0x02;
+        loggerGainCH2 = LOGGERGAIN4;
     }
     else if( !qsTrigType.compare("X8") )
     {
-        loggerGainCH2 = 0x03;
+        loggerGainCH2 = LOGGERGAIN8;
+    }
+
+}
+
+void labfriend::setLoggerGain3(QString qsTrigType)
+{
+    if( !qsTrigType.compare("X1") )
+    {
+        loggerGainCH3 = LOGGERGAIN1;
+    }
+    else if( !qsTrigType.compare("X2") )
+    {
+        loggerGainCH3 = LOGGERGAIN2;
+    }
+    else if( !qsTrigType.compare("X4") )
+    {
+        loggerGainCH3 = LOGGERGAIN4;
+    }
+    else if( !qsTrigType.compare("X8") )
+    {
+        loggerGainCH3 = LOGGERGAIN8;
     }
 
 }
@@ -1262,24 +1231,37 @@ void labfriend::getLoggerData( void )
     QFile file("datalogger.txt");
     loggerChannel1.resize(loggersample+1);
     loggerChannel2.resize(loggersample+1);
+    loggerChannel3.resize(loggersample+1);
+    loggerExvo.resize(loggersample+1);
+    loggerTemp.resize(loggersample+1);
+    printf("lgain %x %x %x", loggerGainCH1, loggerGainCH2, loggerGainCH3);
     loggerChannel1[loggersample]  = getVoltage(LOGGERADC0 | SINGLECONVERSION | LOGGERSPS15 | loggerGainCH1);
     loggerChannel2[loggersample]  = getVoltage(LOGGERADC1 | SINGLECONVERSION | LOGGERSPS15 | loggerGainCH2);
-
+    loggerChannel3[loggersample]  = getVoltage(LOGGERADC2 | SINGLECONVERSION | LOGGERSPS15 | loggerGainCH3);
+    loggerExvo[loggersample]      = getVoltage(LOGGERADC3 | SINGLECONVERSION | LOGGERSPS15 | LOGGERGAIN1);
+    loggerTemp[loggersample]      = getVoltage(LOGGERTEMP | SINGLECONVERSION | LOGGERSPS15 | LOGGERGAIN1);
     Logxaxis.resize(loggersample + 1);
     Logxaxis[loggersample] = loggersample;
     superplot.ui.qcpDataLog->graph(0)->setData(Logxaxis, loggerChannel1);
     superplot.ui.qcpDataLog->graph(1)->setData(Logxaxis, loggerChannel2);
+    superplot.ui.qcpDataLog->graph(2)->setData(Logxaxis, loggerChannel3);
+    superplot.ui.qcpDataLog->graph(3)->setData(Logxaxis, loggerTemp);
 
     superplot.ui.lcdCh1->display(loggerChannel1[loggersample] * 1000);
     superplot.ui.lcdCh2->display(loggerChannel2[loggersample] * 1000);
+    superplot.ui.lcdCh3->display(loggerChannel3[loggersample] * 1000);
+    superplot.ui.lcdEXVO->display(loggerExvo[loggersample] * 1000 );
+    superplot.ui.lcdTemp->display(loggerTemp[loggersample] );
 
+    superplot.ui.qcpDataLog->xAxis->setRange(0, loggersample);
     emit replotTriggerDataNow();
 
     if( dataLoggertoFile == true)
     {
         file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
         QTextStream out(&file);
-        out << QDateTime::currentMSecsSinceEpoch() << " " << loggerChannel1[loggersample] << " " << loggerChannel2[loggersample] << " " << EXvoltage << endl;
+        out << QDateTime::currentMSecsSinceEpoch() << " " << loggerChannel1[loggersample] << " " << loggerChannel2[loggersample] << " "
+            << loggerChannel3[loggersample] << " " << loggerExvo[loggersample] << " " << loggerTemp[loggersample] << endl;
         file.close();
     }
 
@@ -1293,6 +1275,8 @@ void labfriend::getLoggerData( void )
     }
 
 }
+
+
 
 void labfriend::setTrigSource(QString qsSource)
 {
@@ -1315,16 +1299,28 @@ void labfriend::setTrigSource(QString qsSource)
     triggerValue = set_trigger_voltage(triggerSource, superplot.ui.dbsTriggerLevel->value()/1000);
 }
 
+
+
 void labfriend::setOffsetADC1(double offsetVoltage)
 {
-    scopeOffsetCh1 = offsetVoltage;
-    setVoltage(HSADCOFFSET0, scopeOffsetCh1/1000.0 + ADC1OffsetOffsetError/1000.0, 0, 0);
+    double attenuator = 1;
+    if (scopeVdiv[0] > 201e-3)
+    {
+        attenuator = 10;
+    }
+    scopeOffset[0] = offsetVoltage;
+    setVoltage(HSADCOFFSET0, scopeOffset[0]/(attenuator*1000.0), ADCGainError[0], ADCOffsetError[0]/1000.0);
 }
 
 void labfriend::setOffsetADC2(double offsetVoltage)
 {
-    scopeOffsetCh2 = offsetVoltage;
-    setVoltage(HSADCOFFSET1, scopeOffsetCh2/1000.0 + ADC2OffsetOffsetError/1000.0, 0, 0);
+    double attenuator  = 1;
+    if (scopeVdiv[1] > 201e-3)
+    {
+        attenuator = 10;
+    }
+    scopeOffset[1] = offsetVoltage;
+    setVoltage(HSADCOFFSET1, scopeOffset[1]/(attenuator*1000.0), ADCGainError[1], ADCOffsetError[1]/1000.0);
 }
 
 void labfriend::setOffsetTime(double offsetTime)
@@ -1542,24 +1538,6 @@ void labfriend::mouseReleaseAudio(QMouseEvent* event)
 
 
 
-
-void labfriend::setInitialCalibration(void)
-{
-    ADC1OffsetGainError = 1;
-    ADC1OffsetOffsetError = 0;
-    ADC2OffsetGainError = 1;
-    ADC2OffsetOffsetError = 0;
-    LAVIOOffsetGainError = 1;
-    LAVIOOffsetOffsetError = 0;
-    EXVOOffsetGainError = 1;
-    EXVOOffsetOffsetError = 0;
-    LAVIrefOffsetGainError = 1.1834;
-    LAVIrefOffsetOffsetError = 0;
-    LAVIoffsetGainError = 1;
-    LAVIoffsetOffsetError = 2;
-    open_CalibrationFile();
-}
-
 void labfriend::setLoggerRate(double loggerSampleRate)
 {
     dataLoggerRate = loggerSampleRate;
@@ -1660,12 +1638,15 @@ void labfriend::scopeConnections(void)
     QObject::connect( superplot.ui.dbsTimeOffset , SIGNAL( valueChanged(double) ), this, SLOT(setOffsetTime(double)));
     QObject::connect( superplot.ui.dbsTriggerLevel , SIGNAL( valueChanged(double) ), this, SLOT(setTriggerValue(double)));
     QObject::connect( superplot.ui.cbFastRamRead , SIGNAL(toggled(bool)), this, SLOT( setFastRead(bool)) );
+    //datalogger an dc measurement
     QObject::connect( superplot.ui.cmbGAINCH1, SIGNAL( currentIndexChanged(QString)), this, SLOT(setLoggerGain1(QString)));
     QObject::connect( superplot.ui.cmbGAINCH2, SIGNAL( currentIndexChanged(QString)), this, SLOT(setLoggerGain2(QString)));
+    QObject::connect( superplot.ui.cmbGAINCH3, SIGNAL( currentIndexChanged(QString)), this, SLOT(setLoggerGain3(QString)));
     QObject::connect( this, SIGNAL(replotTriggerDataNow()), &superplot, SLOT(replotLoggerData()));
     QObject::connect( superplot.ui.cbContinous , SIGNAL(toggled(bool)), this, SLOT( dataLoggerChekerbox(bool) ) );
     QObject::connect( superplot.ui.pbMeasure , SIGNAL( clicked() ), this, SLOT(getLoggerData()));
     QObject::connect( superplot.ui.dbsSampleRate , SIGNAL( valueChanged(double) ), this, SLOT(setLoggerRate(double)));
+
     //Connections of DC control values used by PWM system in FPGA---------------------------------------------------------------
     QObject::connect( superplot.ui.dbsExDC , SIGNAL( valueChanged(double) ), this, SLOT(setEXvoltage(double)));
     QObject::connect( superplot.ui.dbsDIOVoltage , SIGNAL( valueChanged(double) ), this, SLOT(setIOvoltage(double)));
@@ -1727,6 +1708,9 @@ void labfriend::initScopeRun(void)
     xaxis.reserve(nrOfRamAddresses);
     loggerChannel1.reserve(LOGGERMAXSIZE);
     loggerChannel2.reserve(LOGGERMAXSIZE);
+    loggerChannel3.reserve(LOGGERMAXSIZE);
+    loggerExvo.reserve(LOGGERMAXSIZE);
+    loggerTemp.reserve(LOGGERMAXSIZE);
     Logxaxis.reserve(LOGGERMAXSIZE);
     dobit07 = new uint8_t[MAXDOFILESIZE];
     aovalue = new uint8_t[MAXDOFILESIZE];
@@ -1870,6 +1854,10 @@ void labfriend::initScopeRun(void)
     superplot.ui.sbDOrate->setValue(0);
     superplot.ui.cbAOloopFile->setCheckState(Qt::Checked);
     superplot.ui.cbDOloopfile->setCheckState(Qt::Checked);
+
+    loggerGainCH1 = LOGGERGAIN1;
+    loggerGainCH2 = LOGGERGAIN1;
+    loggerGainCH3 = LOGGERGAIN1;
 }
 
 

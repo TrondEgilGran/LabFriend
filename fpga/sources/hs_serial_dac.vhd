@@ -219,9 +219,9 @@ begin
 	--Clock output needs to be buffered by DDR buffer otherwise place and route will fail since ouptu pins are not on global clock net
 	ODDR2_inst_1 : ODDR2
 	generic map(
-		DDR_ALIGNMENT => "NONE", -- Sets output alignment to "NONE", "C0", "C1"
+		DDR_ALIGNMENT => "C0", -- Sets output alignment to "NONE", "C0", "C1"
 		INIT => '0', -- Sets initial state of the Q output to
-		SRTYPE => "SYNC") -- Specifies "SYNC" or "ASYNC" set/reset
+		SRTYPE => "ASYNC") -- Specifies "SYNC" or "ASYNC" set/reset
 	port map (
 		Q => sck, -- 1-bit output data
 		C0 => hs_clk, -- 1-bit clock input

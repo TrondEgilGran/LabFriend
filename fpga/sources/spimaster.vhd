@@ -121,20 +121,7 @@ begin
 	end if;
 end process pSPIR;
 
---pSPIW: process(spiclk, rst, spics) is
---begin
---	if (rst = '1') then
---		newRDdataflagM1 <= '0';
---	elsif falling_edge(spiclk) then
---		if spibitcounter = 0 and commandReg(7) = '1' then
---			spiregout <= datainreg;
---			newRDdataflagM1 <= '1';
---		else
---			spiregout <= spiregout(6 downto 0) & '0';
---			newRDdataflagM1 <= '0';
---		end if;
---	end if;
---end process pSPIW;
+
 spidataout <= spiregout(7);
 
 pReclocker : process(clk, rst)
@@ -157,7 +144,7 @@ begin
 	end if;
 end process pReclocker;
 newdataflag <= (not newdataflagM1D4) and newdataflagM1D3;
-newRDdataflag <= (not newRDdataflagM1D4) and newRDdataflagM1D3;
+newRDdataflag <= (not newRDdataflagM1D3) and newRDdataflagM1D2;
 
 
 

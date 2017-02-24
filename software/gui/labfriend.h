@@ -7,6 +7,7 @@
 #include "mainform.h"
 #include <cstdint>
 #include "fft/FFTReal.h"
+#include "board.h"
 
 #define LOGGERMAXSIZE 1024
 #define MAXDOFILESIZE 100000
@@ -89,6 +90,7 @@ public slots:
     void setTimeDiv(QString qsSource);
     void setLoggerGain1(QString qsTrigType);
     void setLoggerGain2(QString qsTrigType);
+    void setLoggerGain3(QString qsTrigType);
     void getLoggerData( void );
     void dataLoggerChekerbox(bool checked);
     void setLoggerRate(double loggerSampleRate);
@@ -159,8 +161,7 @@ private:
     uint32_t audioUpdateTimerMax;
     double audioSampleRate;
     double scopeTimeOffsetFormat;
-    double scopeOffsetCh1;
-    double scopeOffsetCh2;
+    double scopeOffset[NumberOfScopeChannels];
     bool zoomYaxis;
     bool zoomYaxisAudio;
 
@@ -179,22 +180,28 @@ private:
     uint8_t triggerSource;
     uint8_t srateDiv;
     uint8_t srateMult;
-    double ADC1OffsetGainError;
-    double ADC1OffsetOffsetError;
-    double ADC2OffsetGainError;
-    double ADC2OffsetOffsetError;
-    double vdiv5mvOffsetErrorCH1;
-    double vdiv10mvOffsetErrorCH1;
-    double vdiv20mvOffsetErrorCH1;
-    double vdiv50mvOffsetErrorCH1;
-    double vdiv100mvOffsetErrorCH1;
-    double vdiv200mvOffsetErrorCH1;
-    double vdiv5mvOffsetErrorCH2;
-    double vdiv10mvOffsetErrorCH2;
-    double vdiv20mvOffsetErrorCH2;
-    double vdiv50mvOffsetErrorCH2;
-    double vdiv100mvOffsetErrorCH2;
-    double vdiv200mvOffsetErrorCH2;
+    //Scope Calibration
+    double ADCGainError[NumberOfScopeChannels];
+    double ADCOffsetError[NumberOfScopeChannels];
+    double vdiv5mvOffsetError[NumberOfScopeChannels];
+    double vdiv10mvOffsetError[NumberOfScopeChannels];
+    double vdiv20mvOffsetError[NumberOfScopeChannels];
+    double vdiv50mvOffsetError[NumberOfScopeChannels];
+    double vdiv100mvOffsetError[NumberOfScopeChannels];
+    double vdiv200mvOffsetError[NumberOfScopeChannels];
+    double vdiv500mvOffsetError[NumberOfScopeChannels];
+    double vdiv1vOffsetError[NumberOfScopeChannels];
+    double vdiv2vOffsetError[NumberOfScopeChannels];
+    double vdiv5mvGainError[NumberOfScopeChannels];
+    double vdiv10mvGainError[NumberOfScopeChannels];
+    double vdiv20mvGainError[NumberOfScopeChannels];
+    double vdiv50mvGainError[NumberOfScopeChannels];
+    double vdiv100mvGainError[NumberOfScopeChannels];
+    double vdiv200mvGainError[NumberOfScopeChannels];
+    double vdiv500mvGainError[NumberOfScopeChannels];
+    double vdiv1vGainError[NumberOfScopeChannels];
+    double vdiv2vGainError[NumberOfScopeChannels];
+    //PWM Calibration
     double LAVIOOffsetGainError;
     double LAVIOOffsetOffsetError;
     double EXVOOffsetGainError;
@@ -203,6 +210,7 @@ private:
     double LAVIrefOffsetOffsetError;
     double LAVIoffsetGainError;
     double LAVIoffsetOffsetError;
+
     double scopeVdiv[2];
     uint32_t scopeOffsetValue;
     double scopeSampleRate;
@@ -210,9 +218,13 @@ private:
     uint8_t triggerValue;
     QVector<double> loggerChannel1;
     QVector<double> loggerChannel2;
+    QVector<double> loggerChannel3;
+    QVector<double> loggerExvo;
+    QVector<double> loggerTemp;
     int loggersample;
-    uint8_t loggerGainCH1;
-    uint8_t loggerGainCH2;
+    uint16_t loggerGainCH1;
+    uint16_t loggerGainCH2;
+    uint16_t loggerGainCH3;
     double EXvoltage;
     double digitalIOvoltage;
     double digitalIrefVoltage;

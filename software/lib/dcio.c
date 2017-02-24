@@ -68,47 +68,75 @@ int setVoltage(uint8_t channel, float voltage, float gainerror, float offset)
 	
 }
 
-float getVoltage(uint8_t config)
+
+
+float getVoltage(uint16_t config)
 {
 	uint16_t adcraw;
 	float adcvalue;
 	uint8_t databuffer[3];
-    uint8_t gainDig;
-    float gain;
+    uint16_t gainDig;
+    float gain, ref;
+    config = config | 0x0002;
+    databuffer[0] = 0x05;
+    databuffer[1] = ((config >> 8)&0x00FF );
+    databuffer[2] = (0x00FF&config);
+    spiCommand(WRITE, addrSPI, 3 );
+    spiWrite(databuffer, 3);
+    usleep(15000);
+    //databuffer[2] = 0x00FF&config;
+    printf("config %x %x %x \n",config, databuffer[1], databuffer[2]);
+    spiCommand(WRITE, addrSPI, 3 );
+    spiWrite(databuffer, 3);
+    usleep(15000);
+    spiCommand(READ, addrSPI, 3 );
+    spiRead(databuffer,3);
 
-	databuffer[0] = config;
-/*
-	spiCommand( WRITE, addrI2Cdac | i2cadcConfig, 1 );
-	spiWrite( databuffer, 1 );
-    usleep(30000);
-	spiCommand( WRITE, addrI2Cdac | i2cdataread, 1 );
-	spiWrite( databuffer, 1 );
-    usleep(30000);
-	spiCommand( READ, addrI2Cdac, 2);
-    usleep(20000);
-    spiRead(databuffer, 2);*/
 
-    gainDig = 0x03 & config;
+
+    gainDig = 0x0E00 & config;
     if (gainDig == LOGGERGAIN1 )
     {
         gain = 1.0;
+        ref = 6.144;
     }
     else if (gainDig == LOGGERGAIN2 )
     {
         gain = 2.0;
+        ref = 4.096;
     }
     else if (gainDig == LOGGERGAIN4 )
     {
         gain = 4.0;
+        ref = 2.048;
     }
     else if (gainDig == LOGGERGAIN8 )
     {
         gain = 8.0;
+        ref = 1.024;
     }
-	adcraw =  ( (uint16_t)databuffer[0] << 8) | databuffer[1] ;
-	adcvalue = (2.048/32768)*(float)((int16_t)adcraw);
-    printf("adcvalue raw %x float %f\n", adcraw, adcvalue);
-    return adcvalue/gain;
+    else if (gainDig == LOGGERGAIN16 )
+    {
+        gain = 16.0;
+        ref = 0.512;
+    }
+    else if (gainDig == LOGGERGAIN32 )
+    {
+        gain = 32.0;
+        ref = 0.256;
+    }
+    adcraw =  ( (uint16_t)databuffer[1] << 8) | databuffer[2] ;
+    if (config&LOGGERTEMP)
+    {
+        adcvalue = ((float)adcraw)/4 * 0.03125;
+
+    }
+    else
+    {
+        adcvalue = (ref/32768)*(float)((int16_t)adcraw);
+    }
+    printf("adcvalue raw  %x %x float %f\n", databuffer[0], adcraw, adcvalue);
+    return adcvalue;
 	
 }
 

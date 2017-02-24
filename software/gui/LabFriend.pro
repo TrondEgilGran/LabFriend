@@ -54,7 +54,8 @@ SOURCES += mainform.cpp \
            ../lib/dcio.c \
            ../lib/scope_control.c \
            ../lib/spicomm.c \
-    qcustomplot/qcustomplot.cpp
+    qcustomplot/qcustomplot.cpp \
+    labfriend_calibration.cpp
 
 FORMS += mainwindow.ui
 OTHER_FILES += \

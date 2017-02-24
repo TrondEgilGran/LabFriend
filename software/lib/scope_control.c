@@ -427,7 +427,7 @@ int set_scope_config( 	uint8_t trigger_value,
 	databuffer[command] 		= cmd_configure;
 	databuffer[conf_ram_mux]	= 	ram0_sel ;
 	databuffer[conf_clock_power]	=	(adc_powerdown << adc_powerdown_shift) |
-						(adc_clock << adc_clock_pol_shift);
+                        (adc_clock << adc_clock_pol_shift) | 0x0;
     databuffer[conf_trigger]	=	((trigger_source << trigger_source_shift)& trigger_source_mask) |
                         ((trigger_edge << trigger_edge_shift)& trigger_edge_mask) |
                         (trigger_source) ;

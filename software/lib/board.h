@@ -18,3 +18,4 @@
 
 #define PWMMAX          0xFFFF
 
+#define NumberOfScopeChannels 2
