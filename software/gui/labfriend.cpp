@@ -262,38 +262,52 @@ void labfriend::byte2FloatingBits(uint8_t *inputByte)
     uint32_t i;
     const double stepSize = 0.15625;
     const double channelOffset = 0.062500;
-    digitalBit0data.resize(scopeBufferSize);
-    digitalBit1data.resize(scopeBufferSize);
-    digitalBit2data.resize(scopeBufferSize);
-    digitalBit3data.resize(scopeBufferSize);
-    digitalBit4data.resize(scopeBufferSize);
-    digitalBit5data.resize(scopeBufferSize);
-    digitalBit6data.resize(scopeBufferSize);
-    digitalBit7data.resize(scopeBufferSize);
+
+    double key;
+    double datatemp;
+    digitalBit0data->clear();
+    digitalBit1data->clear();
+    digitalBit2data->clear();
+    digitalBit3data->clear();
+    digitalBit4data->clear();
+    digitalBit5data->clear();
+    digitalBit6data->clear();
+    digitalBit7data->clear();
     for(i=0; i < scopeBufferSize; i++)
     {
+        key = i/scopeSampleRate;
         if( i < 8)
         {
-            digitalBit0data[i] = 0.0;
-            digitalBit1data[i] = 0.0;
-            digitalBit2data[i] = 0.0;
-            digitalBit3data[i] = 0.0;
-            digitalBit4data[i] = 0.0;
-            digitalBit5data[i] = 0.0;
-            digitalBit6data[i] = 0.0;
-            digitalBit7data[i] = 0.0;
+            datatemp = 0.0;
+            digitalBit0data->insertMulti(digitalBit0data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit1data->insertMulti(digitalBit1data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit2data->insertMulti(digitalBit2data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit3data->insertMulti(digitalBit3data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit4data->insertMulti(digitalBit4data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit5data->insertMulti(digitalBit5data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit6data->insertMulti(digitalBit6data->constEnd(),key , QCPData( key,datatemp));
+            digitalBit7data->insertMulti(digitalBit7data->constEnd(),key , QCPData( key,datatemp));
+
         }
         else
         {
 
-            digitalBit0data[i] = (float(inputByte[i-8] & 0x01) * stepSize);
-            digitalBit1data[i] = (float((inputByte[i-8] >> 1) & 0x01) * stepSize) + (channelOffset+stepSize)*1;
-            digitalBit2data[i] = (float((inputByte[i-8] >> 2) & 0x01) * stepSize) + (channelOffset+stepSize)*2;
-            digitalBit3data[i] = (float((inputByte[i-8] >> 3) & 0x01) * stepSize) + (channelOffset+stepSize)*3;
-            digitalBit4data[i] = (float((inputByte[i-8] >> 4) & 0x01) * stepSize) + (channelOffset+stepSize)*4;
-            digitalBit5data[i] = (float((inputByte[i-8] >> 5) & 0x01) * stepSize) + (channelOffset+stepSize)*5;
-            digitalBit6data[i] = (float((inputByte[i-8] >> 6) & 0x01) * stepSize) + (channelOffset+stepSize)*6;
-            digitalBit7data[i] = (float((inputByte[i-8] >> 7) & 0x01) * stepSize) + (channelOffset+stepSize)*7;
+            datatemp = (float(inputByte[i-8] & 0x01) * stepSize);
+            digitalBit0data->insertMulti(digitalBit0data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 1) & 0x01) * stepSize) + (channelOffset+stepSize)*1;
+            digitalBit1data->insertMulti(digitalBit1data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 2) & 0x01) * stepSize) + (channelOffset+stepSize)*2;
+            digitalBit2data->insertMulti(digitalBit2data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 3) & 0x01) * stepSize) + (channelOffset+stepSize)*3;
+            digitalBit3data->insertMulti(digitalBit3data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 4) & 0x01) * stepSize) + (channelOffset+stepSize)*4;
+            digitalBit4data->insertMulti(digitalBit4data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 5) & 0x01) * stepSize) + (channelOffset+stepSize)*5;
+            digitalBit5data->insertMulti(digitalBit5data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 6) & 0x01) * stepSize) + (channelOffset+stepSize)*6;
+            digitalBit6data->insertMulti(digitalBit6data->constEnd(),key , QCPData( key,datatemp));
+            datatemp = (float((inputByte[i-8] >> 7) & 0x01) * stepSize) + (channelOffset+stepSize)*7;
+            digitalBit7data->insertMulti(digitalBit7data->constEnd(),key , QCPData( key,datatemp));
         }
     }
 }
@@ -347,32 +361,40 @@ void labfriend::ScopeRun(void)
                             elapsedTime += (end.tv_usec - begin.tv_usec) / 1000.0;
                             printf("ReadRam TIme %f \n", elapsedTime);
 
-                        xaxis.resize(scopeBufferSize);
-                        trace_1_data.resize(scopeBufferSize);
-                        trace_2_data.resize(scopeBufferSize);
-                        trace_3_data.resize(scopeBufferSize);
-                        trace_4_data.resize(scopeBufferSize);
+                        gettimeofday(&begin, NULL);
 
+
+                        trace_1_data->clear();
+                        trace_2_data->clear();
 
                         byte2FloatingBits(trace_1_raw);
+                        double key;
                         for(i=0; i < scopeBufferSize; i++ )
                         {
-                              xaxis[i] = i/scopeSampleRate;
-                              trace_1_data[i] = (double)trace_2_raw[i]/32.0;
-                              trace_2_data[i] = (double)trace_3_raw[i]/32.0;
+                              key = i/scopeSampleRate;
+                              trace_1_data->insertMulti(trace_1_data->constEnd(),key , QCPData( key,(double)trace_3_raw[i]/32.0));
+                              trace_2_data->insertMulti(trace_2_data->constEnd(),key , QCPData( key,(double)trace_2_raw[i]/32.0));
                         }
-                            superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setData(xaxis, trace_1_data);
-                            superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setData(xaxis, trace_2_data);
+                        gettimeofday(&end, NULL);
+                            elapsedTime = (end.tv_sec - begin.tv_sec) * 1000.0;      // sec to ms
+                            elapsedTime += (end.tv_usec - begin.tv_usec) / 1000.0;
+                            printf("copy time %f \n", elapsedTime);
+
+                            gettimeofday(&begin, NULL);
+
+
+                            superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setData(trace_1_data);
+                            superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setData(trace_2_data);
                             superplot.ui.qcpScopeDisplay->graph( superplot.curve2 )->setVisible(true);
                             superplot.ui.qcpScopeDisplay->graph( superplot.curve1 )->setVisible(true);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD0)->setData(xaxis, digitalBit0data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD1)->setData(xaxis, digitalBit1data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD2)->setData(xaxis, digitalBit2data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD3)->setData(xaxis, digitalBit3data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD4)->setData(xaxis, digitalBit4data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD5)->setData(xaxis, digitalBit5data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD6)->setData(xaxis, digitalBit6data);
-                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD7)->setData(xaxis, digitalBit7data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD0)->setData(digitalBit0data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD1)->setData(digitalBit1data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD2)->setData(digitalBit2data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD3)->setData(digitalBit3data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD4)->setData(digitalBit4data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD5)->setData(digitalBit5data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD6)->setData(digitalBit6data);
+                            superplot.ui.qcpScopeDisplay->graph(superplot.curveD7)->setData(digitalBit7data);
 
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD0)->setVisible(true);
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD1)->setVisible(true);
@@ -384,10 +406,20 @@ void labfriend::ScopeRun(void)
                             superplot.ui.qcpScopeDisplay->graph(superplot.curveD7)->setVisible(true);
 
 
+                            gettimeofday(&end, NULL);
+                                elapsedTime = (end.tv_sec - begin.tv_sec) * 1000.0;      // sec to ms
+                                elapsedTime += (end.tv_usec - begin.tv_usec) / 1000.0;
+                                printf("Setup plot time %f \n", elapsedTime);
+
                         xmax = scopeBufferSize/scopeSampleRate;
                        // emit replotdatanow(0.0 ,xmax, 0.0, 255.0, scopeActualDiv, 32.0 );
 
+                        gettimeofday(&begin, NULL);
                         superplot.replotNewData(0.0 ,xmax, 0.0, 8 );
+                        gettimeofday(&end, NULL);
+                            elapsedTime = (end.tv_sec - begin.tv_sec) * 1000.0;      // sec to ms
+                            elapsedTime += (end.tv_usec - begin.tv_usec) / 1000.0;
+                            printf("replot time %f \n", elapsedTime);
                         printf("data replotted\n");
                         if( scopeSingle == false)
                         {
@@ -516,7 +548,7 @@ void labfriend::scopeStart(void)
 
     if (triggerType == trigger_automatic)
     {
-        offsetval =   scopeBufferSizeV/72;
+        offsetval =   scopeBufferSizeV/72 - 2;
     }
     else
     {
@@ -1693,19 +1725,16 @@ void labfriend::initScopeRun(void)
     trace_2_raw = new uint8_t[nrOfRamAddresses];
     trace_3_raw = new uint8_t[nrOfRamAddresses];
     trace_4_raw = new uint8_t[nrOfRamAddresses];
-    trace_1_data.reserve(nrOfRamAddresses);
-    trace_2_data.reserve(nrOfRamAddresses);
-    trace_3_data.reserve(nrOfRamAddresses);
-    trace_4_data.reserve(nrOfRamAddresses);
-    digitalBit0data.reserve(nrOfRamAddresses);
-    digitalBit1data.reserve(nrOfRamAddresses);
-    digitalBit2data.reserve(nrOfRamAddresses);
-    digitalBit3data.reserve(nrOfRamAddresses);
-    digitalBit4data.reserve(nrOfRamAddresses);
-    digitalBit5data.reserve(nrOfRamAddresses);
-    digitalBit6data.reserve(nrOfRamAddresses);
-    digitalBit7data.reserve(nrOfRamAddresses);
-    xaxis.reserve(nrOfRamAddresses);
+    trace_1_data = new QCPDataMap();
+    trace_2_data = new QCPDataMap();
+    digitalBit0data = new QCPDataMap();
+    digitalBit1data = new QCPDataMap();
+    digitalBit2data = new QCPDataMap();
+    digitalBit3data = new QCPDataMap();
+    digitalBit4data = new QCPDataMap();
+    digitalBit5data = new QCPDataMap();
+    digitalBit6data = new QCPDataMap();
+    digitalBit7data = new QCPDataMap();
     loggerChannel1.reserve(LOGGERMAXSIZE);
     loggerChannel2.reserve(LOGGERMAXSIZE);
     loggerChannel3.reserve(LOGGERMAXSIZE);
