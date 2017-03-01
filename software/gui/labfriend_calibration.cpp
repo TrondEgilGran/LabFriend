@@ -44,6 +44,8 @@ void labfriend::setInitialCalibration(void)
     LAVIrefOffsetOffsetError = 0;
     LAVIoffsetGainError = 1;
     LAVIoffsetOffsetError = 2;
+    ScopeOffsetGainError[0] = 1;
+    ScopeOffsetGainError[1] = 1;
     //Scope Offset
     vdiv5mvOffsetError[0] = 0;
     vdiv10mvOffsetError[0] = 0;

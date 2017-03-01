@@ -11,6 +11,7 @@ TARGET = LabFriend
 DEPENDPATH += .
 INCLUDEPATH += .
 QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -O3
 
 LIBS += -lmpsse -lm
 

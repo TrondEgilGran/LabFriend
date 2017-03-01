@@ -30,16 +30,17 @@ public:
     uint8_t *trace_2_raw;
     uint8_t *trace_3_raw;
     uint8_t *trace_4_raw;
-    QCPDataMap * trace_1_data;
-    QCPDataMap * trace_2_data;
-    QCPDataMap * digitalBit0data;
-    QCPDataMap * digitalBit1data;
-    QCPDataMap * digitalBit2data;
-    QCPDataMap * digitalBit3data;
-    QCPDataMap * digitalBit4data;
-    QCPDataMap * digitalBit5data;
-    QCPDataMap * digitalBit6data;
-    QCPDataMap * digitalBit7data;
+    QVector<double> trace_1_data;
+    QVector<double> trace_2_data;
+    QVector<double> digitalBit0data;
+    QVector<double> digitalBit1data;
+    QVector<double> digitalBit2data;
+    QVector<double> digitalBit3data;
+    QVector<double> digitalBit4data;
+    QVector<double> digitalBit5data;
+    QVector<double> digitalBit6data;
+    QVector<double> digitalBit7data;
+    QVector<double> scopeXaxis;
     QVector<double> Logxaxis;
     QVector<double> AudioAxis;
     QVector<double> audioData1;
@@ -207,6 +208,7 @@ private:
     double LAVIrefOffsetOffsetError;
     double LAVIoffsetGainError;
     double LAVIoffsetOffsetError;
+    double ScopeOffsetGainError[NumberOfScopeChannels];
 
     double scopeVdiv[2];
     uint32_t scopeOffsetValue;
