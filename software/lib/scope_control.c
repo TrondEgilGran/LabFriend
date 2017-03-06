@@ -373,24 +373,25 @@ int scope_data_available(void)
     return returnvalue;
 }
 
-int scope_read_trigger(void)
+int scope_read_trigger(uint32_t buffer_size)
 {
     uint8_t databuffer[6];
     int returnvalue = 0;
-
+    uint32_t trigger_point;
+    uint32_t end_point;
+    uint32_t difftime;
     databuffer[command] = cmd_read_trigger;
     spiCommand( WRITE, addrHSaqusition, 1 );
     spiWrite( databuffer, 1 );
     spiCommand( READ, addrHSaqusition, 6 );
     spiRead( databuffer, 6 );
 
-    printf("data 1 %x\n", databuffer[0]);
-    printf("data 2 %x\n", databuffer[1]);
-    printf("data 3 %x\n", databuffer[2]);
-    printf("data 4 %x\n", databuffer[3]);
-    printf("data 5 %x\n", databuffer[4]);
-    printf("data 6 %x\n", databuffer[5]);
-
+    trigger_point = (uint32_t)databuffer[2] << 16| (uint32_t)databuffer[1] << 8 | databuffer[0] ;
+    end_point = (uint32_t)databuffer[5] << 16| (uint32_t)databuffer[4] << 8 | databuffer[3] ;
+    printf("trigg hex %x dec%d, end hex %x dec %d\n", trigger_point, trigger_point, end_point, end_point);
+    difftime = buffer_size - (end_point-trigger_point)&0xffffff;
+    printf("diff time %d \n",difftime);
+    returnvalue = difftime+26;
     return returnvalue;
 }
 
@@ -440,7 +441,7 @@ int set_scope_config( 	uint8_t trigger_value,
 	
 	spiCommand( WRITE, addrHSaqusition, 9 );
 	spiWrite( databuffer, 9 );
-	printf( "Scope config started\n");
+    printf( "Scope config started %x\n", databuffer[conf_trigger]);
 	if( start_capture == 1 ) printf("data capture started\n");
 	
 	return 1;
@@ -503,10 +504,10 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
                 *(ram_group_2 + ramadress+1) = databuffer[10+ia];
                 *(ram_group_2 + ramadress+0) = databuffer[11+ia];
                 ramadress = ramadress + 4;
-                fprintf(f," %d %x %x %x \n", ia, databuffer[0+ia],databuffer[4+ia], databuffer[8+ia]);
-                fprintf(f," %d %x %x %x \n", ia, databuffer[1+ia],databuffer[5+ia], databuffer[9+ia]);
-                fprintf(f," %d %x %x %x \n", ia, databuffer[2+ia],databuffer[6+ia], databuffer[10+ia]);
-                fprintf(f," %d %x %x %x \n", ia, databuffer[3+ia],databuffer[7+ia], databuffer[11+ia]);
+                fprintf(f," %d %d %x %x --\n", ia, databuffer[0+ia],databuffer[4+ia], databuffer[8+ia]);
+                fprintf(f," %d %d %x %x \n", ia, databuffer[1+ia],databuffer[5+ia], databuffer[9+ia]);
+                fprintf(f," %d %d %x %x \n", ia, databuffer[2+ia],databuffer[6+ia], databuffer[10+ia]);
+                fprintf(f," %d %d %x %x \n", ia, databuffer[3+ia],databuffer[7+ia], databuffer[11+ia]);
 
             }
          }

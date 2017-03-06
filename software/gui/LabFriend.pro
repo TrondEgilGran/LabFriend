@@ -11,7 +11,15 @@ TARGET = LabFriend
 DEPENDPATH += .
 INCLUDEPATH += .
 QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS_RELEASE -= -O
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS += -O3
+
+QMAKE_CFLAGS_RELEASE -= -O
+QMAKE_CFLAGS_RELEASE -= -O1
+QMAKE_CFLAGS_RELEASE -= -O2
+QMAKE_CFLAGS += -O3
 
 LIBS += -lmpsse -lm
 
@@ -56,7 +64,9 @@ SOURCES += mainform.cpp \
            ../lib/scope_control.c \
            ../lib/spicomm.c \
     qcustomplot/qcustomplot.cpp \
-    labfriend_calibration.cpp
+    labfriend_calibration.cpp \
+    labfriend_scope_controls.cpp \
+    labfriend_scope_run.cpp
 
 FORMS += mainwindow.ui
 OTHER_FILES += \

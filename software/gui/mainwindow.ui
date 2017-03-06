@@ -546,24 +546,11 @@
           <string>AC</string>
          </property>
         </widget>
-        <widget class="QCheckBox" name="cbFastRamRead">
-         <property name="geometry">
-          <rect>
-           <x>200</x>
-           <y>240</y>
-           <width>91</width>
-           <height>21</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Fast Read</string>
-         </property>
-        </widget>
         <widget class="QCheckBox" name="cbCursor1">
          <property name="geometry">
           <rect>
            <x>30</x>
-           <y>370</y>
+           <y>420</y>
            <width>85</width>
            <height>21</height>
           </rect>
@@ -576,7 +563,7 @@
          <property name="geometry">
           <rect>
            <x>30</x>
-           <y>400</y>
+           <y>450</y>
            <width>85</width>
            <height>21</height>
           </rect>
@@ -589,7 +576,7 @@
          <property name="geometry">
           <rect>
            <x>150</x>
-           <y>350</y>
+           <y>400</y>
            <width>21</width>
            <height>16</height>
           </rect>
@@ -602,7 +589,7 @@
          <property name="geometry">
           <rect>
            <x>230</x>
-           <y>350</y>
+           <y>400</y>
            <width>31</width>
            <height>16</height>
           </rect>
@@ -615,7 +602,7 @@
          <property name="geometry">
           <rect>
            <x>130</x>
-           <y>370</y>
+           <y>420</y>
            <width>57</width>
            <height>15</height>
           </rect>
@@ -628,7 +615,7 @@
          <property name="geometry">
           <rect>
            <x>210</x>
-           <y>370</y>
+           <y>420</y>
            <width>57</width>
            <height>15</height>
           </rect>
@@ -641,7 +628,7 @@
          <property name="geometry">
           <rect>
            <x>130</x>
-           <y>400</y>
+           <y>450</y>
            <width>57</width>
            <height>15</height>
           </rect>
@@ -654,7 +641,7 @@
          <property name="geometry">
           <rect>
            <x>210</x>
-           <y>400</y>
+           <y>450</y>
            <width>57</width>
            <height>15</height>
           </rect>
@@ -667,7 +654,7 @@
          <property name="geometry">
           <rect>
            <x>30</x>
-           <y>440</y>
+           <y>490</y>
            <width>57</width>
            <height>15</height>
           </rect>
@@ -680,7 +667,7 @@
          <property name="geometry">
           <rect>
            <x>130</x>
-           <y>440</y>
+           <y>490</y>
            <width>91</width>
            <height>16</height>
           </rect>
@@ -693,7 +680,7 @@
          <property name="geometry">
           <rect>
            <x>30</x>
-           <y>460</y>
+           <y>510</y>
            <width>71</width>
            <height>16</height>
           </rect>
@@ -706,7 +693,7 @@
          <property name="geometry">
           <rect>
            <x>130</x>
-           <y>460</y>
+           <y>510</y>
            <width>101</width>
            <height>16</height>
           </rect>
@@ -719,7 +706,7 @@
          <property name="geometry">
           <rect>
            <x>30</x>
-           <y>480</y>
+           <y>530</y>
            <width>91</width>
            <height>16</height>
           </rect>
@@ -732,7 +719,7 @@
          <property name="geometry">
           <rect>
            <x>130</x>
-           <y>480</y>
+           <y>530</y>
            <width>121</width>
            <height>16</height>
           </rect>
@@ -745,7 +732,7 @@
          <property name="geometry">
           <rect>
            <x>30</x>
-           <y>500</y>
+           <y>550</y>
            <width>91</width>
            <height>16</height>
           </rect>
@@ -758,7 +745,7 @@
          <property name="geometry">
           <rect>
            <x>130</x>
-           <y>500</y>
+           <y>550</y>
            <width>121</width>
            <height>16</height>
           </rect>
@@ -788,6 +775,29 @@
          </property>
          <property name="text">
           <string>Buffer Size</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cmbScopeSampleRate">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>350</y>
+           <width>141</width>
+           <height>31</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lbTimeDiv_3">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>330</y>
+           <width>151</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Sample Rate</string>
          </property>
         </widget>
        </widget>

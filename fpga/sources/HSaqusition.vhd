@@ -98,8 +98,11 @@ type datamachine is (idle, process_command, read_trigger, read_ram, read_status,
 signal data_state : datamachine := idle; 
 type WRcountermachine is (idle, counting, read_data, wait_ready);
 signal ram_count_state_wr, ram_count_state_rd : WRcountermachine := idle;
-type ram_read_strober is (idle, send_read_command, strobe_triggered, strobe_reset);
-signal ram_read_strobe : ram_read_strober := idle;
+type ram_read_strober is (idle, wait_for_counter, send_read_command, strobe_triggered, strobe_reset);
+signal ram_read_strobe : ram_read_strober := wait_for_counter;
+
+type trigger_machine is ( buffer_prefill, wait_for_trigger, data_written, idle);
+signal trigger_state : trigger_machine :=idle;
 
 
 signal ram_group_0_select, ram_group_1_select, trigger_select, trigger_select_HS  : std_logic_vector( 1 downto 0 ) := (others => '0');
@@ -107,11 +110,11 @@ signal ram_group_2_select, ram_group_3_select : std_logic_vector( 2 downto 0 ) :
 signal ram_group_2_select_master, ram_group_3_select_master : std_logic_vector( 2 downto 0 ) := (others => '0') ;
 signal digital_in_by_8_muxed : std_logic;
 
-signal ram_write_counter, ram_address_offset, ram_trigger_address : unsigned( ram_depth-1 downto 0 ) :=(others => '0') ;
+signal ram_write_counter, ram_address_offset : unsigned( ram_depth-1 downto 0 ) :=(others => '0') ;
 signal ram_read_counter : unsigned( ram_depth+1 downto 0 ) := (others => '0') ;
 signal read_ram_stop, ram_read_size : unsigned( ram_depth+1 downto 0 ) := (others => '1');
-signal ram_counter_wr_stop : std_logic_vector( ram_depth-1 downto 0 ) := (others => '0');
-signal ram_data_in, ram_data_out : std_logic_vector(ram_data_width-1 downto 0 ) := (others => '0');
+signal ram_counter_wr_stop, ram_trigger_address : std_logic_vector( ram_depth-1 downto 0 ) := (others => '0');
+signal ram_data_in, ram_data_out  : std_logic_vector(ram_data_width-1 downto 0 ) := (others => '0');
 signal adc_clk_a_select, adc_clk_b_select, read_ready, ram_data_available, ram_read_finished, ram_ready : std_logic := '0';
 signal trigger_source, trigger_source_tmp, trigger_d1, trigger_d2, trigger_val, trigger_val_d1, trigger_val_hs: std_logic_vector(7 downto 0) := (others => '0');
 signal start_ram_capture, ram_full, data_capture_started, trigger_edge, triggered, manual_trigger : std_logic := '0';
@@ -185,7 +188,9 @@ signal counter_1_ram_address_load_start_en : std_logic := '0';
 signal counter_1_ram_address_load_start : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
 signal counter_2_trig_offset_load : std_logic_vector(ram_depth-1 downto 0) := "000000000000000101010001";
 
-signal counter_0_free_output : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+signal counter_0_free_output : std_logic_vector(ram_depth-1 downto 0);
+signal counter_0_add_a : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
+signal counter_0_add_b : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
 signal counter_1_ram_address_output : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
 signal counter_2_trig_offset_output : std_logic_vector(ram_depth-1 downto 0) := (others => '0');
 signal counter_3_sample_rate_output : std_logic_vector(13 downto 0) := (others => '0');
@@ -217,8 +222,11 @@ signal ram_bl_eq : unsigned( ram_depth-1 downto 0);
 signal adc_en_del : std_logic;
 signal adc_delayed_a, adc_delayed_b,  adc_delayed_en : std_logic_vector(7 downto 0);
 signal adc_a_clock_delay_in, adc_b_clock_delay_in : std_logic;
+signal prerun : std_logic := '0';
 
+signal imhere : std_logic;
 --signal testc : unsigned( 7 downto 0) := "00000000";
+signal wait_cnt : natural RANGE 0 TO 10;
 
 begin
 
@@ -293,7 +301,7 @@ IDELAY_MODE => "NORMAL",--"NORMAL" or "PCI"
 IDELAY_TYPE => "DEFAULT",-- "FIXED", "DEFAULT", "VARIABLE_FROM_ZERO", "VARIABLE_FROM_HALF_MAX" 
 		-- or "DIFF_PHASE_DETECTOR"
 IDELAY_VALUE => 0, --Amount of taps for fixed input delay (0-255)
-ODELAY_VALUE => 3, --Amount of taps fixed output delay (0-255)
+ODELAY_VALUE => 3  , --Amount of taps fixed output delay (0-255)
 SERDES_MODE => "NONE",--"NONE", "MASTER" or "SLAVE"
 SIM_TAPDELAY_VALUE => 75 -- Per tap delay used for simulation in ps
 )
@@ -630,6 +638,28 @@ T => '0'--1-bit input 3-state input signal
 		);
 	-- End of ADDSUB_MACRO_inst instantiation
 	
+	
+	-- COUNTER_LOAD_MACRO: Loadable variable counter implemented in a DSP48E
+	-- Spartan-6
+	-- Xilinx HDL Libraries Guide, version 12.4
+	COUNTER_LOAD_MACRO_inst : COUNTER_LOAD_MACRO
+	generic map (
+					COUNT_BY => X"000000000001", -- Count by value
+					DEVICE => "SPARTAN6", -- Target Device: "VIRTEX5", "VIRTEX6", "SPARTAN6"
+					WIDTH_DATA => ram_depth) -- Counter output bus width, 1-48
+	port map (
+					Q => counter_0_free_output, -- Counter ouput, width determined by WIDTH_DATA generic
+					CLK => hs_clock, -- 1-bit clock input
+					CE => ram_clock_en, -- 1-bit clock enable input
+					DIRECTION => vcc, -- 1-bit up/down count direction input, high is count up
+					LOAD => gnd, -- 1-bit active high load input
+					LOAD_DATA => (others => '0'), -- Counter load data, width determined by WIDTH_DATA generic
+					RST => rst-- 1-bit active high synchronous reset
+			);
+	-- End of COUNTER_LOAD_MACRO_inst instantiation
+
+	
+	
 	-- Counters used for oscilloscope action, implimented using DSP blocks
 	--
 	c1a <= std_logic_vector(counter_1_add_a);
@@ -641,6 +671,7 @@ T => '0'--1-bit input 3-state input signal
 			if counter_1_ram_address_reset = '1' or reset_signal = '1' then
 				counter_1_add_a <= (others => '0');
 				counter_1_add_b <= (others => '0');
+				imhere <= '0';
 			elsif ram_cmd_en_sig = '1' and counter_1_ram_address_en = '1' then
 				if counter_1_ram_address_load_start_en = '1' then
 					counter_1_add_a <= (others => '0');
@@ -650,6 +681,7 @@ T => '0'--1-bit input 3-state input signal
 						counter_1_add_a <= (others => '0');
 						counter_1_add_b <= (others => '0');
 					else	
+						imhere <= not imhere;
 						counter_1_add_a <= counter_1;
 						counter_1_add_b <= unsigned(counter_1_ram_address_count_by);
 					end if;		
@@ -659,20 +691,38 @@ T => '0'--1-bit input 3-state input signal
 			ram_addr(ram_addr_width-1 downto ram_depth) <= (others => '0');
 		end if;	
 	end process counter_1_proc;
-	--
+
+
+	-- triger counter counts number of rambuffers typically 72 bytes to indicate when to stop collecting data
+	-- we don't want to deal with partial ram buffers as this will cause additional logic an reduce d speed
 	counter_2_proc : process(hs_clock, counter_2_trig_offset_reset, ram_cmd_en_sig)
 	begin
 		if rising_edge(hs_clock) then
 			if counter_2_trig_offset_reset = '1'  or reset_signal = '1' then 
 				ram_full <= '0';
-				counter_2 <= unsigned(ram_address_offset);
+				counter_2(ram_depth-1 downto ram_depth-6) <= (others => '0'); --Divide buffer size by 64 to make sure ram always is filled before trigger
+				counter_2(ram_depth-7 downto 0) <= unsigned(counter_1_ram_address_buffer_size(ram_depth-1 downto 6));  
 				debug_1 <= '1';
-			elsif ram_cmd_en_sig = '1' and triggered = '1'  then
+				trigger_state <= buffer_prefill;
+				prerun <= '0';
+			elsif ram_cmd_en_sig = '1' then
 					if counter_2 = 0 then
-						counter_2 <= (others => '0'); --finish ram write or read
-						if data_capture_started = '1' then
-							ram_full <= '1';
-						end if;
+						case trigger_state is
+							when buffer_prefill =>
+								trigger_state <= wait_for_trigger;
+								prerun <= '1';
+							when wait_for_trigger =>
+								if triggered = '1' then
+									counter_2 <= unsigned(ram_address_offset); --Start collecting data from offset point
+									trigger_state <= data_written;
+								end if;
+							when data_written =>
+								ram_counter_wr_stop <= counter_0_free_output;
+								ram_full <= '1';
+								trigger_state <= idle;
+							when idle =>
+								trigger_state <= idle;
+						end case;
 					else	
 						counter_2 <= counter_2 - 1;
 					end if;		
@@ -725,9 +775,10 @@ T => '0'--1-bit input 3-state input signal
 	--Counter 2, Start at trigger, load time offset value, count down buffer, capture Counter 1
 	--           and Counter 0 at 0.
 	SpeedDevil : process( hs_clock, rst )
+	
 	begin
 		if rising_edge(hs_clock) then
-			
+			wait_cnt <= 0;
 			--Store adc and digital input data in registers
 			-----------------------------------------------
 			adc_a_register <= hs_adc_a;
@@ -840,6 +891,13 @@ T => '0'--1-bit input 3-state input signal
 					ram_machine_1 <= idle;
 					ram_command <= "001"; --read ram data
 					case ram_read_strobe is
+						when wait_for_counter =>
+							if wait_cnt = 5 then
+								wait_cnt <= 0;
+								ram_read_strobe <= idle;
+							else
+								wait_cnt <= wait_cnt + 1;
+							end if;
 						when idle =>
 							--counter_2_trig_offset_reset <= '1';  ---keep counter in reset
 							ram_read_strobe <= send_read_command;
@@ -876,7 +934,7 @@ T => '0'--1-bit input 3-state input signal
 					
 			
 			if reset_signal = '1' then
-				ram_read_strobe <= idle;
+				ram_read_strobe <= wait_for_counter;
 				ram_machine_1 <= idle;
 				ram_data_available <= '0';
 				ram_rd_en_sig <= '0';
@@ -915,23 +973,23 @@ T => '0'--1-bit input 3-state input signal
 			--trigger_d2 <= trigger_d2;
 			if trigger_edge = '1' then
 				if (trigger_d1 < trigger_val_hs) and (trigger_source >= trigger_val_hs) and triggered = '0' then
-					trig_it <= '1';
+					trig_it <= prerun;
 				end if;
 			else
 				if (trigger_d1 > trigger_val_hs) and (trigger_source <= trigger_val_hs) and triggered = '0' then
-					trig_it <= '1';
+					trig_it <= prerun;
 				end if;
 			end if;
 			
 			if trig_it = '1' then
-				triggered <= '1';
-				ram_trigger_address <= counter_1;
+				ram_trigger_address <= counter_0_free_output;
 				trig_it <= '0';
+				triggered <= '1';
 			end if;
 			
 			if manual_trigger = '1' and triggered = '0' then
 				triggered <= '1';
-				ram_trigger_address <= counter_1;
+				ram_trigger_address <= counter_0_free_output;
 			end if;
 			
 			

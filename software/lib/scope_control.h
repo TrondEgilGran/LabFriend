@@ -4,7 +4,7 @@
 #define initialOffset  -2.05
 
 #define nrOfRamAddresses_fast 65536
-#define nrOfRamAddresses 524288
+#define nrOfRamAddresses 3145728
 #define bytesPerRamAddress 3
 
 #define fastRamRead 0x10
@@ -161,7 +161,7 @@ int scope_data_available(void);
 int set_digital_out( uint8_t outputByte);
 int new_read_ram(void);
 
-int scope_read_trigger(void);
+int scope_read_trigger(uint32_t buffer_size);
 
 int run_awg(uint8_t mode, uint16_t sample_rate, uint16_t buffersize, uint8_t *datain);
 int run_dwg(uint8_t mode, uint16_t sample_rate, uint16_t buffersize, uint8_t *datain);

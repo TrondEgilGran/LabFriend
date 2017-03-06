@@ -327,7 +327,7 @@ BEGIN
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
-	datain <= "10000000"; --copmbus 3
+	datain <= "01110000"; --copmbus 3
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until falling_edge(clk);

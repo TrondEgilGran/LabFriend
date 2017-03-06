@@ -121,19 +121,41 @@ void MainForm::InitOPtions()
     ui.cmbSampleRate->addItem("32k");
     ui.cmbSampleRate->addItem("48k");
     ui.cmbSampleRate->addItem("96k");
-    ui.cmbTimeDiv->addItem("300us");
-    ui.cmbTimeDiv->addItem("600us");
-    ui.cmbTimeDiv->addItem("1ms");
-    ui.cmbTimeDiv->addItem("2ms");
-    ui.cmbTimeDiv->addItem("5ms");
-    ui.cmbTimeDiv->addItem("10ms");
-    ui.cmbTimeDiv->addItem("20ms");
-    ui.cmbTimeDiv->addItem("40ms");
-    ui.cmbTimeDiv->addItem("80ms");
-    ui.cmbTimeDiv->addItem("200ms");
-    ui.cmbTimeDiv->addItem("400ms");
-    ui.cmbTimeDiv->addItem("600ms");
-    ui.cmbTimeDiv->addItem("1s");
+    ui.cmbTimeDiv->addItem("100ns/div");
+    ui.cmbTimeDiv->addItem("200ns/div");
+    ui.cmbTimeDiv->addItem("500ns/div");
+    ui.cmbTimeDiv->addItem("1us/div");
+    ui.cmbTimeDiv->addItem("2us/div");
+    ui.cmbTimeDiv->addItem("5us/div");
+    ui.cmbTimeDiv->addItem("10us/div");
+    ui.cmbTimeDiv->addItem("20us/div");
+    ui.cmbTimeDiv->addItem("50us/div");
+    ui.cmbTimeDiv->addItem("100us/div");
+    ui.cmbTimeDiv->addItem("200us/div");
+    ui.cmbTimeDiv->addItem("500us/div");
+    ui.cmbTimeDiv->addItem("1ms/div");
+    ui.cmbTimeDiv->addItem("2ms/div");
+    ui.cmbTimeDiv->addItem("5ms/div");
+    ui.cmbTimeDiv->addItem("10ms/div");
+    ui.cmbTimeDiv->addItem("20ms/div");
+    ui.cmbTimeDiv->addItem("50ms/div");
+    ui.cmbTimeDiv->addItem("100ms/div");
+    ui.cmbTimeDiv->addItem("200ms/div");
+    ui.cmbTimeDiv->addItem("500ms/div");
+    ui.cmbTimeDiv->addItem("1s/div");
+    ui.cmbScopeSampleRate->addItem("200 MSps");
+    ui.cmbScopeSampleRate->addItem("100 MSps");
+    ui.cmbScopeSampleRate->addItem("50 MSps");
+    ui.cmbScopeSampleRate->addItem("25 MSps");
+    ui.cmbScopeSampleRate->addItem("12.5 MSps");
+    ui.cmbScopeSampleRate->addItem("6.25 MSps");
+    ui.cmbScopeSampleRate->addItem("3.125 MSps");
+    ui.cmbScopeSampleRate->addItem("1.56 MSps");
+    ui.cmbScopeSampleRate->addItem("781 kSps");
+    ui.cmbScopeSampleRate->addItem("390 kSps");
+    ui.cmbScopeSampleRate->addItem("195 kSps");
+    ui.cmbScopeSampleRate->addItem("97.6 kSps");
+    ui.cmbScopeSampleRate->addItem("48.8 kSps");
     ui.smbSignalType->addItem("Sinus");
     ui.smbSignalType_2->addItem("Sinus");
     ui.smbSignalType->addItem("Square");
@@ -164,7 +186,7 @@ void MainForm::InitOPtions()
     ui.cmbBufferSize->addItem("294k"); //294912
     ui.cmbBufferSize->addItem("589k"); //589824
     ui.cmbBufferSize->addItem("1.1M"); //1179648
-    ui.cmbBufferSize->addItem("2.3Mk"); //2359296
+    ui.cmbBufferSize->addItem("2.3M"); //2359296
     ui.cmbBufferSize->addItem("4.7M"); //4718592
     ui.cmbBufferSize->addItem("9.4M"); //9437184
 

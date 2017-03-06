@@ -25,6 +25,8 @@ public:
     bool doEnabled;
     void initScopeRun(void);
     void scopeConnections(void);
+    void scope_controls_init( void );
+    void scope_controls_connect(void);
     void setInitialCalibration(void);
     uint8_t *trace_1_raw;
     uint8_t *trace_2_raw;
@@ -86,6 +88,7 @@ public slots:
     void setOffsetTime(double offsetTime);
     void setTriggerValue(double dbTrigger);
     void setTimeDiv(QString qsSource);
+    void setScopeSampleRate(QString qsSource);
     void setLoggerGain1(QString qsTrigType);
     void setLoggerGain2(QString qsTrigType);
     void setLoggerGain3(QString qsTrigType);
@@ -119,7 +122,6 @@ public slots:
     void setAudioGenerateAmplitude2(double frequency);
     void setAudioSampleRate(QString qsSource);
     void GenerateAudio(bool checked);
-    void setFastRead(bool checked);
     void setAudioGenerateType2(QString qsSource);
     void setAudioGenerateType1(QString qsSource);
     void setAudioRecTime(double time);
@@ -275,6 +277,8 @@ private:
     uint16_t dwgSampleRate;
     bool awgSingle;
     bool dwgSingle;
+
+    void scope_run_main(void);
 
 
 };
