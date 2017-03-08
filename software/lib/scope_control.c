@@ -388,7 +388,7 @@ int scope_read_trigger(uint32_t buffer_size)
 
     trigger_point = (uint32_t)databuffer[2] << 16| (uint32_t)databuffer[1] << 8 | databuffer[0] ;
     end_point = (uint32_t)databuffer[5] << 16| (uint32_t)databuffer[4] << 8 | databuffer[3] ;
-    printf("trigg hex %x dec%d, end hex %x dec %d\n", trigger_point, trigger_point, end_point, end_point);
+    printf("trigg %d, end %d, biffsize %d\n", trigger_point, end_point, buffer_size);
     difftime = buffer_size - (end_point-trigger_point)&0xffffff;
     printf("diff time %d \n",difftime);
     returnvalue = difftime+26;
