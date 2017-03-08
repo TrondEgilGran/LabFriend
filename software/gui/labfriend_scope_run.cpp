@@ -82,9 +82,19 @@ void labfriend::scope_run_main(void)
             double elapsedTime;
             int trigger_point;
             gettimeofday(&begin, NULL);
+            uint32_t trigg_error;
 
-            trigger_point = scope_read_trigger(scopeBufferSize);
-            uint32_t trigg_error = scopeOffsetValue-trigger_point;
+            if (triggerType == trigger_automatic)
+            {
+                trigger_point = 0;
+                trigg_error = 0;
+            }
+            else
+            {
+                trigger_point = scope_read_trigger(scopeBufferSize);
+                trigg_error = scopeOffsetValue-trigger_point;
+            }
+
             read_ram( trace_3_raw, trace_2_raw, trace_1_raw, scopeBufferSizeV ,3 );
 
             gettimeofday(&end, NULL);
