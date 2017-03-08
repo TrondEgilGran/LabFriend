@@ -987,7 +987,7 @@ T => '0'--1-bit input 3-state input signal
 				triggered <= '1';
 			end if;
 			
-			if manual_trigger = '1' and triggered = '0' then
+			if manual_trigger = '1' and triggered = '0' and prerun = '1' then
 				triggered <= '1';
 				ram_trigger_address <= counter_0_free_output;
 			end if;
