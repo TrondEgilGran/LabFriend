@@ -20,7 +20,7 @@ int32_t fifo_level( uint8_t adcdac)
 	spiCommand( READ, addrAudioCodec | adcdac, 2 );
 	spiRead(databuffer, 2);
 	fifo_level = (uint16_t)databuffer[0] << 8 | databuffer[1];
-    printf("fifo_level %d , hex byte0 %x, byte1 %x \n",  fifo_level, databuffer[0], databuffer[1]);
+   // printf("fifo_level %d , hex byte0 %x, byte1 %x \n",  fifo_level, databuffer[0], databuffer[1]);
 	return fifo_level;
 }
 

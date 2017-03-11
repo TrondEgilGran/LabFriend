@@ -66,7 +66,8 @@ SOURCES += mainform.cpp \
     qcustomplot/qcustomplot.cpp \
     labfriend_calibration.cpp \
     labfriend_scope_controls.cpp \
-    labfriend_scope_run.cpp
+    labfriend_scope_run.cpp \
+    labfriend_audio.cpp
 
 FORMS += mainwindow.ui
 OTHER_FILES += \

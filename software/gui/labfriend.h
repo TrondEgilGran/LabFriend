@@ -137,6 +137,7 @@ public slots:
     void dwgLoopFun( bool lopstat);
     void open_AO_file(void);
     void open_DO_file(void);
+    void setAudioFFTchannel(QString qsSource);
 
 signals:
 	void replotdatanow();
@@ -270,6 +271,7 @@ private:
     int audioAnalysisType;
     const int audioAnalysisType_time=0;
     const int audioAnalysisType_frequency=1;
+    int audioFFT_channel;
     uint32_t scopeBufferSizeV=18432;
 
     //AWG and DWG signals
@@ -279,7 +281,9 @@ private:
     bool dwgSingle;
 
     void scope_run_main(void);
-
+    void audio_generate(void);
+    void audio_connect(void);
+    void audio_init(void);
 
 };
 

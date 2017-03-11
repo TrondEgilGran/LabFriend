@@ -504,10 +504,10 @@ int read_ram( uint8_t * ram_group_0, uint8_t * ram_group_1, uint8_t *ram_group_2
                 *(ram_group_2 + ramadress+1) = databuffer[10+ia];
                 *(ram_group_2 + ramadress+0) = databuffer[11+ia];
                 ramadress = ramadress + 4;
-                fprintf(f," %d %d %x %x --\n", ia, databuffer[0+ia],databuffer[4+ia], databuffer[8+ia]);
-                fprintf(f," %d %d %x %x \n", ia, databuffer[1+ia],databuffer[5+ia], databuffer[9+ia]);
-                fprintf(f," %d %d %x %x \n", ia, databuffer[2+ia],databuffer[6+ia], databuffer[10+ia]);
-                fprintf(f," %d %d %x %x \n", ia, databuffer[3+ia],databuffer[7+ia], databuffer[11+ia]);
+               // fprintf(f," %d %d %x %x --\n", ia, databuffer[0+ia],databuffer[4+ia], databuffer[8+ia]);
+              //  fprintf(f," %d %d %x %x \n", ia, databuffer[1+ia],databuffer[5+ia], databuffer[9+ia]);
+              //  fprintf(f," %d %d %x %x \n", ia, databuffer[2+ia],databuffer[6+ia], databuffer[10+ia]);
+              //  fprintf(f," %d %d %x %x \n", ia, databuffer[3+ia],databuffer[7+ia], databuffer[11+ia]);
 
             }
          }

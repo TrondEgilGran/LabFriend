@@ -190,6 +190,9 @@ void MainForm::InitOPtions()
     ui.cmbBufferSize->addItem("4.7M"); //4718592
     ui.cmbBufferSize->addItem("9.4M"); //9437184
 
+    ui.smbFFTchannel->addItem("1");
+    ui.smbFFTchannel->addItem("2");
+
 }
 
 

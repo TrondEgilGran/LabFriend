@@ -60,7 +60,7 @@
      <x>0</x>
      <y>0</y>
      <width>1459</width>
-     <height>30</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -103,7 +103,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabScopeControl">
         <attribute name="title">
@@ -1051,7 +1051,7 @@
         <widget class="QLabel" name="label_14">
          <property name="geometry">
           <rect>
-           <x>200</x>
+           <x>220</x>
            <y>280</y>
            <width>57</width>
            <height>15</height>
@@ -1079,8 +1079,8 @@
           <rect>
            <x>120</x>
            <y>300</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
@@ -1090,10 +1090,10 @@
         <widget class="QLabel" name="lbAudioCursorY1">
          <property name="geometry">
           <rect>
-           <x>190</x>
+           <x>210</x>
            <y>300</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
@@ -1105,8 +1105,8 @@
           <rect>
            <x>120</x>
            <y>330</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
@@ -1116,10 +1116,10 @@
         <widget class="QLabel" name="lbAudioCursorY2">
          <property name="geometry">
           <rect>
-           <x>190</x>
+           <x>210</x>
            <y>330</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
@@ -1131,8 +1131,8 @@
           <rect>
            <x>120</x>
            <y>360</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
@@ -1142,10 +1142,10 @@
         <widget class="QLabel" name="lbAudioCursorYDiffVoltage">
          <property name="geometry">
           <rect>
-           <x>190</x>
+           <x>210</x>
            <y>360</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
@@ -1170,12 +1170,35 @@
           <rect>
            <x>120</x>
            <y>390</y>
-           <width>57</width>
-           <height>15</height>
+           <width>81</width>
+           <height>16</height>
           </rect>
          </property>
          <property name="text">
           <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="smbFFTchannel">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>460</y>
+           <width>101</width>
+           <height>24</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_23">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>430</y>
+           <width>101</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>FFT Channel</string>
          </property>
         </widget>
        </widget>
