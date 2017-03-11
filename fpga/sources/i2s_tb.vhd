@@ -135,7 +135,7 @@ begin
 	wait until rising_edge(clk);
 	wait until rising_edge(clk);
 	addr <= "00000011";
-	datain <= "00110010";
+	datain <= "00110000";
 	wait until falling_edge(clk);
 	wr <= '1';
 	wait until rising_edge(clk);

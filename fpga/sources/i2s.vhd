@@ -184,11 +184,19 @@ begin
 			end if;
 			sysclkreg <= not sysclkreg;
 		else
-			negedge <= '0';
-			posedge <= '0';
-			lrnegedge <= '0';
-			lrposedge <= '0';
 			freq_counter_sysck <= freq_counter_sysck + 1;
+		end if;
+		if negedge = '1' then
+			negedge <= '0';
+		end if;
+		if posedge = '1' then
+			posedge <= '0';
+		end if;
+		if lrnegedge = '1' then
+			lrnegedge <= '0';
+		end if;
+		if lrposedge = '1' then
+			lrposedge <= '0';
 		end if;
 	end if;
 end process freqGen;
