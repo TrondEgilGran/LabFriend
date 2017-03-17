@@ -108,6 +108,7 @@ signal finish_adc, finish_dac, finish_dac_cnt : std_logic;
 
 signal enable_adc, spi_adc_read, spi_dac_write, enable_dac : std_logic;
 signal serial_transfer_triggered, trigger_serial_transfer, indicator : std_logic;
+signal sync_counters : std_logic;
 begin
 
 bram1: bram_tdp port map (	a_clk   =>   std_logic(ram_adc_a_clk),  
@@ -264,6 +265,17 @@ begin
 			dac_b_addr_counter <= dac_b_addr_counter + 1;
 			dac_fifolevel <= dac_b_addr_counter + 1;
 		end if;		
+		
+		if sync_counters = '1' then
+			adc_a_addr_counter <= (others => '0');
+			adc_b_addr_counter <= (others => '0');
+			dac_a_addr_counter <= (others => '0');
+			dac_b_addr_counter <= (others => '0');
+			adc_fifolevel <= (others => '0');
+			--dac_fifolevel <= (others => '0');	
+		end if;
+		
+		
 	end if;
 
 end process fifo_func;
@@ -325,6 +337,8 @@ begin
 					elsif addr(6 downto 3) = "0001" then -- adc Data
 						dataout <= ram_adc_b_dout( 47 downto 40);
 						data_state <= first_byte;
+					elsif addr(6 downto 3) = "1001" then -- sync ADC/DAC
+						sync_counters <= '1';
 					end if;
 					
 				when first_byte => 
@@ -399,6 +413,10 @@ begin
 			else
 				spi_dac_write <= '0';
 			end if;
+		end if;
+		
+		if sync_counters = '1' then
+			sync_counters <= '0';
 		end if;
 		
 		if serial_transfer_triggered = '1' then
