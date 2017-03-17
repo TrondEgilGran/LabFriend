@@ -47,6 +47,8 @@ public:
     QVector<double> AudioAxis;
     QVector<double> audioData1;
     QVector<double> audioData2;
+    QVector<double> audioDataFFT;
+    QVector<double> audioDataFilteredFFT;
     uint8_t *dobit07;
     uint32_t dosize;
     uint8_t *aovalue;
@@ -266,6 +268,7 @@ private:
     bool audioRecFinished;
     int audioRemainingSamples;
     int audio_buffer_position;
+    int audioFFTAVGcounter;
     int nrAudioSamples;
     double audioSamplerate;
     int audioAnalysisType;

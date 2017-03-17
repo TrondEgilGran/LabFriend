@@ -6,6 +6,7 @@
 #define I2SADCDATA	0x08 //00001000
 #define I2SDACFIFOH	0x20 //00100000
 #define I2SDACFIFOL	0x28 //00101000
+#define I2SSYNC 0x48 //01001000
 
 #define EnableADC	0x10 
 #define EnableDAC	0x20
@@ -28,6 +29,8 @@
 #define FULL 0
 #define FIFOLEVEL 1
 
+#define I2SGROUPDELAY 69
+
 
 int getADCdata(double * samples_R,  double * samples_L, float gainerror_L, float offseterror_L, float gainerror_R, float offseterror_R );
 int setI2Sconfig( uint8_t config);
@@ -38,3 +41,4 @@ int setDacSampleCount(int fifofill);
 int squareGenerator( float * samples, float frequency, float amplitude, float samplerate, uint32_t nrOfSamples);
 int diracGenerator( float * samples, float frequency, float amplitude, float samplerate, uint32_t nrOfSamples);
 int audioSPI(uint8_t address, uint8_t data);
+int setI2sync( void );

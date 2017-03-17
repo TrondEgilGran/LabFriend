@@ -908,7 +908,7 @@ void labfriend::initScopeRun(void)
     superplot.timerA->setInterval(systemTimerRate*1000);
 
     scope_controls_init();
-    audio_init();
+
     superplot.ui.dbsSampleRate->setSuffix("s");
     superplot.ui.dbsSampleRate->setRange(0.3, 60);
     superplot.ui.dbsSampleRate->setDecimals(2);
@@ -955,7 +955,7 @@ void labfriend::initScopeRun(void)
     loggerGainCH2 = LOGGERGAIN1;
     loggerGainCH3 = LOGGERGAIN1;
 
-
+    audio_init();
 
 }
 

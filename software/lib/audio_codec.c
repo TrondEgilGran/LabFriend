@@ -89,6 +89,18 @@ int setI2Sconfig( uint8_t config)
     return 1;
 }
 
+int setI2sync( void )
+{
+    uint8_t databuffer[1];
+
+
+    databuffer[0] = 00;
+    spiCommand( WRITE, addrAudioCodec | I2SSYNC, 1 );
+    spiWrite( databuffer, 1 );
+
+    return 1;
+}
+
 int sineGenerator( float * samples, float frequency, float amplitude, float samplerate, uint32_t nrOfSamples)
 {
     uint32_t i;

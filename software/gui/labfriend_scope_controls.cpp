@@ -499,7 +499,6 @@ void labfriend::scope_controls_connect(void)
     QObject::connect( superplot.ui.pbTrigSingle , SIGNAL(toggled(bool)), this, SLOT(singleScopeRun(bool)));
     QObject::connect( superplot.ui.pbStartStop , SIGNAL( clicked() ), this, SLOT(scopeStart()));
     QObject::connect( superplot.timerA, SIGNAL(timeout()), this, SLOT(ScopeRun()));
-    QObject::connect( superplot.ui.pbRecord , SIGNAL(toggled(bool)), this, SLOT( audioToggleReact(bool) ) );
     QObject::connect( superplot.ui.cmbTraceSource1, SIGNAL( currentIndexChanged(QString)), this, SLOT(setTraceSource1(QString)));
     QObject::connect( superplot.ui.cmbTraceSource2, SIGNAL( currentIndexChanged(QString)), this, SLOT(setTraceSource2(QString)));
     QObject::connect( superplot.ui.cmbTraceSource3, SIGNAL( currentIndexChanged(QString)), this, SLOT(setTraceSource3(QString)));

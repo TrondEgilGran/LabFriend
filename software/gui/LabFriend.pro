@@ -56,7 +56,8 @@ HEADERS +=  mainform.h \
     fft/FFTRealUseTrigo.hpp \
     fft/OscSinCos.h \
     fft/OscSinCos.hpp \
-    ui_mainwindow.h
+    ui_mainwindow.h \
+    ../lib/mls.h
 SOURCES += mainform.cpp \
            labfriend.cpp \
            ../lib/audio_codec.c \
@@ -67,7 +68,8 @@ SOURCES += mainform.cpp \
     labfriend_calibration.cpp \
     labfriend_scope_controls.cpp \
     labfriend_scope_run.cpp \
-    labfriend_audio.cpp
+    labfriend_audio.cpp \
+    ../lib/mls.cpp
 
 FORMS += mainwindow.ui
 OTHER_FILES += \

@@ -162,6 +162,8 @@ void MainForm::InitOPtions()
     ui.smbSignalType_2->addItem("Square");
     ui.smbSignalType->addItem("Dirac");
     ui.smbSignalType_2->addItem("Dirac");
+    ui.smbSignalType->addItem("MLS");
+    ui.smbSignalType_2->addItem("MLS");
     ui.cmbGAINCH1->addItem("X1");
     ui.cmbGAINCH1->addItem("X2");
     ui.cmbGAINCH1->addItem("X4");

@@ -18,6 +18,7 @@
 
 
 #include "labfriend.h"
+#include <mls.h>
 extern "C"
 {
     #include <audio_codec.h>
@@ -37,8 +38,20 @@ void labfriend::get_audio_data()
     double * dataset2;
     int i;
     int fifolevel;
-
-
+    mls_measure mls_au;
+    const long N = 12;
+    const long P = (1 << N) - 1;
+    bool *mls = new bool[P];
+    long *tagL = new long[P];
+    long *tagS = new long[P];
+    double *signal = new double[P];
+     double *signal_in = new double[P];
+    double *perm = new double[P + 1];
+    double *resp = new double[P + 1];
+    double *respo = new double[P + 1];
+    struct timeval begin, end;
+    double elapsedTime;
+    int groupdelay;
 
     dataset1 = (double *) malloc(FifoBufferSize*sizeof(double));
     if (dataset1==NULL) exit (1);
@@ -51,7 +64,7 @@ void labfriend::get_audio_data()
     if(audioRecFinished == true)
     {
         audioSamplerate = getSampleRate( audioConfig );
-        nrAudioSamples = audioRecTime*audioSamplerate;
+        nrAudioSamples = audioRecTime*audioSamplerate + I2SGROUPDELAY;
 
         AudioAxis.clear();
         audioData1.clear();
@@ -66,19 +79,35 @@ void labfriend::get_audio_data()
         audioRecFinished = false;
         //printf ("nrOf Audio %d  adioRecTime %f samplerate %f\n", nrAudioSamples, audioRecTime, samplerate);
         //Flush audio buffer
-        fifolevel = getADCdata( dataset1, dataset2, 1, 0, 1, 0);
+
+        setI2sync();
+        usleep(2000); //make sure buffer is filled up to beyond the groupddelay on first run
     }
+
+
 
     fifolevel = getADCdata( dataset1, dataset2, 1, 0, 1, 0);
     audioRemainingSamples = audioRemainingSamples - fifolevel;
 
-    for(i=0; i < fifolevel; i++)
+
+
+    if(audio_buffer_position == 0)
+    {
+        groupdelay = I2SGROUPDELAY;
+
+    }
+    else
+    {
+        groupdelay = 0;
+    }
+
+    for(i=0; i < (fifolevel-groupdelay); i++)
     {
         if( (i+ audio_buffer_position) < nrAudioSamples )
         {
             AudioAxis[i+audio_buffer_position] = ((double)i+(double)audio_buffer_position)/audioSamplerate;
-            audioData1[i+audio_buffer_position] = dataset1[i];
-            audioData2[i+audio_buffer_position] = dataset2[i];
+            audioData1[i+audio_buffer_position] = dataset1[i+groupdelay];
+            audioData2[i+audio_buffer_position] = dataset2[i+groupdelay];
         }
         else break;
 
@@ -98,6 +127,7 @@ void labfriend::get_audio_data()
         {
             int fftsize, nrbit;
             int startpoint;
+            double sample_temp, sample_temp2, sample_temp3;
             nrbit = nrAudioSamples;
             fftsize = 0;
             while(nrbit >>= 1)
@@ -105,7 +135,7 @@ void labfriend::get_audio_data()
                 fftsize++;
             }
             fftsize = exp2(fftsize-1);
-           // printf("fftsize %x %d %x \n", fftsize, fftsize, nrAudioSamples);
+            printf("fftsize %x %d %x \n", fftsize, fftsize, nrAudioSamples);
             ffft::FFTReal <float> fft_object (fftsize);
 
             float *fftinput;
@@ -120,49 +150,93 @@ void labfriend::get_audio_data()
 
             for(i=0; i < fftsize; i++)
             {
-                double multiplier = 0.5*(1-cos(2*M_PI*i/fftsize));
                 if(audioFFT_channel == 1)
                 {
-                    fftinput[i] = multiplier * audioData1[i];
+                    signal_in[i] = audioData1[i];
                 }
                 else if (audioFFT_channel == 2)
                 {
-                    fftinput[i] = multiplier * audioData2[i];
+                    signal_in[i] = audioData2[i];
                 }
             //    fprintf(fptr, "%f \n", fftinput[i]);
             }
-            AudioAxis.resize(fftsize/2);
-            audioData1.resize(fftsize/2);
 
-            fft_object.do_fft(fftputput, fftinput);
-            startpoint = audioSampleRate/nrAudioSamples;
-        /*    for(i=0; i < startpoint; i++)
+            mls_au.GenerateMls(mls, P, N); // Generate the Maximum length sequence
+            mls_au.GeneratetagL(mls, tagL, P, N); // Generate tagL for the L matrix
+            mls_au.GeneratetagS(mls, tagS, P, N);
+            mls_au.PermuteSignal(signal_in, perm, tagS, P);
+            mls_au.FastHadamard(perm,P+1,N);
+            mls_au.PermuteResponse(perm,resp,tagL,P);
+            mls_au.RotateResponse(resp,respo,P);
+
+
+            for(i=0; i < fftsize; i++)
             {
-                audioData1[i] = 20*log10(sqrt(pow(fftputput[startpoint], 2) + pow(fftputput[startpoint+fftsize/2],2))/((float)fftsize/2));
-                AudioAxis[i] = i*((audioSamplerate/2)/(fftsize/2));
-                printf("dd %f %f \n",audioData1[i], AudioAxis[i] );
+                double multiplier = 0.5*(1-cos(2*M_PI*i/fftsize));
+                if(audioFFT_channel == 1)
+                {
+                    fftinput[i] = multiplier * respo[i];
+                }
+                else if (audioFFT_channel == 2)
+                {
+                    fftinput[i] = multiplier * respo[i];
+                }
+            //    fprintf(fptr, "%f \n", fftinput[i]);
             }
-            printf("StartPointFFT %d %f, %d %f\n", startpoint, audioSampleRate, nrAudioSamples, audioData1[0]);*/
+
+            AudioAxis.resize(fftsize/2);
+            audioDataFFT.resize(fftsize/2);
+            audioDataFilteredFFT.resize(fftsize/2);
+            fft_object.do_fft(fftputput, fftinput);
+            fft_object.do_ifft(fftputput, fftinput);
+            startpoint = audioSampleRate/nrAudioSamples;
             for(i=0; i < fftsize/2; i++)
             {
-
-                //audioData1[i] = 20*log10(abs(fftputput[i]/((float)fftsize)));
-
-                audioData1[i] = 20*log10(sqrt(pow(fftputput[i], 2) + pow(fftputput[i+fftsize/2],2))/((float)fftsize/2));
+                audioDataFFT[i] = 20*log10(sqrt(pow(fftputput[i], 2) + pow(fftputput[i+fftsize/2],2))/((float)fftsize/2));
                 AudioAxis[i] = i*((audioSamplerate/2)/(fftsize/2));
-             //   fprintf(fptr, "%f \n", audioData1[i]);
             }
+            /*for(i=0; i < fftsize/2; i++)
+            {
+                if(audioFFTAVGcounter == 0)
+                {
+                    audioDataFilteredFFT[i] =  audioDataFFT[i]/(96);
+                    audioDataFFT[i] = 0.0;
+                }
+                sample_temp = 20*log10(sqrt(pow(fftputput[i], 2) + pow(fftputput[i+fftsize/2],2))/((float)fftsize/2));
+                audioDataFFT[i] = (audioDataFFT[i] + sample_temp);
+                AudioAxis[i] = i*((audioSamplerate/2)/(fftsize/2));
+                if(i==100) sample_temp2 = sample_temp;
+            }*/
+/*
+            for(i = 0; i < P; i++)
+            {
+                audioDataFilteredFFT[i] = respo[i];
+                AudioAxis[i] = i/audioSampleRate;
+            }
+
+            if(audioFFTAVGcounter == 95)
+            {
+                audioFFTAVGcounter = 0;
+            }
+            else
+            {
+                audioFFTAVGcounter++;
+            }*/
+            //printf("hmmmd %f %f %f %f\n", audioDataFFT[100], sample_temp2, audioDataFilteredFFT[100], sample_temp3 );
            // printf("StartPointFFT %d %f, %d %f %f\n", startpoint, audioSampleRate, nrAudioSamples, audioData1[fftsize/2-1], AudioAxis[fftsize/2-1]);
            // superplot.ui.qcpAudioDisplay->graph(0)->setData();
 
-            superplot.ui.qcpAudioDisplay->graph(0)->setData(AudioAxis,audioData1, 1);
+
+            superplot.ui.qcpAudioDisplay->graph(0)->setData(AudioAxis,audioDataFFT, 1);
+            superplot.ui.qcpAudioDisplay->graph(1)->setVisible(0);
 
             QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
             logTicker->setLogBase(10);
             superplot.ui.qcpAudioDisplay->xAxis->setTicker(logTicker);
             superplot.ui.qcpAudioDisplay->xAxis->setScaleType(QCPAxis::stLogarithmic);
            // superplot.ui.qcpAudioDisplay->graph(1)[i](AudioAxis,audioData1);
-            superplot.replotAudioData(audioSampleRate/nrAudioSamples, AudioAxis[(fftsize/2-1)],-150, 0);
+           // superplot.replotAudioData(audioSampleRate/nrAudioSamples, AudioAxis[(fftsize/2-1)],-1, 1);
+            superplot.replotAudioData(10, AudioAxis[(fftsize/2-1)],-155, 1);
             free(fftinput);
             free(fftputput);
             audioRecFinished = true;
@@ -176,16 +250,29 @@ void labfriend::get_audio_data()
     }
     else
     {
-        audio_buffer_position = audio_buffer_position + fifolevel;
+        audio_buffer_position = audio_buffer_position + (fifolevel-groupdelay);
 
     }
-
+/*
+    delete []mls;
+    delete []tagL;
+    delete []tagS;
+    delete []signal;
+    delete []perm;
+    delete []resp;
+    delete []signal_in;*/
 }
 
 void labfriend::audio_generate(void)
 {
     double currentSamplerate;
     double divisionratio;
+    mls_measure mls_af;
+    const long N = 12;
+    const long P = (1 << N) - 1;
+    bool *mls = new bool[P];
+    double *signal = new double[P+1];
+    int i, repeat;
 
     if( (GenerateAudioEnable == true) and (GenerateAudioLast == false) )
     {
@@ -211,6 +298,14 @@ void labfriend::audio_generate(void)
         {
             diracGenerator(audioLeftBuffer, actualGeneratedFrequency1, audioGenAmplitude1, currentSamplerate, FifoBufferSize);
         }
+        else if ( !audioGenerateType1.compare("MLS"))
+        {
+            mls_af.GenerateMls(mls, P, N);
+            mls_af.GenerateSignal(mls, signal, P, 0.5);
+            for(i=0; i < (P+1); i++) audioLeftBuffer[i] = signal[i];
+            //for(i=0; i < (P+1); i++) audioLeftBuffer[i+P+1] = signal[i];
+
+        }
 
         if( !audioGenerateType2.compare("Sinus"))
         {
@@ -223,6 +318,12 @@ void labfriend::audio_generate(void)
         else if ( !audioGenerateType2.compare("Dirac"))
         {
             diracGenerator(audioRigthBuffer, actualGeneratedFrequency2, audioGenAmplitude2, currentSamplerate, FifoBufferSize);
+        }
+        else if ( !audioGenerateType1.compare("MLS"))
+        {
+            mls_af.GenerateMls(mls, P, N);
+            mls_af.GenerateSignal(mls, signal, P, 0.5);
+            for(i=0; i < (P+1); i++) audioRigthBuffer[i] = signal[i];
         }
 
         setDACdata(audioLeftBuffer , audioRigthBuffer, 1, 0, 1, 0, FULL);
@@ -237,11 +338,16 @@ void labfriend::audio_generate(void)
     }
 
      GenerateAudioLast = GenerateAudioEnable;
+
+
+     delete []mls;
+     delete []signal;
 }
 
 void labfriend::audioToggleReact(bool checked)
 {
     audioEnabled = checked;
+    audioFFTAVGcounter = 0;
 
 }
 
@@ -341,14 +447,14 @@ void labfriend::audio_init(void)
     superplot.ui.smbSignalType_2->setCurrentIndex(1);
     superplot.ui.smbSignalType_2->setCurrentIndex(0);
 
+    superplot.ui.cmbSampleRate->setCurrentIndex(0);  //48khz defalt samplerate
+
     startAudioGenerate = false;
     audio_gen_delay = 0;
-    audioSampleRateConfig = SampleRate48k;
     audioInputConfig = audioATT1;
     enableAudioADC = EnableADC;
     enableAudioDAC = 0;
-    audioConfig =  audioSampleRateConfig | audioInputConfig  | enableAudioADC;
-    setI2Sconfig( audioConfig );
+
     superplot.ui.dbsAmplitude1->setDecimals(3);
     superplot.ui.dbsAmplitude1->setRange(0.0, 1.0);
     superplot.ui.dbsAmplitude1->setValue(0.5);
@@ -364,14 +470,15 @@ void labfriend::audio_init(void)
     GenerateAudioEnable = false;
     GenerateAudioLast = false;
     //Initialize Audio Codec
-    audioSampleRate = getSampleRate(audioConfig);
-    audioUpdateTimerMax = round((3200/audioSampleRate)/systemTimerRate);
+
     audioUpdateTimer = 0;
     zoomYaxisAudio = false;
     audioRecFinished = true;
     superplot.ui.qcpAudioDisplay->axisRect()->setRangeZoom(Qt::Horizontal);
     superplot.ui.smbFFTchannel->setCurrentIndex(1);
     superplot.ui.smbFFTchannel->setCurrentIndex(0);
+
+    superplot.ui.cmbSampleRate->setCurrentIndex(4);  //48khz defalt samplerate
 
 }
 
@@ -391,4 +498,5 @@ void labfriend::audio_connect(void)
     QObject::connect( superplot.ui.smbSignalType_2, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioGenerateType2(QString)));
     QObject::connect( superplot.ui.qcpAudioDisplay, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(mouseReleaseAudio(QMouseEvent*)));
     QObject::connect( superplot.ui.smbFFTchannel, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioFFTchannel(QString)));
+    QObject::connect( superplot.ui.pbRecord , SIGNAL(toggled(bool)), this, SLOT( audioToggleReact(bool) ) );
 }
