@@ -288,5 +288,9 @@ private:
     void audio_connect(void);
     void audio_init(void);
 
+    void mls_analysis(double *indata, double *outdata, int32_t order);
+    void fft_analysis(double *indata, double *out_amplitude, double *out_phase, double *axis, int32_t fftsize);
+    void audio_plot(double * axis, double * ch1data, double *ch2data, uint8_t visible_channel, int axistype);
+
 };
 

@@ -8,9 +8,9 @@ using namespace std;
 
 
 
-void mls_measure::GenerateSignal(bool *mls, double *signal, long P, double gain)
+void mls_measure::GenerateSignal(bool *mls, double *signal, int32_t P, double gain)
 {
-    long i;
+    int32_t i;
 
     for (i = 0; i < P; i++) // Change 0 to 1 and 1 to -1
     {
@@ -30,9 +30,9 @@ namespace little_endian_io
   }
 }
 using namespace little_endian_io;
-void mls_measure::GenerateWaveFile(double *signal, long P, int channel,int repeat, std::string filename)
+void mls_measure::GenerateWaveFile(double *signal, int32_t P, int channel,int repeat, std::string filename)
 {
-    long i;
+    int32_t i;
     int left_chan, right_can;
 
 
@@ -80,9 +80,9 @@ void mls_measure::GenerateWaveFile(double *signal, long P, int channel,int repea
     write_word( f, file_length - 8, 4 );
 }
 
-void mls_measure::GenerateMls(bool *mls, long P, long N)
+void mls_measure::GenerateMls(bool *mls, int32_t P, int32_t N)
 {
-    const long maxNoTaps = 18;
+    const int32_t maxNoTaps = 18;
     const bool tapsTab[16][18] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0,
@@ -102,9 +102,9 @@ void mls_measure::GenerateMls(bool *mls, long P, long N)
         0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     bool taps[maxNoTaps];
-    long i, j;
+    int32_t i, j;
     bool *delayLine = new bool[maxNoTaps];
-    long sum;
+    int32_t sum;
     for (i = 0; i < N; i++) // copy the N’th taps table
     {
         taps[i] = tapsTab[maxNoTaps - N][i];
@@ -128,9 +128,9 @@ void mls_measure::GenerateMls(bool *mls, long P, long N)
     }
     delete []delayLine;
 }
-void mls_measure::FastHadamard(double *x, long P1, long N)
+void mls_measure::FastHadamard(double *x, int32_t P1, int32_t N)
 {
-    long i, i1, j, k, k1, k2;
+    int32_t i, i1, j, k, k1, k2;
     double temp;
 
     k1 = P1;
@@ -151,9 +151,9 @@ void mls_measure::FastHadamard(double *x, long P1, long N)
         k1 = k1 >> 1;
     }
 }
-void mls_measure::PermuteSignal(double *sig, double *perm, long *tagS, long P)
+void mls_measure::PermuteSignal(double *sig, double *perm, int32_t *tagS, int32_t P)
 {
-    long i;
+    int32_t i;
     double dc = 0;
 
     for (i = 0; i < P; i++)
@@ -164,9 +164,9 @@ void mls_measure::PermuteSignal(double *sig, double *perm, long *tagS, long P)
     for (i = 0; i < P; i++) // Just a permutation of the measured signal
         perm[tagS[i]] = sig[i];
 }
-void mls_measure::PermuteResponse(double *perm, double *resp, long *tagL, long P)
+void mls_measure::PermuteResponse(double *perm, double *resp, int32_t *tagL, int32_t P)
 {
-    long i;
+    int32_t i;
     const double fact = 1 / double(P + 1);
     for (i = 0; i < P; i++) // Just a permutation of the impulse response
     {
@@ -175,10 +175,10 @@ void mls_measure::PermuteResponse(double *perm, double *resp, long *tagL, long P
     resp[P] = 0;
 }
 
-void mls_measure::RotateResponse(double *inresp, double *outresp, long P)
+void mls_measure::RotateResponse(double *inresp, double *outresp, int32_t P)
 {
-    long i;
-    long MidPoint;
+    int32_t i;
+    int32_t MidPoint;
 
     MidPoint = (P) >> 1;
 
@@ -190,11 +190,11 @@ void mls_measure::RotateResponse(double *inresp, double *outresp, long P)
 
 }
 
-void mls_measure::GeneratetagL(bool *mls, long *tagL, long P, long N)
+void mls_measure::GeneratetagL(bool *mls, int32_t *tagL, int32_t P, int32_t N)
 {
-    long i, j;
-    long *colSum = new long[P];
-    long *index = new long[N];
+    int32_t i, j;
+    int32_t *colSum = new int32_t[P];
+    int32_t *index = new int32_t[N];
     for (i = 0; i < P; i++) // Run through all the columns in the autocorr matrix
     {
         colSum[i] = 0;
@@ -220,9 +220,9 @@ void mls_measure::GeneratetagL(bool *mls, long *tagL, long P, long N)
     delete []index;
 }
 
-void mls_measure::GeneratetagS(bool *mls, long *tagS, long P, long N)
+void mls_measure::GeneratetagS(bool *mls, int32_t *tagS, int32_t P, int32_t N)
 {
-    long i, j;
+    int32_t i, j;
     for (i = 0; i < P; i++) // For each column in the S matrix
     {
         tagS[i] = 0;
@@ -236,12 +236,12 @@ void mls_measure::GeneratetagS(bool *mls, long *tagS, long P, long N)
 #ifdef HAVE_MAIN
 int main()
 {
-    const long N = 10;
-    const long P = (1 << N) - 1;
-    long i;
+    const int32_t N = 10;
+    const int32_t P = (1 << N) - 1;
+    int32_t i;
     bool *mls = new bool[P];
-    long *tagL = new long[P];
-    long *tagS = new long[P];
+    int32_t *tagL = new int32_t[P];
+    int32_t *tagS = new int32_t[P];
     double *signal = new double[P];
     double *perm = new double[P + 1];
     double *resp = new double[P + 1];
