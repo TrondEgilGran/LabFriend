@@ -109,6 +109,7 @@ signal finish_adc, finish_dac, finish_dac_cnt : std_logic;
 signal enable_adc, spi_adc_read, spi_dac_write, enable_dac : std_logic;
 signal serial_transfer_triggered, trigger_serial_transfer, indicator : std_logic;
 signal sync_counters : std_logic;
+signal zeero_out : std_logic;
 begin
 
 bram1: bram_tdp port map (	a_clk   =>   std_logic(ram_adc_a_clk),  
@@ -223,7 +224,11 @@ begin
 		end if;
 		
 		if lrnegedge = '1' then
-			dac_I2S_data <= ram_dac_a_dout;
+			if zeero_out = '0' then
+				dac_I2S_data <= ram_dac_a_dout;
+			else
+				dac_I2S_data <= (others => '0');
+			end if;
 			ram_adc_a_din <= adc_I2S_data;
 			ram_adc_a_wr <= '1';
 		else
@@ -313,6 +318,7 @@ begin
 		spi_adc_read <= '0';
 		indicator <= '0';
 		dacBufferSize <= (others => '1');
+		zeero_out <= '0';
 	elsif rising_edge(clk) then
 		if (wr = '1' or rd = '1') and addr(2 downto 0) = address(2 downto 0) then
 			case data_state is
@@ -339,6 +345,7 @@ begin
 						data_state <= first_byte;
 					elsif addr(6 downto 3) = "1001" then -- sync ADC/DAC
 						sync_counters <= '1';
+						zeero_out <= datain(0);
 					end if;
 					
 				when first_byte => 
