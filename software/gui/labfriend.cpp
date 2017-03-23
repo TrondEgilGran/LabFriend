@@ -174,7 +174,11 @@ void labfriend::ScopeRun(void)
             }
             else
             {
-                get_audio_data();
+                if(audioRepeat || audio_single_trig)
+                {
+                    get_audio_data();
+                    if (audioRecFinished == true)  audio_single_trig = 0;
+                }
                 audioUpdateTimer = 0;
             }
         }
@@ -577,50 +581,6 @@ void labfriend::setTriggerValue(double dbTrigger)
 {
     triggerValue = set_trigger_voltage(triggerSource, dbTrigger/1000);
 }
-
-void labfriend::setAudioGenerateFrequency1(double frequency)
-{
-    audioGenFrequency1 = frequency;
-}
-
-void labfriend::setAudioGenerateFrequency2(double frequency)
-{
-    audioGenFrequency2 = frequency;
-}
-
-void labfriend::setAudioGenerateAmplitude1(double amplitude)
-{
-    audioGenAmplitude1 = amplitude;
-}
-
-void labfriend::setAudioGenerateAmplitude2(double amplitude)
-{
-    audioGenAmplitude2 = amplitude;
-}
-
-void labfriend::setAudioGenerateType1(QString qsSource)
-{
-    audioGenerateType1 = qsSource;
-}
-
-void labfriend::setAudioGenerateType2(QString qsSource)
-{
-    audioGenerateType2 = qsSource;
-}
-
-void labfriend::setAudioAnalysis(QString qsSource)
-{
-    if( !qsSource.compare("Time") )
-    {
-        audioAnalysisType = audioAnalysisType_time;
-    }
-    else if( !qsSource.compare("Frequency") )
-    {
-        audioAnalysisType = audioAnalysisType_frequency;
-    }
-
-}
-
 
 
 void labfriend::ManageCursor(QCustomPlot *customPlot, QCPCursor *cursor, double x, double y, QPen pen)

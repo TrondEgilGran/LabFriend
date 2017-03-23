@@ -41,4 +41,5 @@ int setDacSampleCount(int fifofill);
 int squareGenerator( float * samples, float frequency, float amplitude, float samplerate, uint32_t nrOfSamples);
 int diracGenerator( float * samples, float frequency, float amplitude, float samplerate, uint32_t nrOfSamples);
 int audioSPI(uint8_t address, uint8_t data);
-int setI2sync( void );
+int setI2sync(uint8_t datain );
+int silenceGenerator( float * samples, uint32_t nrOfSamples);

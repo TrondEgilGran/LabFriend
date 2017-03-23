@@ -29,7 +29,7 @@ public:
     QTimer *timerA;
     bool audioEnableButtonValue;
     Ui::MainWindow ui;
-    void replotAudioData(double xmin, double xmax, double ymin, double ymax);
+    void replotAudioData(double xmin, double xmax, double ymin, double ymax, double ymin2, double ymax2);
 
 
 public slots:

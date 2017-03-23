@@ -45,10 +45,13 @@ public:
     QVector<double> scopeXaxis;
     QVector<double> Logxaxis;
     QVector<double> AudioAxis;
+    QVector<double> AudioAxisFFT;
     QVector<double> audioData1;
     QVector<double> audioData2;
-    QVector<double> audioDataFFT;
-    QVector<double> audioDataFilteredFFT;
+    QVector<double> audioDataFFTamplitude;
+    QVector<double> audioDataFFTphase;
+    QVector<double> audioDataMLS;
+    //QVector<double> audioDataFilteredFFT;
     uint8_t *dobit07;
     uint32_t dosize;
     uint8_t *aovalue;
@@ -74,7 +77,7 @@ public slots:
     void ScopeRun(void);
     void singleScopeRun(bool checked);
     void scopeStart(void);
-    void audioToggleReact(bool checked);
+    void audioToggleReact();
     void setTraceSource1(QString qsSource);
     void setTraceSource2(QString qsSource);
     void setTraceSource3(QString qsSource);
@@ -129,6 +132,8 @@ public slots:
     void setAudioRecTime(double time);
     void setAudioRecRepeate(bool checked);
     void setAudioAnalysis(QString qsSource);
+    void audioFFTCW(void);
+    void audioSetMicPower(void);
     void scopeBufferSizeF(QString qsSource);
     //AWG and DWG functions
     void setDWGrate(int dwgrate);
@@ -159,14 +164,9 @@ private:
     double scopeUpdateRate;
     uint32_t scopeUpdateTimer;
     uint32_t scopeUpdateTimerMax;
-    double audioUpdateRate;
-    uint32_t audioUpdateTimer;
-    uint32_t audioUpdateTimerMax;
-    double audioSampleRate;
     double scopeTimeOffsetFormat;
     double scopeOffset[NumberOfScopeChannels];
     bool zoomYaxis;
-    bool zoomYaxisAudio;
 
     double doUpdateRate;
     uint32_t doUpdateTimer;
@@ -239,6 +239,31 @@ private:
     uint32_t dobyteCounter;
     bool doFileEnable;
     bool doLoopFile;
+    uint16_t numberOfSamples;
+    bool ScopeFastRead;
+    uint32_t scopeBufferSize;
+    double scopeActualDiv;
+    double xCursor1Point;
+    double xCursor2Point;
+    double yCursor1Point;
+    double yCursor2Point;
+
+    uint32_t scopeBufferSizeV=18432;
+
+    //AWG and DWG signals
+    uint16_t awgSampleRate;
+    uint16_t dwgSampleRate;
+    bool awgSingle;
+    bool dwgSingle;
+
+    void scope_run_main(void);
+
+    //Audio related
+    double audioUpdateRate;
+    uint32_t audioUpdateTimer;
+    uint32_t audioUpdateTimerMax;
+    double audioSampleRate;
+    bool zoomYaxisAudio;
     uint8_t audioInputConfig;
     uint8_t audioSampleRateConfig;
     double audioGenAmplitude1;
@@ -250,16 +275,8 @@ private:
     bool GenerateAudioEnable;
     bool GenerateAudioLast;
     bool startAudioGenerate;
-    uint16_t numberOfSamples;
     double actualGeneratedFrequency1;
     double actualGeneratedFrequency2;
-    bool ScopeFastRead;
-    uint32_t scopeBufferSize;
-    double scopeActualDiv;
-    double xCursor1Point;
-    double xCursor2Point;
-    double yCursor1Point;
-    double yCursor2Point;
     uint8_t enableAudioADC;
     uint8_t enableAudioDAC;
     int audio_gen_delay;
@@ -274,23 +291,29 @@ private:
     int audioAnalysisType;
     const int audioAnalysisType_time=0;
     const int audioAnalysisType_frequency=1;
+    const int audioAnalysisType_mls=2;
+    const uint8_t audioTrace0=1;
+    const uint8_t audioTrace1=2;
+    const uint8_t audioTrace2=4;
+    const uint8_t axistypeLin=0;
+    const uint8_t axistypeLog=1;
     int audioFFT_channel;
-    uint32_t scopeBufferSizeV=18432;
-
-    //AWG and DWG signals
-    uint16_t awgSampleRate;
-    uint16_t dwgSampleRate;
-    bool awgSingle;
-    bool dwgSingle;
-
-    void scope_run_main(void);
     void audio_generate(void);
     void audio_connect(void);
     void audio_init(void);
-
-    void mls_analysis(double *indata, double *outdata, int32_t order);
-    void fft_analysis(double *indata, double *out_amplitude, double *out_phase, double *axis, int32_t fftsize);
-    void audio_plot(double * axis, double * ch1data, double *ch2data, uint8_t visible_channel, int axistype);
+    void mls_analysis(QVector<double> &indata, QVector<double> &outdata, int32_t order);
+    void fft_analysis(QVector<double> &indata, QVector<double> &out_amplitude, QVector<double> &out_phase, QVector<double> &axis, int32_t fftsize);
+    void audio_plot(QVector<double> &axis, QVector<double> &trace0, QVector<double> &trace1, uint8_t visible_trace, int axistype, uint32_t datasize);
+    uint32_t audio_find_fft_size(uint32_t input);
+    double audioXaxisStart;
+    double audioYaxisMin;
+    double audioYaxisMax;
+    double audioYaxis2min;
+    double audioYaxis2Max;
+    void audio_set_axis(double xstart, double ymin, double ymax, double y2min, double y2max);
+    bool audio_single_trig;
+    bool audioFFTmode;
+    uint32_t fftsize;
 
 };
 

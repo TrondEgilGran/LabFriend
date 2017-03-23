@@ -56,6 +56,9 @@ void MainForm::attachCurves()
     ui.qcpAudioDisplay->graph(0)->setPen(QPen(Qt::blue));
     ui.qcpAudioDisplay->addGraph();
     ui.qcpAudioDisplay->graph(1)->setPen(QPen(Qt::red));
+    ui.qcpAudioDisplay->addGraph(ui.qcpAudioDisplay->xAxis,ui.qcpAudioDisplay->yAxis2 );
+    ui.qcpAudioDisplay->graph(2)->setPen(QPen(Qt::green));
+
     ui.qcpAudioDisplay->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom );
 
 }
@@ -112,7 +115,7 @@ void MainForm::InitOPtions()
     ui.cmbADC2->addItem("1V/div");
     ui.cmbADC1->addItem("2V/div");
     ui.cmbADC2->addItem("2V/div");
-    ui.pbRecord->setCheckable(true);
+
     ui.pbGenerateAudio->setCheckable(true);
     ui.pbTrigSingle->setCheckable(true);
     ui.cmbSampleRate->addItem("16k");
@@ -182,6 +185,7 @@ void MainForm::InitOPtions()
     ui.cmbAudioInputConfig->addItem("GND");
     ui.cmbAnalysis->addItem("Time");
     ui.cmbAnalysis->addItem("Frequency");
+    ui.cmbAnalysis->addItem("MLS");
     ui.cmbBufferSize->addItem("18k"); //18432
     ui.cmbBufferSize->addItem("73k"); //73728
     ui.cmbBufferSize->addItem("147k"); //147456
@@ -215,10 +219,11 @@ void MainForm::replotLoggerData()
     ui.qcpDataLog->replot();
 }
 
-void MainForm::replotAudioData(double xmin, double xmax, double ymin, double ymax)
+void MainForm::replotAudioData(double xmin, double xmax, double ymin, double ymax, double ymin2, double ymax2)
 {
     ui.qcpAudioDisplay->xAxis->setRange(xmin, xmax);
     ui.qcpAudioDisplay->yAxis->setRange(ymin, ymax);
+    ui.qcpAudioDisplay->yAxis2->setRange(ymin2, ymax2);
 
     ui.qcpAudioDisplay->replot();
 }

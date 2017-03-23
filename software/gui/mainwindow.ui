@@ -70,7 +70,14 @@
     <addaction name="action_Open_Digital_Out"/>
     <addaction name="actionOpenAnalogOutput"/>
    </widget>
+   <widget class="QMenu" name="menuAudio">
+    <property name="title">
+     <string>Audio</string>
+    </property>
+    <addaction name="actionSet_Mic_Power"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuAudio"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="docControls">
@@ -935,7 +942,7 @@
           <rect>
            <x>220</x>
            <y>100</y>
-           <width>61</width>
+           <width>71</width>
            <height>16</height>
           </rect>
          </property>
@@ -1199,6 +1206,19 @@
          </property>
          <property name="text">
           <string>FFT Channel</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pbFFTCW">
+         <property name="geometry">
+          <rect>
+           <x>170</x>
+           <y>460</y>
+           <width>121</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>FFT Current View</string>
          </property>
         </widget>
        </widget>
@@ -1790,6 +1810,11 @@
   <action name="actionOpenAnalogOutput">
    <property name="text">
     <string>O&amp;penAnalogOutput</string>
+   </property>
+  </action>
+  <action name="actionSet_Mic_Power">
+   <property name="text">
+    <string>Set Mic Power</string>
    </property>
   </action>
  </widget>

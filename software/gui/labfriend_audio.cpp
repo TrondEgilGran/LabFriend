@@ -37,9 +37,13 @@ void labfriend::get_audio_data()
     double * dataset2;
     int i;
     int fifolevel;
+
     struct timeval begin, end;
+
     double elapsedTime;
-    int groupdelay;
+
+    int32_t groupdelay;
+
 
     dataset1 = (double *) malloc(FifoBufferSize*sizeof(double));
     if (dataset1==NULL) exit (1);
@@ -67,8 +71,9 @@ void labfriend::get_audio_data()
         audioRecFinished = false;
         //printf ("nrOf Audio %d  adioRecTime %f samplerate %f\n", nrAudioSamples, audioRecTime, samplerate);
         //Flush audio buffer
-
-        setI2sync();
+        setI2sync(1); //zeero output
+        usleep(150000);
+        setI2sync(0);
         usleep(2000); //make sure buffer is filled up to beyond the groupddelay on first run
     }
 
@@ -105,18 +110,41 @@ void labfriend::get_audio_data()
     {
         if( audioAnalysisType == audioAnalysisType_time)
         {
-            superplot.ui.qcpAudioDisplay->graph(0)->setData(AudioAxis,audioData1);
-            superplot.ui.qcpAudioDisplay->graph(1)->setData(AudioAxis,audioData2);
-            superplot.ui.qcpAudioDisplay->xAxis->setScaleType(QCPAxis::stLinear);
-            superplot.replotAudioData(0.0, AudioAxis[nrAudioSamples-1], -1, 1);
+            audio_set_axis(0, -1, 1, -1, 1);
+            audio_plot(AudioAxis,audioData1, audioData2, audioTrace0 | audioTrace1, axistypeLin, nrAudioSamples );
         }
         else if( audioAnalysisType == audioAnalysisType_frequency)
         {
-            fft_analysis();
+            fftsize = audio_find_fft_size(nrAudioSamples);
+            printf("ffts %d, nrau %d\n", fftsize, nrAudioSamples);
+            audioDataFFTamplitude.resize(fftsize/2);
+            audioDataFFTphase.resize(fftsize/2);
+            AudioAxis.resize(fftsize/2);
+            if(audioFFT_channel == 1)
+            {
+                fft_analysis(audioData1,audioDataFFTamplitude,audioDataFFTphase,AudioAxis,fftsize);
+            }
+            else if(audioFFT_channel == 2)
+            {
+               fft_analysis(audioData2,audioDataFFTamplitude,audioDataFFTphase,AudioAxis,fftsize);
+            }
+            audio_set_axis(audioSampleRate/fftsize, -155, 0, -180, 180);
+            audio_plot(AudioAxis,audioDataFFTamplitude, audioDataFFTphase, audioTrace0 | audioTrace2, axistypeLog, fftsize/2 );
         }
-        else if( audioAnalysisType == audioAnalysisType_frequency)
+        else if( audioAnalysisType == audioAnalysisType_mls)
         {
-            mls_analysis();
+            audioDataMLS.resize(4096);
+            AudioAxis.resize(4096);
+            if(audioFFT_channel == 1)
+            {
+                mls_analysis(audioData1, audioDataMLS, 12);
+            }
+            else if(audioFFT_channel == 2)
+            {
+                mls_analysis(audioData2, audioDataMLS, 12);
+            }
+            audio_set_axis(0, -1, 1, -1, 1);
+            audio_plot(AudioAxis,audioDataMLS, audioDataMLS, audioTrace0, axistypeLin, 4096 );
         }
 
 
@@ -130,6 +158,20 @@ void labfriend::get_audio_data()
         audio_buffer_position = audio_buffer_position + (fifolevel-groupdelay);
 
     }
+}
+
+uint32_t labfriend::audio_find_fft_size(uint32_t input)
+{
+    uint32_t i;
+
+    i=0;
+
+    while(input >>= 1)
+    {
+        i++;
+    }
+
+    return exp2(i);
 }
 
 void labfriend::audio_generate(void)
@@ -170,7 +212,7 @@ void labfriend::audio_generate(void)
         else if ( !audioGenerateType1.compare("MLS"))
         {
             mls_af.GenerateMls(mls, P, N);
-            mls_af.GenerateSignal(mls, signal, P, 0.5);
+            mls_af.GenerateSignal(mls, signal, P, audioGenAmplitude1);
             for(i=0; i < (P+1); i++) audioLeftBuffer[i] = signal[i];
             //for(i=0; i < (P+1); i++) audioLeftBuffer[i+P+1] = signal[i];
 
@@ -191,7 +233,7 @@ void labfriend::audio_generate(void)
         else if ( !audioGenerateType1.compare("MLS"))
         {
             mls_af.GenerateMls(mls, P, N);
-            mls_af.GenerateSignal(mls, signal, P, 0.5);
+            mls_af.GenerateSignal(mls, signal, P, audioGenAmplitude2);
             for(i=0; i < (P+1); i++) audioRigthBuffer[i] = signal[i];
         }
 
@@ -213,7 +255,7 @@ void labfriend::audio_generate(void)
      delete []signal;
 }
 
-void labfriend::fft_analysis(double * indata, double * out_amplitude, double * out_phase, double * axis, int32_t fftsize)
+void labfriend::fft_analysis(QVector<double> &indata, QVector<double> &out_amplitude, QVector<double> &out_phase, QVector<double> &axis, int32_t fftsize)
 {
     int i;
 
@@ -237,17 +279,17 @@ void labfriend::fft_analysis(double * indata, double * out_amplitude, double * o
         real = fftputput[i];
         imag = fftputput[i+fftsize/2];
         out_amplitude[i] = 20*log10(sqrt(pow(real, 2) + pow(imag,2))/((float)fftsize/2));
-        if(abs(real) < 1e-6 )  real=0; //avoid calculating phase for noise
-        if(abs(imag) < 1e-6 )  imag=0;
+        if(abs(real) < 0.5e-6 )  real=0; //avoid calculating phase for noise
+        if(abs(imag) < 0.5e-6 )  imag=0;
         out_phase[i] = atan2(real, imag) * 180/M_PI;
         axis[i] = i*((audioSamplerate/2)/(fftsize/2));
     }
 
-    delete fftinput[];
-    delete fftputput[];
+    delete []fftinput;
+    delete []fftputput;
 }
 
-void labfriend::mls_analysis(double * indata, double * outdata, int32_t order)
+void labfriend::mls_analysis(QVector<double> &indata, QVector<double> &outdata, int32_t order)
 {
     mls_measure mls_au;
     int32_t N = order;
@@ -261,32 +303,75 @@ void labfriend::mls_analysis(double * indata, double * outdata, int32_t order)
     mls_au.GenerateMls(mls, P, N); // Generate the Maximum length sequence
     mls_au.GeneratetagL(mls, tagL, P, N); // Generate tagL for the L matrix
     mls_au.GeneratetagS(mls, tagS, P, N);
-    mls_au.PermuteSignal(indata, perm, tagS, P);
+    mls_au.PermuteSignal(indata.data(), perm, tagS, P);
     mls_au.FastHadamard(perm,P+1,N);
     mls_au.PermuteResponse(perm,resp,tagL,P);
-    mls_au.RotateResponse(resp,outdata,P);
+    mls_au.RotateResponse(resp,outdata.data(),P);
 
-    delete mls[];
-    delete tagL[];
-    delete tagS[];
-    delete perm[];
-    delete resp[];
+    delete []mls;
+    delete []tagL;
+    delete []tagS;
+    delete []perm;
+    delete []resp;
 }
 
-void labfriend::audio_plot(double * axis, double * trace0, double * trace1, uint8_t visible_channel, int axistype)
+void labfriend::audio_plot(QVector<double> &axis, QVector<double> &trace0, QVector<double> &trace1, uint8_t visible_trace, int axistype, uint32_t datasize)
 {
+    superplot.ui.qcpAudioDisplay->graph(0)->setVisible(0);
+    superplot.ui.qcpAudioDisplay->graph(1)->setVisible(0);
+    superplot.ui.qcpAudioDisplay->graph(2)->setVisible(0);
+    superplot.ui.qcpAudioDisplay->yAxis2->setVisible(0);
 
-    superplot.ui.qcpAudioDisplay->graph(0)->setData(axis,ch);
-    superplot.ui.qcpAudioDisplay->graph(1)->setData(AudioAxis,audioData2);
-    superplot.ui.qcpAudioDisplay->xAxis->setScaleType(QCPAxis::stLinear);
-    superplot.replotAudioData(0.0, AudioAxis[nrAudioSamples-1], -1, 1);
+    if( visible_trace & audioTrace0 )
+    {
+        superplot.ui.qcpAudioDisplay->graph(0)->setData(axis,trace0);
+        superplot.ui.qcpAudioDisplay->graph(0)->setVisible(1);
+    }
+    if( visible_trace & audioTrace1 )
+    {
+        superplot.ui.qcpAudioDisplay->graph(1)->setData(axis,trace1);
+        superplot.ui.qcpAudioDisplay->graph(1)->setVisible(1);
+    }
+    if( visible_trace & audioTrace2 ) //Use this for alternate Y axis
+    {
+        superplot.ui.qcpAudioDisplay->graph(2)->setData(axis,trace1);
+        superplot.ui.qcpAudioDisplay->graph(2)->setVisible(1);
+        superplot.ui.qcpAudioDisplay->yAxis2->setVisible(1);
+    }
+
+    if(axistype == axistypeLin)
+    {
+        superplot.ui.qcpAudioDisplay->xAxis->setScaleType(QCPAxis::stLinear);
+        QSharedPointer<QCPAxisTicker> linTicker(new QCPAxisTicker);
+        superplot.ui.qcpAudioDisplay->xAxis->setTicker(linTicker);
+
+    }
+    else
+    {
+        superplot.ui.qcpAudioDisplay->xAxis->setScaleType(QCPAxis::stLogarithmic);
+        QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+        logTicker->setLogBase(10);
+        superplot.ui.qcpAudioDisplay->xAxis->setTicker(logTicker);
+    }
+
+    superplot.replotAudioData( audioXaxisStart, axis[datasize-1], audioYaxisMin, audioYaxisMax, audioYaxis2min, audioYaxis2Max);
 }
 
-void labfriend::audioToggleReact(bool checked)
+void labfriend::audioToggleReact()
 {
-    audioEnabled = checked;
     audioFFTAVGcounter = 0;
+    audio_single_trig = 1;
+    audioFFTmode = false;
 
+}
+
+void labfriend::audio_set_axis(double xstart, double ymin, double ymax, double y2min, double y2max)
+{
+    audioXaxisStart = xstart;
+    audioYaxisMin = ymin;
+    audioYaxisMax = ymax;
+    audioYaxis2min = y2min;
+    audioYaxis2Max = y2max;
 }
 
 void labfriend::setAudioConfig(QString qsSource)
@@ -367,6 +452,122 @@ void labfriend::setAudioSampleRate(QString qsSource)
 
 }
 
+void labfriend::setAudioGenerateFrequency1(double frequency)
+{
+    audioGenFrequency1 = frequency;
+}
+
+void labfriend::setAudioGenerateFrequency2(double frequency)
+{
+    audioGenFrequency2 = frequency;
+}
+
+void labfriend::setAudioGenerateAmplitude1(double amplitude)
+{
+    audioGenAmplitude1 = amplitude;
+}
+
+void labfriend::setAudioGenerateAmplitude2(double amplitude)
+{
+    audioGenAmplitude2 = amplitude;
+}
+
+void labfriend::setAudioGenerateType1(QString qsSource)
+{
+    audioGenerateType1 = qsSource;
+}
+
+void labfriend::setAudioGenerateType2(QString qsSource)
+{
+    audioGenerateType2 = qsSource;
+}
+
+void labfriend::setAudioAnalysis(QString qsSource)
+{
+    if( !qsSource.compare("Time") )
+    {
+        audioAnalysisType = audioAnalysisType_time;
+    }
+    else if( !qsSource.compare("Frequency") )
+    {
+        audioAnalysisType = audioAnalysisType_frequency;
+    }
+    else if( !qsSource.compare("MLS") )
+    {
+        audioAnalysisType = audioAnalysisType_mls;
+    }
+
+}
+
+void labfriend::audioSetMicPower(void)
+{
+    uint8_t config;
+    uint8_t data[4];
+    setVoltage( LAVIO , 5.0, LAVIOOffsetGainError, LAVIOOffsetOffsetError);
+    setVoltage( EXVO , 5.0, EXVOOffsetGainError, EXVOOffsetOffsetError);
+    config = DWG_CONFIG_LOOP;
+    data[0] = 0x55;
+    data[1] = 0xAA;
+    data[2] = 0x55;
+    data[3] = 0xAA;
+    run_dwg(config, 30, 4, data );
+    data[0] = (uint8_t)round(2.5*RFDACMAX/RFDACREF);
+    data[1] = (uint8_t)round(2.5*RFDACMAX/RFDACREF);
+    data[2] = (uint8_t)round(2.5*RFDACMAX/RFDACREF);
+    data[3] = (uint8_t)round(2.5*RFDACMAX/RFDACREF);
+    run_awg(config, 30, 4, data );
+    printf("mic should have power now\n");
+}
+
+void labfriend::audioFFTCW(void)
+{
+    if(audioFFTmode == false)
+    {
+        audioFFTmode = true;
+
+        if(audioAnalysisType == audioAnalysisType_mls)
+        {
+            fftsize = 4096;
+        }
+        else
+        {
+            fftsize = audio_find_fft_size(nrAudioSamples);
+        }
+        audioDataFFTamplitude.resize(fftsize/2);
+        audioDataFFTphase.resize(fftsize/2);
+        AudioAxisFFT.resize(fftsize/2);
+
+        if(audioAnalysisType == audioAnalysisType_mls)
+        {
+            fft_analysis(audioDataMLS,audioDataFFTamplitude,audioDataFFTphase,AudioAxisFFT,fftsize);
+        }
+        else if((audioFFT_channel == 1) && audioAnalysisType == audioAnalysisType_time )
+        {
+            fft_analysis(audioData1,audioDataFFTamplitude,audioDataFFTphase,AudioAxisFFT,fftsize);
+        }
+        else if((audioFFT_channel == 2) && audioAnalysisType == audioAnalysisType_time )
+        {
+           fft_analysis(audioData2,audioDataFFTamplitude,audioDataFFTphase,AudioAxisFFT,fftsize);
+        }
+        audio_set_axis(audioSampleRate/fftsize, -155, 0, -180, 180);
+        audio_plot(AudioAxisFFT,audioDataFFTamplitude, audioDataFFTphase, audioTrace0 | audioTrace2, axistypeLog, fftsize/2 );
+    }
+    else
+    {
+        audioFFTmode = false;
+        if(audioAnalysisType == audioAnalysisType_mls)
+        {
+            audio_set_axis(0, -1, 1, -1, 1);
+            audio_plot(AudioAxis,audioDataMLS, audioDataMLS, audioTrace0, axistypeLin, 4096 );
+        }
+        else if( audioAnalysisType == audioAnalysisType_time )
+        {
+            audio_set_axis(0, -1, 1, -1, 1);
+            audio_plot(AudioAxis,audioData1, audioData2, audioTrace0 | audioTrace1, axistypeLin, nrAudioSamples );
+        }
+    }
+}
+
 void labfriend::audio_init(void)
 {
     audioLeftBuffer = new float[FifoBufferSize+1];
@@ -418,6 +619,9 @@ void labfriend::audio_init(void)
 
     superplot.ui.cmbSampleRate->setCurrentIndex(4);  //48khz defalt samplerate
 
+    audio_single_trig = 0;
+    audioEnabled = true;
+    audioFFTmode = false;
 }
 
 void labfriend::audio_connect(void)
@@ -436,5 +640,7 @@ void labfriend::audio_connect(void)
     QObject::connect( superplot.ui.smbSignalType_2, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioGenerateType2(QString)));
     QObject::connect( superplot.ui.qcpAudioDisplay, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(mouseReleaseAudio(QMouseEvent*)));
     QObject::connect( superplot.ui.smbFFTchannel, SIGNAL( currentIndexChanged(QString)), this, SLOT(setAudioFFTchannel(QString)));
-    QObject::connect( superplot.ui.pbRecord , SIGNAL(toggled(bool)), this, SLOT( audioToggleReact(bool) ) );
+    QObject::connect( superplot.ui.pbRecord , SIGNAL(clicked()), this, SLOT( audioToggleReact() ) );
+    QObject::connect( superplot.ui.pbFFTCW , SIGNAL(clicked()), this, SLOT( audioFFTCW() ) );
+    QObject::connect( superplot.ui.actionSet_Mic_Power, SIGNAL(triggered()), this, SLOT(audioSetMicPower()));
 }

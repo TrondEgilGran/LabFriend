@@ -89,12 +89,12 @@ int setI2Sconfig( uint8_t config)
     return 1;
 }
 
-int setI2sync( void )
+int setI2sync( uint8_t datain ) //0== reset counters 1=zeero out + reset counters
 {
     uint8_t databuffer[1];
 
 
-    databuffer[0] = 00;
+    databuffer[0] = datain;
     spiCommand( WRITE, addrAudioCodec | I2SSYNC, 1 );
     spiWrite( databuffer, 1 );
 
@@ -107,13 +107,25 @@ int sineGenerator( float * samples, float frequency, float amplitude, float samp
     printf("[ ");
 	for( i=0; i<nrOfSamples; i++ )
 	{
-		samples[i] = amplitude * (float) sin( ((double)i/(double)samplerate)*frequency * M_PI * 2.0 );
+        samples[i] = amplitude * (float) sin( ((double)i/(double)samplerate)*frequency * M_PI * 2.0);
         printf("%f ", samples[i]);
 	}
 
     printf("]; \n ------------------------------\n", samples[i]);
     return 1;
 }
+
+int silenceGenerator( float * samples, uint32_t nrOfSamples)
+{
+    uint32_t i;
+    printf("[ ");
+    for( i=0; i<nrOfSamples; i++ )
+    {
+        samples[i] = 0;
+    }
+    return 1;
+}
+
 
 int squareGenerator( float * samples, float frequency, float amplitude, float samplerate, uint32_t nrOfSamples)
 {
