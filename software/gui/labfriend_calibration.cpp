@@ -100,12 +100,12 @@ void labfriend::open_CalibrationFile(void)
         char * pEnd;
         int i=0;
 
-
+        setlocale(LC_NUMERIC,"C");
         printf("startfile \n");
         while( !file.atEnd() )
         {
             lineLength = file.readLine(buf, sizeof(buf));
-
+            printf("buf %s \n", buf);
             if (lineLength != -1)
             {
             // the line is available in buf
@@ -176,7 +176,8 @@ void labfriend::open_CalibrationFile(void)
             }
 
         }
-        printf("i is %d \n", i);
+
+        printf("i is %d %f %f\n", i, vdiv5mvGainError[1], vdiv5mvGainError[0] );
         dosize = i;
     }
 
